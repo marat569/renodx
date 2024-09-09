@@ -40,3 +40,16 @@ RenoDX, short for "Renovation Engine for DirectX Games", is a toolset to mod gam
 * [renodx-devkit.addon64](https://clshortfuse.github.io/renodx/renodx-devkit.addon64)
 * [decomp.exe](https://clshortfuse.github.io/renodx/decomp.exe)
 
+# Marat's mods
+
+* [Atelier Ryza 2](https://marat569.github.io/renodx/renodx-ryza2.addon64)
+
+* [Atelier Ryza 3](https://marat569.github.io/renodx/renodx-ryza3.addon64)
+
+* [Atelier Sophie 1 DX](https://marat569.github.io/renodx/renodx-sophie1.addon64)
+
+* [Nights of Azure 1](https://marat569.github.io/renodx/renodx-nightsofazure1.addon64)
+
+* [Nights of Azure 2](https://marat569.github.io/renodx/renodx-nightsofazure2.addon64)
+
+* [The Evil Within 2](https://marat569.github.io/renodx/renodx-tew2.addon64)

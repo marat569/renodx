@@ -10,13 +10,18 @@
 
 #include <deps/imgui/imgui.h>
 
+#include <embed/0x04D8EA44.h>
 #include <embed/0x18CFEFF4.h>
+#include <embed/0x21C2AF18.h>
 #include <embed/0x298A6BB0.h>
 #include <embed/0x341CEB87.h>
+#include <embed/0x4A2023A1.h>
+#include <embed/0x4E63FBE2.h>
 #include <embed/0x5DF649A9.h>
 #include <embed/0x61DBBA5C.h>
 #include <embed/0x71F27445.h>
 #include <embed/0x745E34E1.h>
+#include <embed/0x80CEFAE4.h>
 #include <embed/0x89C4A7A4.h>
 #include <embed/0x97CA5A85.h>
 #include <embed/0xA61F2FEE.h>
@@ -26,6 +31,7 @@
 #include <embed/0xC83E64DF.h>
 #include <embed/0xCBFFC2A3.h>
 #include <embed/0xDE517511.h>
+#include <embed/0xED7139C7.h>
 #include <embed/0xFBFF99B4.h>
 
 
@@ -53,7 +59,14 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0x89C4A7A4),  // new_menu
     CustomShaderEntry(0x18CFEFF4),  // new_menu_renderless
     CustomShaderEntry(0xFBFF99B4),  // new_hud
-    CustomShaderEntry(0xA8520658),  // composite2_multisample
+    CustomShaderEntry(0x80CEFAE4),  // film_grain_new
+    CustomShaderEntry(0x21C2AF18),  // composite2
+    CustomShaderEntry(0xA8520658),  // composite2_array_multisample
+    CustomShaderEntry(0x04D8EA44),  // composite2_array_multisample_blend_rtv1
+    CustomShaderEntry(0x4A2023A1),  // composite2_blend_rtv1
+    CustomShaderEntry(0x4E63FBE2),  // composite2_multisample
+    CustomShaderEntry(0xED7139C7),  // composite2_multisample_blend_rtv1
+
 };
 
 ShaderInjectData shader_injection;
@@ -204,7 +217,7 @@ renodx::utils::settings::Settings settings = {
     new renodx::utils::settings::Setting{
         .key = "sceneGradingLift",
         .binding = &shader_injection.sceneGradingLift,
-        .default_value = 0.f,
+        .default_value = 50.f,
         .label = "Lift",
         .section = "Scene Grading",
         .max = 100.f,
@@ -230,15 +243,6 @@ renodx::utils::settings::Settings settings = {
     },
     new renodx::utils::settings::Setting{
         .key = "sceneGradingBlack",
-        .binding = &shader_injection.sceneGradingWhite,
-        .default_value = 50.f,
-        .label = "White Fill",
-        .section = "Scene Grading",
-        .max = 100.f,
-        .parse = [](float value) { return value * 0.02f; },
-    },
-    new renodx::utils::settings::Setting{
-        .key = "sceneGradingBlack",
         .binding = &shader_injection.sceneGradingBlack,
         .default_value = 50.f,
         .label = "Black Floor",
@@ -248,6 +252,15 @@ renodx::utils::settings::Settings settings = {
     },
     new renodx::utils::settings::Setting{
         .key = "sceneGradingWhite",
+        .binding = &shader_injection.sceneGradingWhite,
+        .default_value = 50.f,
+        .label = "White Fill",
+        .section = "Scene Grading",
+        .max = 100.f,
+        .parse = [](float value) { return value * 0.02f; },
+    },
+    new renodx::utils::settings::Setting{
+        .key = "sceneGradingClip",
         .binding = &shader_injection.sceneGradingClip,
         .default_value = 50.f,
         .label = "White Clip",
@@ -374,11 +387,13 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("sceneGradingGain", 50.f);
   renodx::utils::settings::UpdateSetting("sceneGradingBlack", 50.f);
   renodx::utils::settings::UpdateSetting("sceneGradingWhite", 50.f);
+  renodx::utils::settings::UpdateSetting("sceneGradingClip", 50.f);
   renodx::utils::settings::UpdateSetting("sceneGradingStrength", 50.f);
 
   renodx::utils::settings::UpdateSetting("fxBloom", 50.f);
   renodx::utils::settings::UpdateSetting("fxVignette", 50.f);
   renodx::utils::settings::UpdateSetting("fxFilmGrain", 0.f);
+
   renodx::utils::settings::UpdateSetting("processingLUTCorrection", 0.f);
   renodx::utils::settings::UpdateSetting("processingLUTOrder", 1.f);
   renodx::utils::settings::UpdateSetting("processingInternalSampling", 0.f);

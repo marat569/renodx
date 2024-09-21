@@ -18,7 +18,8 @@
 #include <embed/0x5D15CFEE.h> //videos -- pre-renderd movies
 #include <embed/0x21E7062A.h> //combat artifacts
 #include <embed/0xEA314404.h> // wardrobe
-#include <embed/0x53FBE188.h> // tonemapper
+#include <embed/0x53FBE188.h> // tonemapper, FXAA
+#include <embed/0x0F539095.h> // tonemapper, TAA/AA OFF
 #include <embed/0xBB055A34.h> // Final
 
 
@@ -46,7 +47,8 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0x5D15CFEE), // videos -- pre-rendered movies
     CustomShaderEntry(0x21E7062A), // combat artifacts
     CustomShaderEntry(0xEA314404), // wardrobe
-    CustomShaderEntry(0x53FBE188),  // Tonemapper!!
+    CustomShaderEntry(0x53FBE188), // Tonemapper FXAA
+    CustomShaderEntry(0x0F539095), // Tonemapper TAA/ AA OFF  
     CustomShaderEntry(0xBB055A34), // Final
 	
 
@@ -97,6 +99,19 @@ renodx::utils::settings::Settings settings = {
         .min = 48.f,
         .max = 500.f,
     },
+
+    new renodx::utils::settings::Setting{
+        .key = "toneMapHueCorrection",
+        .binding = &shader_injection.toneMapHueCorrection,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .can_reset = true,
+        .label = "Hue Correction",
+        .section = "Tone Mapping",
+        .tooltip = "Applies hue shift emulation before tonemapping",
+        .labels = {"None", "Vanilla", "Reinhard", "Uncharted 2"},
+    },
+
     new renodx::utils::settings::Setting{
         .key = "colorGradeExposure",
         .binding = &shader_injection.colorGradeExposure,
@@ -156,16 +171,7 @@ renodx::utils::settings::Settings settings = {
         .parse = [](float value) { return value * 0.01f; },
     },
 
-     new renodx::utils::settings::Setting{
-        .key = "toneMapHueCorrection",
-        .binding = &shader_injection.toneMapHueCorrection,
-        .default_value = 50.f,
-        .label = "Hue Correction",
-        .section = "Color Grading",
-        .tooltip = "Emulates hue shifting from the vanilla tonemapper",
-        .max = 100.f,
-        .parse = [](float value) { return value * 0.01f; },
-    },
+
 
     new renodx::utils::settings::Setting{
         .key = "blend",
@@ -202,17 +208,21 @@ renodx::utils::settings::Settings settings = {
     },
 
     new renodx::utils::settings::Setting{
-        .key = "fxaa",
-        .binding = &shader_injection.fxaa,
-        .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
-        .default_value = 1,
-        .can_reset = false,
-        .label = "FXAA",
-        .section = "Effects",
-        .tooltip = "Enable/Disable FXAA",
-
+        .value_type = renodx::utils::settings::SettingValueType::TEXT,
+        .label = "Please make sure DOF, Bloom, and Light Shafts are enabled! Join the HDR Den discord for help!",
+        .section = "Instructions",
     },
 
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
+        .label = "HDR Den Discord",
+        .section = "About",
+        .group = "button-line-1",
+        .tint = 0x5865F2,
+        .on_change = []() {
+          system("start https://discord.gg/5WZXDpmbpP");
+        },
+    },
 
 };
 
@@ -221,18 +231,17 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("toneMapPeakNits", 203.f);
   renodx::utils::settings::UpdateSetting("toneMapGameNits", 203.f);
   renodx::utils::settings::UpdateSetting("toneMapUINits", 203.f);
+  renodx::utils::settings::UpdateSetting("toneMapHueCorrection", 0.f);
   renodx::utils::settings::UpdateSetting("colorGradeExposure", 1.f);
   renodx::utils::settings::UpdateSetting("colorGradeHighlights", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeShadows", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeContrast", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeSaturation", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeBlowout", 50.f);
-  renodx::utils::settings::UpdateSetting("toneMapHueCorrection", 50.f);
-  renodx::utils::settings::UpdateSetting("blend", 0);
+  renodx::utils::settings::UpdateSetting("blend", 0.f);
   //Start PostProcess effects on/off
-  renodx::utils::settings::UpdateSetting("bloom", 1);
+  renodx::utils::settings::UpdateSetting("bloom", 1.f);
   renodx::utils::settings::UpdateSetting("fxBloom", 50);
-  renodx::utils::settings::UpdateSetting("fxaa", 1);
 }
 
 }  // namespace

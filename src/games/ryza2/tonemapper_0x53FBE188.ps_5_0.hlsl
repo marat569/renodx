@@ -76,8 +76,7 @@ void main(
     
     r0.xyzw = smplScene_Tex.Sample(smplScene_s, v1.xy).xyzw;
     
-    if (injectedData.fxaa == 1)
-    { //FXAA on/off
+
         r1.xy = smplScene_Tex.Sample(smplScene_s, v2.xy).xy;
         r1.zw = smplScene_Tex.Sample(smplScene_s, v2.zw).xy;
         r2.xy = smplScene_Tex.Sample(smplScene_s, v3.xy).xy;
@@ -133,7 +132,7 @@ void main(
             r0.xyz = r1.xxx ? r5.xyz : r2.xyz;
         }
   
-    } //FXAA slider end
+
     
     
     r1.x = smplAdaptedLumCur_Tex.Sample(smplAdaptedLumCur_s, float2(0.25, 0.5)).x;
@@ -286,14 +285,12 @@ void main(
     outputColor = applyUserTonemap(untonemapped, vanillaColor, renodx::color::y::from::BT709(r0.rgb)); //Apply our custom tonemapper from tonemapper.hlsl
  
 
- //     outputColor = renodx::math::SafePow(outputColor, fGamma); //fGamma  [inverse 2.2-ish?]
+ //     outputColor = renodx::math::SafePow(outputColor, fGamma); // Game does fGamma, but its not exactly 1/2.2; so we'll do 1/2.2 ourselves!
         outputColor = renodx::math::SafePow(outputColor, 1/2.2); // [inverse 2.2, final shader does 2.2]
 
-// Moving gamma and Paper White to the Final shader 
-//   outputColor = renodx::math::SafePow(outputColor, 2.2f); //2.2 gamma
-//   outputColor *= injectedData.toneMapGameNits; // Scale by user nits
+
         
- //   outputColor.rgb /= 80.f;
+
         
     o0.rgb = outputColor.rgb;
     

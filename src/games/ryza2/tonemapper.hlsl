@@ -28,25 +28,59 @@ float3 applyUserTonemap(float3 untonemapped, float3 vanillaColor, float midGray)
     float renoDRTSaturation = 1.f; //
     float renoDRTHighlights = 1.f;
 
-    renodx::tonemap::Config config = renodx::tonemap::config::Create(
-      injectedData.toneMapType,
-      injectedData.toneMapPeakNits,
-      injectedData.toneMapGameNits,
-      1,
-      injectedData.colorGradeExposure,
-      injectedData.colorGradeHighlights,
-      injectedData.colorGradeShadows,
-      injectedData.colorGradeContrast,
-      injectedData.colorGradeSaturation,
-      vanillaMidGray,
-      vanillaMidGray * 100.f,
-      renoDRTHighlights,
-      renoDRTShadows,
-      renoDRTContrast,
-      renoDRTSaturation,
-      renoDRTDechroma,
-      renoDRTFlare,
-      renodx::tonemap::config::hue_correction_type::CUSTOM, (injectedData.toneMapHueCorrection), clamp(untonemapped, 0, 4.f));
+    renodx::tonemap::Config config = renodx::tonemap::config::Create();
+    config.type = injectedData.toneMapType;
+    config.peak_nits = injectedData.toneMapPeakNits;
+    config.game_nits = injectedData.toneMapGameNits;
+    config.gamma_correction = 1;
+    config.exposure = injectedData.colorGradeExposure;
+    config.highlights = injectedData.colorGradeHighlights;
+    config.shadows = injectedData.colorGradeShadows;
+    config.contrast = injectedData.colorGradeContrast;
+    config.saturation = injectedData.colorGradeSaturation;
+    
+    //Start hue correction if
+    
+    //Vanilla
+    if (injectedData.toneMapHueCorrection == 1.f)
+    {
+        config.hue_correction_type = renodx::tonemap::config::hue_correction_type::CUSTOM;
+        config.hue_correction_color = lerp(
+      untonemapped,
+      vanillaColor,
+      1.f);
+        config.hue_correction_strength = 1.f;
+    }
+    //Reinhard (Default)
+    if (injectedData.toneMapHueCorrection == 2.f)
+    {
+        config.hue_correction_type = renodx::tonemap::config::hue_correction_type::CUSTOM;
+        config.hue_correction_color = lerp(
+      untonemapped,
+      renodx::tonemap::Reinhard(untonemapped),
+      1.f);
+        config.hue_correction_strength = 1.f;
+    }
+    //Uncharted 2
+    if (injectedData.toneMapHueCorrection == 3.f)
+    {
+        config.hue_correction_type = renodx::tonemap::config::hue_correction_type::CUSTOM;
+        config.hue_correction_color = lerp(
+      untonemapped,
+      renodx::tonemap::uncharted2::BT709(untonemapped),
+      1.f);
+        config.hue_correction_strength = 1.f;
+    }
+
+    
+    config.reno_drt_highlights = renoDRTHighlights;
+    config.reno_drt_shadows = renoDRTShadows;
+    config.reno_drt_contrast = renoDRTContrast;
+    config.reno_drt_saturation = renoDRTSaturation;
+    config.reno_drt_dechroma = renoDRTDechroma;
+    config.mid_gray_value = vanillaMidGray;
+    config.mid_gray_nits = vanillaMidGray * 100.f;
+    config.reno_drt_flare = renoDRTFlare;
 
     outputColor = renodx::tonemap::config::Apply(outputColor, config);
     

@@ -38,7 +38,7 @@ void main(
 
   r0.xyzw = smplScene_Tex.Sample(smplScene_s, v1.xy).xyzw;
     
-    if (injectedData.fxaa == 1) { //FXAA start
+    
     
     
   r1.xy = smplScene_Tex.Sample(smplScene_s, v2.xy).xy;
@@ -92,7 +92,7 @@ void main(
     r1.x = (int)r1.y | (int)r1.x;
     r0.xyz = r1.xxx ? r5.xyz : r2.xyz;
   }
-    } //FXAA end
+   
         
     float3 untonemapped = r0.rgb;
     

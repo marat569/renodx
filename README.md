@@ -54,4 +54,4 @@ RenoDX, short for "Renovation Engine for DirectX Games", is a toolset to mod gam
 
 * [The Evil Within 2](https://marat569.github.io/renodx/renodx-tew2.addon64)
 
-* 
+* [Yakuza Kiwami 1](https://marat569.github.io/renodx/renodx-kiwami1.addon64) !Beta! *Has some compatability with Yakuza: 0

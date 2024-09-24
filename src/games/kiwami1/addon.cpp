@@ -166,7 +166,7 @@ renodx::utils::settings::Settings settings = {
         .section = "Effects",
         .tooltip = "Control the game's native Color Grading",
         .max = 100.f,
-        .parse = [](float value) { return value * 0.02f; },
+        .parse = [](float value) { return value * 0.01f; },
 
     },
 

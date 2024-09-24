@@ -17,6 +17,7 @@ cbuffer cb9 : register(b9)
 // 3Dmigoto declarations
 #define cmp -
 
+//Simple function, only saturate if tonemapper is not vanilla
 float3 vanillaSaturate(float3 color){
 	if (injectedData.toneMapType != 0){
 	return color;
@@ -36,9 +37,9 @@ void main(
 
   r0.xyz = t0.Sample(s0_s, v0.xy).xyz;
   r0.w = dot(r0.xyz, float3(0.333333343,0.333333343,0.333333343));
-  float3 untonemapped = r0.rgb;
-  
 
+  
+  // something based on avg channel  
   r1.x = 1 + -r0.w;
   r1.y = -r1.x * r1.x + 1;
   r2.x = r1.x * r1.x;
@@ -50,29 +51,42 @@ void main(
   r2.rgb = vanillaSaturate(r2.rgb);
   
 
-	
+  // do more math on this  
   r1.x = dot(cb9[4].xyz, r2.xyz);
   r1.y = dot(cb9[8].xyz, r2.xyz);
   r1.xy = cb9[0].zw + r1.xy;
   r0.w = 1 + r1.x;
+	
+ // go to ycbcr	
   r3.y = dot(float3(-0.168740004,-0.331259996,0.5), r0.xyz);
   r3.z = dot(float3(0.5,-0.418689996,-0.0813099965), r0.xyz);
   r0.x = dot(float3(0.298999995,0.587000012,0.114), r0.xyz);
-  //r0.x = cb9[0].y + r0.x;
+
+// add to luminance	
+// Will add to even black, causing raised blacks	
+//  r0.x = cb9[0].y + r0.x;
+	
+  // modify chrominance	
   r0.yz = r3.yz * r0.ww;
+	
+// ycbcr to rgb	
   r3.x = dot(float2(1,1.40199995), r0.xz);
   r3.y = dot(float3(1,-0.344139993,-0.714139998), r0.xyz);
   r3.z = dot(float2(1,1.77199996), r0.xy);
+	
+  // more math: 1 / (1 - (2*r1.y)	
   r0.x = r1.y * -2 + 1;
   r0.x = 1 / r0.x;
   
+  // r0 = r3 / (1 - (2 *r1.y)) - r1.y	
   r0.xyz = (r3.xyz * r0.xxx + -r1.yyy);
   r0.rgb = vanillaSaturate(r0.rgb);
-  float3 vanillaColor = r0.rgb;
-  
+  float3 untonemapped = r0.rgb;
+
+	
   r0.rgb = applyUserTonemap(untonemapped);
 
-
+// calculate new contrast as r1
 
   //r0.xyz = log2(r0.xyz);
   //r1.x = dot(cb9[5].xyz, r2.xyz);
@@ -82,6 +96,8 @@ void main(
   //r1.xyz = float3(0.454545438,0.454545438,0.454545438) * r1.xyz;
   //r0.xyz = r1.xyz * r0.xyz;
   //r0.xyz = exp2(r0.xyz);
+  // pow(r0, r1) and then 1/2.2 to gamma	
+	
   r0.rgb = renodx::math::SafePow(r0.rgb, 1/2.2);
   
   //o0.xyz = min(float3(1,1,1), r0.xyz);

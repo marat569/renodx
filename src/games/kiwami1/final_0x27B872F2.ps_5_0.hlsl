@@ -45,6 +45,5 @@ void main(
   r0.w = 8 & asint(cb13[0].x);
   o0.xyz = r0.www ? r1.xyz : r0.xyz;
   
-  r0.rgb = renodx::math::SafePow(o0.rgb, 1.f/2.2f); //Undo gamma
   return;
 }

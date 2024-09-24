@@ -13,9 +13,10 @@
 
 #include <embed/0xFFFFFFFD.h> // Custom final VS
 #include <embed/0xFFFFFFFE.h> // Custom final PS
-#include <embed/0x35832457.h> // Saturates
-#include <embed/0x7D90228C.h> // tonemapper for real?
-#include <embed/0x27B872F2.h> // Game's vanilla final
+#include <embed/0x7D90228C.h> // Color Grading
+#include <embed/0x35832457.h> // Idk / Saturates
+#include <embed/0x27B872F2.h> // Game's vanilla final shader
+#include <embed/0x406B1825.h> // UI, Game World
 
 
 
@@ -33,10 +34,10 @@ namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
 
-
-  CustomShaderEntry(0x35832457),  // Saturates
-  CustomShaderEntry(0x7D90228C),  // Tonemapper for real?
-  CustomShaderEntry(0x27B872F2), // Game's vanilla final
+  CustomShaderEntry(0x7D90228C),  // Color Grading
+  CustomShaderEntry(0x35832457),  // Idk/ Saturates
+  CustomShaderEntry(0x27B872F2), // Game's vanilla final shader
+  CustomShaderEntry(0x406B1825), // UI, Game World
 
 
 
@@ -157,17 +158,7 @@ renodx::utils::settings::Settings settings = {
         .parse = [](float value) { return value * 0.02f; },
     },
 
-    new renodx::utils::settings::Setting{
-        .key = "fxaa",
-        .binding = &shader_injection.fxaa,
-        .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
-        .default_value = 1,
-        .can_reset = false,
-        .label = "FXAA",
-        .section = "Effects",
-        .tooltip = "Enable/Disable FXAA",
 
-    },
 
 };
 
@@ -184,7 +175,7 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("colorGradeContrast", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeSaturation", 50.f);
   //Start PostProcess effects on/off
-  renodx::utils::settings::UpdateSetting("fxaa", 1.f);
+
 
 }
 
@@ -417,7 +408,7 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       reshade::register_event<reshade::addon_event::present>(OnPresent);
      //final shader copy pasta end
       
-      // BGRA8_TYPELESS to unclamp
+      // BGRA8_TYPELESS
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::b8g8r8a8_typeless,
           .new_format = reshade::api::format::r16g16b16a16_float,
@@ -439,6 +430,36 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::b8g8r8a8_unorm,
           .new_format = reshade::api::format::r16g16b16a16_float,
+      });
+
+      //16:9 aspect ratio upgrades for SSAA
+
+      // BGRA8_TYPELESS 16:9
+      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+          .old_format = reshade::api::format::b8g8r8a8_typeless,
+          .new_format = reshade::api::format::r16g16b16a16_float,
+          .aspect_ratio = 16.f/9.f,
+      });
+
+      // BGRA8_UNORM 16:9
+      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+          .old_format = reshade::api::format::b8g8r8a8_unorm,
+          .new_format = reshade::api::format::r16g16b16a16_float,
+          .aspect_ratio = 16.f / 9.f,
+      });
+
+      // RGBA8_TYPELESS 16:9
+      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+          .old_format = reshade::api::format::r8g8b8a8_typeless,
+          .new_format = reshade::api::format::r16g16b16a16_float,
+          .aspect_ratio = 16.f / 9.f,
+      });
+
+      // RGBA8_UNORM 16:9
+      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+          .old_format = reshade::api::format::b8g8r8a8_unorm,
+          .new_format = reshade::api::format::r16g16b16a16_float,
+          .aspect_ratio = 16.f / 9.f,
       });
 
       break;

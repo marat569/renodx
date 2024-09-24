@@ -1,5 +1,5 @@
-#ifndef SRC_SOPHIE1_SHARED_H_
-#define SRC_SOPHIE1_SHARED_H_
+#ifndef SRC_KIWAMI1_SHARED_H_
+#define SRC_KIWAMI1_SHARED_H_
 
 #ifndef __cplusplus
 #include "../../shaders/renodx.hlsl"
@@ -20,7 +20,6 @@ struct ShaderInjectData {
   float colorGradeBlowout;
   float toneMapHueCorrection;
   float clipPeak;
-  float fxaa;
 };
 
 #ifndef __cplusplus
@@ -29,4 +28,4 @@ cbuffer cb13 : register(b13) {
 }
 #endif
 
-#endif  // SRC_SOPHIE1_SHARED_H_
+#endif  // SRC_KIWAMI1_SHARED_H_

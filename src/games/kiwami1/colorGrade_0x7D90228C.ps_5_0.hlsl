@@ -1,6 +1,8 @@
 // ---- Created with 3Dmigoto v1.3.16 on Mon Sep 23 18:15:01 2024
+// Has some color grading functions and pow/gamma on the bottom
+// cb9[x] = contrast/color grading related stuff
+
 #include "./shared.h"
-#include "./tonemapper.hlsl"
 
 Texture2D<float4> t0 : register(t0);
 
@@ -19,7 +21,7 @@ cbuffer cb9 : register(b9)
 
 //Simple function, only saturate if tonemapper is not vanilla
 float3 vanillaSaturate(float3 color){
-	if (injectedData.toneMapType != 0){
+	if (injectedData.toneMapType != 0.f){
 	return color;
 	} else {
 	return saturate(color);
@@ -81,24 +83,23 @@ void main(
   // r0 = r3 / (1 - (2 *r1.y)) - r1.y	
   r0.xyz = (r3.xyz * r0.xxx + -r1.yyy);
   r0.rgb = vanillaSaturate(r0.rgb);
-  float3 untonemapped = r0.rgb;
 
-	
-  r0.rgb = applyUserTonemap(untonemapped);
 
 // calculate new contrast as r1
 
-  //r0.xyz = log2(r0.xyz);
-  //r1.x = dot(cb9[5].xyz, r2.xyz);
-  //r1.y = dot(cb9[9].xyz, r2.xyz);
-  //r1.z = dot(cb9[13].xyz, r2.xyz);
-  //r1.xyz = cb9[1].xyz + r1.xyz;
-  //r1.xyz = float3(0.454545438,0.454545438,0.454545438) * r1.xyz;
-  //r0.xyz = r1.xyz * r0.xyz;
-  //r0.xyz = exp2(r0.xyz);
-  // pow(r0, r1) and then 1/2.2 to gamma	
+  r0.xyz = log2(r0.xyz);
+  r1.x = dot(cb9[5].xyz, r2.xyz);
+  r1.y = dot(cb9[9].xyz, r2.xyz);
+  r1.z = dot(cb9[13].xyz, r2.xyz);
+  r1.xyz = cb9[1].xyz + r1.xyz;
+  r1.xyz = float3(0.454545438,0.454545438,0.454545438) * r1.xyz;
+  r0.xyz = r1.xyz * r0.xyz;
+  r0.xyz = exp2(r0.xyz);
+//   pow(r0, r1) and then 1/2.2 to gamma	
 	
-  r0.rgb = renodx::math::SafePow(r0.rgb, 1/2.2);
+
+	
+  //r0.rgb = renodx::math::SafePow(r0.rgb, 1/2.2);
   
   //o0.xyz = min(float3(1,1,1), r0.xyz);
   o0.rgb = r0.rgb;

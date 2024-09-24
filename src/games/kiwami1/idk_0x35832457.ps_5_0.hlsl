@@ -1,6 +1,7 @@
 // ---- Created with 3Dmigoto v1.3.16 on Wed Jul 17 22:45:07 2024
 
 #include "./shared.h"
+#include "./tonemapper.hlsl"
 
 Texture2D<float4> t0 : register(t0);
 
@@ -360,7 +361,11 @@ void main(
   }
   o0.xyz = r0.xyz;
   o0.w = 1;
+    
+    //Apply RenoDX
+    o0.rgb = applyUserTonemap(o0.rgb);
+    o0.rgb = renodx::math::SafePow(o0.rgb, 1.f/2.2f); //back to inverse gamma
   
-  //o0 *= 999.f;
+  
   return;
 }

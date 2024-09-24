@@ -38,6 +38,7 @@ void main(
   float4 fDest;
 
   r0.xyz = t0.Sample(s0_s, v0.xy).xyz;
+    float3 ungraded = r0.rgb; //Ungraded color with 1/2.2 gamma
   r0.w = dot(r0.xyz, float3(0.333333343,0.333333343,0.333333343));
 
   
@@ -96,13 +97,14 @@ void main(
   r0.xyz = r1.xyz * r0.xyz;
   r0.xyz = exp2(r0.xyz);
 //   pow(r0, r1) and then 1/2.2 to gamma	
-	
+    float3 graded = r0.rgb; //Graded color with 1/2.2 gamma 
 
 	
-  //r0.rgb = renodx::math::SafePow(r0.rgb, 1/2.2);
+  
   
   //o0.xyz = min(float3(1,1,1), r0.xyz);
-  o0.rgb = r0.rgb;
+  //o0.rgb = r0.rgb; //vanilla out
+    o0.rgb = lerp(ungraded.rgb, graded.rgb, injectedData.ColorGradeStrength);
   o0.w = 1;
   return;
 }

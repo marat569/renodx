@@ -17,6 +17,7 @@
 #include <embed/0x35832457.h> // Idk / Saturates
 #include <embed/0x27B872F2.h> // Game's vanilla final shader
 #include <embed/0x406B1825.h> // UI, Game World
+#include <embed/0x61D49EC3.h> // Clamp game's gamut to fix aritfacting in differnet games
 
 
 
@@ -38,6 +39,7 @@ renodx::mods::shader::CustomShaders custom_shaders = {
   CustomShaderEntry(0x35832457),  // Idk/ Saturates
   CustomShaderEntry(0x27B872F2), // Game's vanilla final shader
   CustomShaderEntry(0x406B1825), // UI, Game World
+  CustomShaderEntry(0x61D49EC3), // Clamp game's gamut to fix aritfacting in differnet games
 
 
 

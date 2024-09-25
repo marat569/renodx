@@ -88,15 +88,25 @@ void main(
 
 // calculate new contrast as r1
 
-  r0.xyz = log2(r0.xyz);
-  r1.x = dot(cb9[5].xyz, r2.xyz);
-  r1.y = dot(cb9[9].xyz, r2.xyz);
-  r1.z = dot(cb9[13].xyz, r2.xyz);
-  r1.xyz = cb9[1].xyz + r1.xyz;
-  r1.xyz = float3(0.454545438,0.454545438,0.454545438) * r1.xyz;
-  r0.xyz = r1.xyz * r0.xyz;
-  r0.xyz = exp2(r0.xyz);
+  //r0.xyz = log2(r0.xyz);
+  //r1.x = dot(cb9[5].xyz, r2.xyz);
+  //r1.y = dot(cb9[9].xyz, r2.xyz);
+  //r1.z = dot(cb9[13].xyz, r2.xyz);
+  //r1.xyz = cb9[1].xyz + r1.xyz;
+  //r1.xyz = float3(0.454545438,0.454545438,0.454545438) * r1.xyz;
+  //r0.xyz = r1.xyz * r0.xyz;
+  //r0.xyz = exp2(r0.xyz);
 //   pow(r0, r1) and then 1/2.2 to gamma	
+	
+// Ty musa for negative safe code	
+    r1.x = dot(cb9[5].xyz, r2.xyz);
+    r1.y = dot(cb9[9].xyz, r2.xyz);
+    r1.z = dot(cb9[13].xyz, r2.xyz);
+    r1.xyz = cb9[1].xyz + r1.xyz;
+    r1.xyz = (1.f / 2.2f) * r1.xyz;
+    r0.xyz = sign(r0.xyz) * pow(abs(r0.xyz), abs(r1.xyz));
+	
+
     float3 graded = r0.rgb; //Graded color with 1/2.2 gamma 
 
 	
@@ -104,6 +114,7 @@ void main(
   
   //o0.xyz = min(float3(1,1,1), r0.xyz);
   //o0.rgb = r0.rgb; //vanilla out
+	
     o0.rgb = lerp(ungraded.rgb, graded.rgb, injectedData.ColorGradeStrength);
   o0.w = 1;
   return;

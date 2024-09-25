@@ -18,6 +18,7 @@ void main(
         color.rgb = min(color.rgb, injectedData.toneMapPeakNits / 80.f); //clamp output to peak nits slider, bandaid for a few effects
     }
     
+    color.a = saturate(color.a); // Try to fix up alpha
     
     output.rgba = color;
 }

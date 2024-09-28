@@ -9,13 +9,15 @@
 
 // #define DEBUG_LEVEL_1 //added
 
+#include <embed/0xFFFFFFFD.h>  // Custom final VS
+#include <embed/0xFFFFFFFE.h>  // Custom final PS
 #include <embed/0x27B872F2.h>  // Game's vanilla final shader
 #include <embed/0x35832457.h>  // Idk / Saturates
 #include <embed/0x406B1825.h>  // UI, Game World
 #include <embed/0x61D49EC3.h>  // Clamp game's gamut to fix aritfacting in differnet games
 #include <embed/0x7D90228C.h>  // Color Grading
-#include <embed/0xFFFFFFFD.h>  // Custom final VS
-#include <embed/0xFFFFFFFE.h>  // Custom final PS
+#include <embed/0x6370B56D.h>  // Movies
+
 
 #include <deps/imgui/imgui.h>
 #include <include/reshade.hpp>
@@ -34,6 +36,7 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0x27B872F2),  // Game's vanilla final shader
     CustomShaderEntry(0x406B1825),  // UI, Game World
     CustomShaderEntry(0x61D49EC3),  // Clamp game's gamut to fix aritfacting in differnet games
+    CustomShaderEntry(0x6370B56D), // Movies
 
 };
 
@@ -204,7 +207,7 @@ void OnPresetOff() {
 // NOLINTBEGIN(readability-identifier-naming)
 
 extern "C" __declspec(dllexport) const char* NAME = "RenoDX";
-extern "C" __declspec(dllexport) const char* DESCRIPTION = "RenoDX for Atelier Sophie 1";
+extern "C" __declspec(dllexport) const char* DESCRIPTION = "RenoDX for Yakuza Kiwami 1";
 
 // NOLINTEND(readability-identifier-naming)
 

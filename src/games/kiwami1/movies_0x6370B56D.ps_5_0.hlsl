@@ -1,5 +1,5 @@
 // ---- Created with 3Dmigoto v1.3.16 on Tue Sep 24 17:15:32 2024
-// Movies
+// Not movies, gamma is shared between movies and game
 
 
 #include "./shared.h"
@@ -48,6 +48,6 @@ void main(
   o0.xy = v0.xy * r0.yx;
   o0.w = v0.w;
     
-    o0.rgb = renodx::math::SafePow(o0.rgb, 1.f / 2.2f);
+    //o0.rgb = renodx::math::SafePow(o0.rgb, 2.2f);
   return;
 }

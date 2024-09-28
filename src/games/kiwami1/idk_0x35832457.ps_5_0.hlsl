@@ -364,7 +364,7 @@ void main(
     
     //Apply RenoDX
     o0.rgb = applyUserTonemap(o0.rgb);
-    o0.rgb = renodx::math::SafePow(o0.rgb, 1.f/2.2f); //back to inverse gamma
+    //o0.rgb = renodx::math::SafePow(o0.rgb, 1.f/2.2f); //back to inverse gamma
   
   
   return;

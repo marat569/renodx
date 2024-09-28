@@ -17,6 +17,7 @@
 #include <embed/0x61D49EC3.h>  // Clamp game's gamut to fix aritfacting in differnet games
 #include <embed/0x7D90228C.h>  // Color Grading
 #include <embed/0x6370B56D.h>  // Movies
+#include <embed/0x5EE2913B.h> // Premium Adventure Color Grade
 
 
 #include <deps/imgui/imgui.h>
@@ -37,6 +38,7 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0x406B1825),  // UI, Game World
     CustomShaderEntry(0x61D49EC3),  // Clamp game's gamut to fix aritfacting in differnet games
     CustomShaderEntry(0x6370B56D), // Movies
+    CustomShaderEntry(0x5EE2913B), // Premium Adventure Color Grade
 
 };
 

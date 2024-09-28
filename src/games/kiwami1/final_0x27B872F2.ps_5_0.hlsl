@@ -39,7 +39,7 @@ void main(
   //r0.xyz = log2(r0.xyz);
   //r0.xyz = cb9[0].zzz * r0.xyz;
   //r0.xyz = exp2(r0.xyz);
-  r0.rgb = renodx::math::SafePow(r0.rgb, 2.2f); // Game wants to be in gamma
+  //r0.rgb = renodx::math::SafePow(r0.rgb, 2.2f); // Game wants to be in gamma
   
   r1.xyz = r0.xyz * float3(0.858823538,0.858823538,0.858823538) + float3(0.0627451017,0.0627451017,0.0627451017);
   r0.w = 8 & asint(cb13[0].x);

@@ -7,21 +7,15 @@
 
 #define DEBUG_LEVEL_0
 
-//#define DEBUG_LEVEL_1 //added
+// #define DEBUG_LEVEL_1 //added
 
-
-
-#include <embed/0xFFFFFFFD.h> // Custom final VS
-#include <embed/0xFFFFFFFE.h> // Custom final PS
-#include <embed/0x7D90228C.h> // Color Grading
-#include <embed/0x35832457.h> // Idk / Saturates
-#include <embed/0x27B872F2.h> // Game's vanilla final shader
-#include <embed/0x406B1825.h> // UI, Game World
-#include <embed/0x61D49EC3.h> // Clamp game's gamut to fix aritfacting in differnet games
-
-
-
-
+#include <embed/0x27B872F2.h>  // Game's vanilla final shader
+#include <embed/0x35832457.h>  // Idk / Saturates
+#include <embed/0x406B1825.h>  // UI, Game World
+#include <embed/0x61D49EC3.h>  // Clamp game's gamut to fix aritfacting in differnet games
+#include <embed/0x7D90228C.h>  // Color Grading
+#include <embed/0xFFFFFFFD.h>  // Custom final VS
+#include <embed/0xFFFFFFFE.h>  // Custom final PS
 
 #include <deps/imgui/imgui.h>
 #include <include/reshade.hpp>
@@ -35,13 +29,11 @@ namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
 
-  CustomShaderEntry(0x7D90228C),  // Color Grading
-  CustomShaderEntry(0x35832457),  // Idk/ Saturates
-  CustomShaderEntry(0x27B872F2), // Game's vanilla final shader
-  CustomShaderEntry(0x406B1825), // UI, Game World
-  CustomShaderEntry(0x61D49EC3), // Clamp game's gamut to fix aritfacting in differnet games
-
-
+    CustomShaderEntry(0x7D90228C),  // Color Grading
+    CustomShaderEntry(0x35832457),  // Idk/ Saturates
+    CustomShaderEntry(0x27B872F2),  // Game's vanilla final shader
+    CustomShaderEntry(0x406B1825),  // UI, Game World
+    CustomShaderEntry(0x61D49EC3),  // Clamp game's gamut to fix aritfacting in differnet games
 
 };
 
@@ -203,9 +195,8 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("colorGradeShadows", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeContrast", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeSaturation", 50.f);
-  //Start PostProcess effects on/off
+  // Start PostProcess effects on/off
   renodx::utils::settings::UpdateSetting("ColorGradeStrength", 100.f);
-
 }
 
 }  // namespace
@@ -414,8 +405,8 @@ void OnPresent(reshade::api::command_queue* queue, reshade::api::swapchain* swap
   cmd_list->barrier(back_buffer_resource, reshade::api::resource_usage::render_target, reshade::api::resource_usage::shader_resource);
 
   // reset the copy tracker, entirely unrelated to the final shader above
-  //track_next_copy = false; // We dont need this, just pasted from FF14 code
-  //shader_injection.copyTracker = 0; // We dont need this, just pasted from FF14 code
+  // track_next_copy = false; // We dont need this, just pasted from FF14 code
+  // shader_injection.copyTracker = 0; // We dont need this, just pasted from FF14 code
 }
 // End custom final copy pasta
 
@@ -423,20 +414,19 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   switch (fdw_reason) {
     case DLL_PROCESS_ATTACH:
       if (!reshade::register_addon(h_module)) return FALSE;
-      renodx::mods::shader::force_pipeline_cloning = true; //So the mod works with the toolkit
+      renodx::mods::shader::force_pipeline_cloning = true;  // So the mod works with the toolkit
 
-      renodx::mods::swapchain::force_borderless = false; //needed for stability
-      renodx::mods::swapchain::prevent_full_screen = false; //needed for stability
+      renodx::mods::swapchain::force_borderless = false;     // needed for stability
+      renodx::mods::swapchain::prevent_full_screen = false;  // needed for stability
 
-
-     //final shader copy pasta start
+      // final shader copy pasta start
       reshade::register_event<reshade::addon_event::init_device>(OnInitDevice);
       reshade::register_event<reshade::addon_event::destroy_device>(OnDestroyDevice);
       reshade::register_event<reshade::addon_event::init_swapchain>(OnInitSwapchain);
       reshade::register_event<reshade::addon_event::destroy_swapchain>(OnDestroySwapchain);
       reshade::register_event<reshade::addon_event::present>(OnPresent);
-     //final shader copy pasta end
-      
+      // final shader copy pasta end
+
       // BGRA8_TYPELESS
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::b8g8r8a8_typeless,
@@ -461,13 +451,13 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
           .new_format = reshade::api::format::r16g16b16a16_float,
       });
 
-      //16:9 aspect ratio upgrades for SSAA
+      // 16:9 aspect ratio upgrades for SSAA
 
       // BGRA8_TYPELESS 16:9
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::b8g8r8a8_typeless,
           .new_format = reshade::api::format::r16g16b16a16_float,
-          .aspect_ratio = 16.f/9.f,
+          .aspect_ratio = 16.f / 9.f,
       });
 
       // BGRA8_UNORM 16:9
@@ -493,13 +483,13 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
 
       break;
     case DLL_PROCESS_DETACH:
-      //Final shader copy pasta start
+      // Final shader copy pasta start
       reshade::unregister_event<reshade::addon_event::init_device>(OnInitDevice);
       reshade::unregister_event<reshade::addon_event::destroy_device>(OnDestroyDevice);
       reshade::unregister_event<reshade::addon_event::init_swapchain>(OnInitSwapchain);
       reshade::unregister_event<reshade::addon_event::destroy_swapchain>(OnDestroySwapchain);
       reshade::unregister_event<reshade::addon_event::present>(OnPresent);
-      //final shader copy pasta end
+      // final shader copy pasta end
 
       reshade::unregister_addon(h_module);
       break;

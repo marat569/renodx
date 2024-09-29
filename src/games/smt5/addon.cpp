@@ -7,42 +7,38 @@
 
 #define DEBUG_LEVEL_0
 
-//#define DEBUG_LEVEL_1 //added
+// #define DEBUG_LEVEL_1 //added
 
-
+#include <embed/0x099B9006.h>  //ui -- Party's faces
+#include <embed/0x12E3927E.h>  //ui -- dialog box
+#include <embed/0x23729AED.h>  //ui -- main menu
+#include <embed/0x27A2F211.h>  //ui -- The background in the pause/load menus
+#include <embed/0x29A889E6.h>  //ui
+#include <embed/0x2FA199F2.h>  //ui
+#include <embed/0x2FB8A3BC.h>  //ui
+#include <embed/0x3884890C.h>  //ui -- Pause menu skills/items/essence/etc text
+#include <embed/0x4ADD8064.h>  //UI
+#include <embed/0x6D432834.h>  //ui
+#include <embed/0x76B068AD.h>  //ui
+#include <embed/0x8EC8EF33.h>  //ui
+#include <embed/0x94614EA1.h>  //ui
+#include <embed/0xA42D4BBE.h>  //ui
+#include <embed/0xB86F8772.h>  //UI -- Speach bubbles above npc's heads
 #include <embed/0xC3126A03.h>  //ui
 #include <embed/0xC3979EE8.h>  //ui
 #include <embed/0xC6FA129B.h>  //ui
 #include <embed/0xC90A6F07.h>  //ui
 #include <embed/0xEAADB3AA.h>  //ui
-#include <embed/0x6D432834.h>  //ui
-#include <embed/0x76B068AD.h>  //ui
-#include <embed/0x8EC8EF33.h>  //ui
-#include <embed/0x94614EA1.h>  //ui
-#include <embed/0x099B9006.h>  //ui -- Party's faces
-#include <embed/0x12E3927E.h>  //ui -- dialog box
-#include <embed/0x27A2F211.h>  //ui -- The background in the pause/load menus
-#include <embed/0xB86F8772.h> //UI -- Speach bubbles above npc's heads
-#include <embed/0x29A889E6.h>  //ui
-#include <embed/0x2FA199F2.h>  //ui
-#include <embed/0x2FB8A3BC.h>  //ui
-#include <embed/0x3884890C.h>  //ui -- Pause menu skills/items/essence/etc text
-#include <embed/0xA42D4BBE.h> //ui
-#include <embed/0x4ADD8064.h> //UI
-#include <embed/0x23729AED.h> //ui -- main menu
 ////
-#include <embed/0x82F9B4AC.h> // Movies, Intro
+#include <embed/0x82F9B4AC.h>  // Movies, Intro
 ////
-#include <embed/0xC1BCC6B5.h> // Lutbuilder1 [Game world]
-#include <embed/0xBBA0606A.h> // Sample1
-#include <embed/0xD019CA1A.h> // Final1 [Game world]
-#include <embed/0xE6EB2840.h> // Lutbuilder 2 [Tokyo]
-#include <embed/0x3CFCA6D5.h> // Final2 [Tokyo]
-#include <embed/0x4D541E80.h> // Final3 [Map, Shops, Etc.]
-#include <embed/0x4D541E80.h> // Sample 2 [Cutscenes?]
- 
-
-
+#include <embed/0x3CFCA6D5.h>  // Final2 [Tokyo]
+#include <embed/0x4D541E80.h>  // Final3 [Map, Shops, Etc.]
+#include <embed/0x4D541E80.h>  // Sample 2 [Cutscenes?]
+#include <embed/0xBBA0606A.h>  // Sample1
+#include <embed/0xC1BCC6B5.h>  // Lutbuilder1 [Game world]
+#include <embed/0xD019CA1A.h>  // Final1 [Game world]
+#include <embed/0xE6EB2840.h>  // Lutbuilder 2 [Tokyo]
 
 #include <deps/imgui/imgui.h>
 #include <include/reshade.hpp>
@@ -55,7 +51,6 @@
 namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
-
 
     CustomShaderEntry(0x94614EA1),  // UI
     CustomShaderEntry(0xC6FA129B),  // UI
@@ -74,23 +69,19 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0x27A2F211),  // UI -- The background in the pause/load menus
     CustomShaderEntry(0xB86F8772),  // UI -- Speach bubbles above npc's heads
     CustomShaderEntry(0x12E3927E),  // UI -- Dialog box
-    CustomShaderEntry(0xA42D4BBE), // UI
-    CustomShaderEntry(0x4ADD8064), // UI
-    CustomShaderEntry(0x23729AED), // UI -- Main Menu
+    CustomShaderEntry(0xA42D4BBE),  // UI
+    CustomShaderEntry(0x4ADD8064),  // UI
+    CustomShaderEntry(0x23729AED),  // UI -- Main Menu
     ////
-    CustomShaderEntry(0x82F9B4AC), // Movies, Intro
+    CustomShaderEntry(0x82F9B4AC),  // Movies, Intro
     ////
     CustomShaderEntry(0xC1BCC6B5),  // Lutbuilder1 [Game world]
-    CustomShaderEntry(0xBBA0606A), // Sample1
-    CustomShaderEntry(0xD019CA1A), // Final1 [Game world]
-    CustomShaderEntry(0xE6EB2840), // Lutbuilder 2 [Tokyo]
-    CustomShaderEntry(0x3CFCA6D5), // Final2 [Tokyo]
-    CustomShaderEntry(0x4D541E80), // Final3 [Map, shops, etc]
-    CustomShaderEntry(0x4D541E80), // Sample 2 [Cutscenes?]
-
-
-
-	
+    CustomShaderEntry(0xBBA0606A),  // Sample1
+    CustomShaderEntry(0xD019CA1A),  // Final1 [Game world]
+    CustomShaderEntry(0xE6EB2840),  // Lutbuilder 2 [Tokyo]
+    CustomShaderEntry(0x3CFCA6D5),  // Final2 [Tokyo]
+    CustomShaderEntry(0x4D541E80),  // Final3 [Map, shops, etc]
+    CustomShaderEntry(0x4D541E80),  // Sample 2 [Cutscenes?]
 
 };
 
@@ -185,7 +176,7 @@ renodx::utils::settings::Settings settings = {
         .parse = [](float value) { return value * 0.02f; },
     },
 
-     new renodx::utils::settings::Setting{
+    new renodx::utils::settings::Setting{
         .key = "colorGradeBlowout",
         .binding = &shader_injection.colorGradeBlowout,
         .default_value = 50.f,
@@ -196,7 +187,7 @@ renodx::utils::settings::Settings settings = {
         .parse = [](float value) { return value * 0.01f; },
     },
 
-     new renodx::utils::settings::Setting{
+    new renodx::utils::settings::Setting{
         .key = "toneMapHueCorrection",
         .binding = &shader_injection.toneMapHueCorrection,
         .default_value = 50.f,
@@ -207,8 +198,22 @@ renodx::utils::settings::Settings settings = {
         .parse = [](float value) { return value * 0.01f; },
     },
 
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::TEXT,
+        .label = "Join the HDR Den discord for help!",
+        .section = "Instructions",
+    },
 
-
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
+        .label = "HDR Den Discord",
+        .section = "About",
+        .group = "button-line-1",
+        .tint = 0x5865F2,
+        .on_change = []() {
+          system("start https://discord.gg/5WZXDpmbpP");
+        },
+    },
 
 };
 
@@ -224,7 +229,6 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("colorGradeSaturation", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeBlowout", 50.f);
   renodx::utils::settings::UpdateSetting("toneMapHueCorrection", 50.f);
-
 }
 
 }  // namespace
@@ -241,13 +245,13 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
     case DLL_PROCESS_ATTACH:
       if (!reshade::register_addon(h_module)) return FALSE;
       renodx::mods::shader::on_init_pipeline_layout = [](reshade::api::device* device, auto, auto) {
-        return device->get_api() == reshade::api::device_api::d3d12; //So overlays dont kill the game
+        return device->get_api() == reshade::api::device_api::d3d12;  // So overlays dont kill the game
       };
-      renodx::mods::shader::expected_constant_buffer_space = 50; //Cbuffer slot 50
-	  
-	    //renodx::mods::shader::force_pipeline_cloning = true; //So the mod works with the toolkit
-      renodx::mods::swapchain::force_borderless = false; //needed for stability
-      renodx::mods::swapchain::prevent_full_screen = false; //needed for stability
+      renodx::mods::shader::expected_constant_buffer_space = 50;  // Cbuffer slot 50
+
+      // renodx::mods::shader::force_pipeline_cloning = true; //So the mod works with the toolkit
+      renodx::mods::swapchain::force_borderless = false;     // needed for stability
+      renodx::mods::swapchain::prevent_full_screen = false;  // needed for stability
 
       // BGRA8_TYPELESS
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
@@ -264,21 +268,20 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       });
 
       //// BGRA8_TYPELESS 16:9
-      //renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
-      //    .old_format = reshade::api::format::b8g8r8a8_typeless,
-      //    .new_format = reshade::api::format::r16g16b16a16_float,
-      //    .aspect_ratio = 16.f/9.f,
+      // renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      //     .old_format = reshade::api::format::b8g8r8a8_typeless,
+      //     .new_format = reshade::api::format::r16g16b16a16_float,
+      //     .aspect_ratio = 16.f/9.f,
 
       //});
 
       //// BGRA8_UNORM 16:9
-      //renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
-      //    .old_format = reshade::api::format::b8g8r8a8_unorm,
-      //    .new_format = reshade::api::format::r16g16b16a16_float,
-      //    .aspect_ratio = 16.f/9.f,
+      // renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      //     .old_format = reshade::api::format::b8g8r8a8_unorm,
+      //     .new_format = reshade::api::format::r16g16b16a16_float,
+      //     .aspect_ratio = 16.f/9.f,
 
       //});
-
 
       break;
     case DLL_PROCESS_DETACH:

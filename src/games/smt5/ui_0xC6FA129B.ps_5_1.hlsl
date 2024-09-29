@@ -21,7 +21,7 @@ void main(
   float4 v0 : SV_POSITION0,
   float4 v1 : COLOR0,
   float4 v2 : ORIGINAL_POSITION0,
-  float4 v3 : TEXCOORD0,
+  float2 v3 : TEXCOORD0,
   float4 v4 : TEXCOORD1,
   out float4 o0 : SV_Target0)
 {

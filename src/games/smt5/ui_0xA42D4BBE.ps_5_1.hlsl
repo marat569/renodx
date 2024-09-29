@@ -1,5 +1,6 @@
-// ---- Created with 3Dmigoto v1.3.16 on Mon Jul 15 20:31:17 2024
+// ---- Created with 3Dmigoto v1.3.16 on Sun Sep 29 01:17:06 2024
 #include "./shared.h"
+
 
 Texture2D<float4> t0 : register(t0);
 
@@ -7,7 +8,7 @@ SamplerState s0_s : register(s0);
 
 cbuffer cb1 : register(b1)
 {
-  float4 cb1[15];
+  float4 cb1[7];
 }
 
 cbuffer cb0 : register(b0)
@@ -34,14 +35,13 @@ void main(
   uint4 bitmask, uiDest;
   float4 fDest;
 
-  r0.xy = v4.xy * v4.zw;
-  r0.xy = r0.xy * cb1[5].xy + cb1[6].xy;
-  r0.xy = cb1[12].xy + r0.xy;
-  r0.xyzw = t0.Sample(s0_s, r0.xy).xyzw;
-  r1.xyz = cb1[13].xyz + -r0.xyz;
-  r1.xyz = cb1[14].xxx * r1.xyz + r0.xyz;
-  r0.w = saturate(r0.w);
-  r0.xyz = max(float3(0,0,0), r1.xyz);
+  r0.xyz = cb1[2].xyz * v1.xyz;
+  r1.xyz = -cb1[2].xyz * v1.xyz + cb1[4].xyz;
+  r0.xyz = v4.www * r1.xyz + r0.xyz;
+  r1.xyz = cb1[5].xyz + -r0.xyz;
+  r0.xyz = cb1[6].xxx * r1.xyz + r0.xyz;
+  r0.xyz = max(float3(0,0,0), r0.xyz);
+  r0.w = saturate(v1.w);
   r1.xyzw = v1.xyzw * r0.xyzw;
   r0.w = dot(float3(0.300000012,0.589999974,0.109999999), r1.xyz);
   r0.xyz = -r0.xyz * v1.xyz + r0.www;
@@ -54,7 +54,6 @@ void main(
   r0.xyz = r0.www * r2.xyz + r0.xyz;
   r0.w = cmp(cb0[3].x != 0.000000);
   r0.xyz = r0.www ? r0.xyz : r1.xyz;
-  o0.w = r1.w;
   r1.xyz = float3(-0.25,-0.25,-0.25) + r0.xyz;
   r1.xyz = saturate(r1.xyz * cb0[1].www + float3(0.25,0.25,0.25));
   r2.xy = cmp(cb0[1].wy != float2(1,1));
@@ -69,8 +68,11 @@ void main(
   r1.xyz = cmp(r1.xyz >= float3(0.00313066994,0.00313066994,0.00313066994));
   r1.xyz = r1.xyz ? r2.xzw : r3.xyz;
   o0.xyz = r2.yyy ? r1.xyz : r0.xyz;
+  r0.x = t0.Sample(s0_s, v4.xy).w;
+  o0.w = r1.w * r0.x;
   
   o0.rgb = renodx::math::SafePow(o0.rgb, 2.2f); //2.2 gamma correction
   o0.rgb *= injectedData.toneMapUINits / 80.f; //Added ui slider
+
   return;
 }

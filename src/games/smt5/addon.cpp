@@ -27,12 +27,19 @@
 #include <embed/0x2FA199F2.h>  //ui
 #include <embed/0x2FB8A3BC.h>  //ui
 #include <embed/0x3884890C.h>  //ui -- Pause menu skills/items/essence/etc text
+#include <embed/0xA42D4BBE.h> //ui
+#include <embed/0x4ADD8064.h> //UI
+#include <embed/0x23729AED.h> //ui -- main menu
+////
+#include <embed/0x82F9B4AC.h> // Movies, Intro
 ////
 #include <embed/0xC1BCC6B5.h> // Lutbuilder1 [Game world]
 #include <embed/0xBBA0606A.h> // Sample1
 #include <embed/0xD019CA1A.h> // Final1 [Game world]
 #include <embed/0xE6EB2840.h> // Lutbuilder 2 [Tokyo]
 #include <embed/0x3CFCA6D5.h> // Final2 [Tokyo]
+#include <embed/0x4D541E80.h> // Final3 [Map, Shops, Etc.]
+#include <embed/0x4D541E80.h> // Sample 2 [Cutscenes?]
  
 
 
@@ -67,12 +74,19 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0x27A2F211),  // UI -- The background in the pause/load menus
     CustomShaderEntry(0xB86F8772),  // UI -- Speach bubbles above npc's heads
     CustomShaderEntry(0x12E3927E),  // UI -- Dialog box
+    CustomShaderEntry(0xA42D4BBE), // UI
+    CustomShaderEntry(0x4ADD8064), // UI
+    CustomShaderEntry(0x23729AED), // UI -- Main Menu
+    ////
+    CustomShaderEntry(0x82F9B4AC), // Movies, Intro
     ////
     CustomShaderEntry(0xC1BCC6B5),  // Lutbuilder1 [Game world]
     CustomShaderEntry(0xBBA0606A), // Sample1
     CustomShaderEntry(0xD019CA1A), // Final1 [Game world]
     CustomShaderEntry(0xE6EB2840), // Lutbuilder 2 [Tokyo]
     CustomShaderEntry(0x3CFCA6D5), // Final2 [Tokyo]
+    CustomShaderEntry(0x4D541E80), // Final3 [Map, shops, etc]
+    CustomShaderEntry(0x4D541E80), // Sample 2 [Cutscenes?]
 
 
 
@@ -87,12 +101,12 @@ renodx::utils::settings::Settings settings = {
         .key = "toneMapType",
         .binding = &shader_injection.toneMapType,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 3.f,
+        .default_value = 2.f,
         .can_reset = false,
         .label = "Tone Mapper",
         .section = "Tone Mapping",
         .tooltip = "Sets the tone mapper type",
-        .labels = {"Vanilla", "None", "ACES", "RenoDRT"},
+        .labels = {"Vanilla", "None", "ACES"},
     },
     new renodx::utils::settings::Setting{
         .key = "toneMapPeakNits",

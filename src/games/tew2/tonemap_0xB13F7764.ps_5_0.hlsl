@@ -108,7 +108,7 @@ void main(
     
     r1.rgb = sdrColor;
     
-    r1.xyz = max(float3(0, 0, 0), r1.xyz); //rec709 clamp
+    //r1.xyz = max(float3(0, 0, 0), r1.xyz); //rec709 clamp
 
   //Post processing start
     r2.xyz = bloomtex_samp.SampleLevel(bloomtex_samp_state_s, r0.xy, 0).xyz;
@@ -176,7 +176,7 @@ void main(
     r1.xyz = r2.xyz * cgbloomgain.xyz * injectedData.fxBloom + r1.xyz; //bloom slider 1
     r0.xyz = r1.xyz + r0.xyz * injectedData.fxBloom2; //bloom slider 2
   
-    r0.xyz = max(float3(0, 0, 0), r0.xyz);
+    //r0.xyz = max(float3(0, 0, 0), r0.xyz); //rec709 clamp
 
     if (config.type != 0.f)
     {
@@ -184,8 +184,11 @@ void main(
         r0.rgb = renodx::tonemap::UpgradeToneMap(hdrColor, sdrColor, r0.rgb, 1.f);
     }
 
-    r0.xyz = rsqrt(r0.xyz);
-    r0.xyz = float3(1, 1, 1) / r0.xyz;
+    //r0.xyz = rsqrt(r0.xyz); //square root
+    //r0.xyz = float3(1, 1, 1) / r0.xyz; // square root
+    r0.rgb = sign(r0.rgb) * sqrt(abs(r0.rgb)); //Safe square root
+    
+    
     o0.xyz = testvector.zzz * float3(1.20000005, 1.20000005, 1.20000005) + r0.xyz;
     o0.w = 1;
     return;

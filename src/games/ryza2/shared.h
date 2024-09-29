@@ -22,6 +22,7 @@ struct ShaderInjectData {
   float blend;
   float bloom;
   float fxBloom;
+  float clipPeak;
 };
 
 #ifndef __cplusplus

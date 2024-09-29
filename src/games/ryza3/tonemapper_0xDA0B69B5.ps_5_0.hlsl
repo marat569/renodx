@@ -267,8 +267,9 @@ void main(
     r0.rgb = applyUserTonemap(untonemapped, vanillaColor, renodx::color::y::from::BT709(vanMidGray)); //Apply our custom tonemapper from tonemapper.hlsl
  
   // New stuff expects power gamma
-    r0.rgb = renodx::math::SafePow(r0.rgb, fGamma);
-
+    //r0.rgb = renodx::math::SafePow(r0.rgb, fGamma);
+    r0.rgb = renodx::math::SafePow(r0.rgb, 1.f/2.2f);
+    
   //new stuff -- we still want to run this
   r1.x = cmp(fSaturationScaleEx == 1.000000);
   r1.y = cmp(1 < fSaturationScaleEx);

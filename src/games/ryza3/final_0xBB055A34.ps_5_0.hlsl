@@ -25,6 +25,11 @@ void main(
     o0.rgb *= injectedData.toneMapGameNits;
     o0.rgb /= 80.f;
     
+    if ((injectedData.toneMapType >= 2) && (injectedData.clipPeak)) { //If tonemapper is not "none" or "Vanilla"
+        if (renodx::color::y::from::BT709(o0.rgb) > injectedData.toneMapPeakNits / 80.f) { // If the MaxCll is over peaknits   
+            o0.rgb = min(o0.rgb, injectedData.toneMapPeakNits / 80.f); //clamp output to peak nits slider, bandaid for a few effects
+        }
+    }
     
   return;
 }

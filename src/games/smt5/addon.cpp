@@ -10,9 +10,27 @@
 //#define DEBUG_LEVEL_1 //added
 
 
-#include <embed/0xC1BCC6B5.h> // Lutbuilder
+#include <embed/0xC3126A03.h>  //ui
+#include <embed/0xC3979EE8.h>  //ui
+#include <embed/0xC6FA129B.h>  //ui
+#include <embed/0xC90A6F07.h>  //ui
+#include <embed/0xEAADB3AA.h>  //ui
+#include <embed/0x6D432834.h>  //ui
+#include <embed/0x76B068AD.h>  //ui
+#include <embed/0x8EC8EF33.h>  //ui
+#include <embed/0x94614EA1.h>  //ui
+#include <embed/0x099B9006.h>  //ui -- Party's faces
+#include <embed/0x12E3927E.h>  //ui -- dialog box
+#include <embed/0x27A2F211.h>  //ui -- The background in the pause/load menus
+#include <embed/0xB86F8772.h> //UI -- Speach bubbles above npc's heads
+#include <embed/0x29A889E6.h>  //ui
+#include <embed/0x2FA199F2.h>  //ui
+#include <embed/0x2FB8A3BC.h>  //ui
+#include <embed/0x3884890C.h>  //ui -- Pause menu skills/items/essence/etc text
+////
+#include <embed/0xC1BCC6B5.h> // Lutbuilder1 [Game world]
 #include <embed/0xBBA0606A.h> // Sample1
-#include <embed/0xD019CA1A.h> // Final1
+#include <embed/0xD019CA1A.h> // Final1 [Game world]
  
 
 
@@ -29,9 +47,28 @@ namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
 
-    CustomShaderEntry(0xC1BCC6B5),  // Lutbuilder1
+
+    CustomShaderEntry(0x94614EA1),  // UI
+    CustomShaderEntry(0xC6FA129B),  // UI
+    CustomShaderEntry(0xC90A6F07),  // UI
+    CustomShaderEntry(0xEAADB3AA),  // UI
+    CustomShaderEntry(0x099B9006),  // UI -- Party's Faces
+    CustomShaderEntry(0xC3979EE8),  // UI
+    CustomShaderEntry(0x29A889E6),  // UI
+    CustomShaderEntry(0x2FB8A3BC),  // UI
+    CustomShaderEntry(0x6D432834),  // UI
+    CustomShaderEntry(0x8EC8EF33),  // UI
+    CustomShaderEntry(0xC3126A03),  // UI
+    CustomShaderEntry(0x2FA199F2),  // UI
+    CustomShaderEntry(0x76B068AD),  // UI
+    CustomShaderEntry(0x3884890C),  // UI -- Pause menu skills/items/essence/etc text
+    CustomShaderEntry(0x27A2F211),  // UI -- The background in the pause/load menus
+    CustomShaderEntry(0xB86F8772),  // UI -- Speach bubbles above npc's heads
+    CustomShaderEntry(0x12E3927E),  // UI -- Dialog box
+    ////
+    CustomShaderEntry(0xC1BCC6B5),  // Lutbuilder1 [Game world]
     CustomShaderEntry(0xBBA0606A), // Sample1
-    CustomShaderEntry(0xD019CA1A), // Final1
+    CustomShaderEntry(0xD019CA1A), // Final1 [Game world]
 
 
 	

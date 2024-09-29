@@ -56,4 +56,4 @@ RenoDX, short for "Renovation Engine for DirectX Games", is a toolset to mod gam
 
 * [Yakuza Kiwami 1](https://marat569.github.io/renodx/renodx-kiwami1.addon64) !Beta! *Has some compatability with Yakuza: 0
 
-* 
+* [Shin Megami Tensei V: Vengeance](https://marat569.github.io/renodx/renodx-smt5.addon64)

@@ -129,6 +129,7 @@ void main(
   r1.xzw = cmp(r1.xzw >= float3(0.5,0.5,0.5));
   r3.xyz = r3.xyz + r3.xyz;
   r2.xyz = -r3.xyz * r2.xyz + float3(1,1,1);
+    
   r0.xyz = r1.xzw ? r2.xyz : r0.xyz;
   r1.xzw = float3(-1,-1,-1) + cb3[7].xyz;
   r1.xyz = r1.yyy * r1.xzw + float3(1,1,1);

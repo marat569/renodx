@@ -166,6 +166,23 @@ renodx::utils::settings::Settings settings = {
 
     },
 
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::TEXT,
+        .label = "Please make sure FXAA is enabled! Join the HDR Den discord for help!",
+        .section = "Instructions",
+    },
+
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
+        .label = "HDR Den Discord",
+        .section = "About",
+        .group = "button-line-1",
+        .tint = 0x5865F2,
+        .on_change = []() {
+          system("start https://discord.gg/5WZXDpmbpP");
+        },
+    },
+
 };
 
 void OnPresetOff() {

@@ -1,7 +1,9 @@
-// ---- Created with 3Dmigoto v1.3.16 on Sun Sep 29 02:54:11 2024
-// Sample 2, Movies
+// ---- Created with 3Dmigoto v1.3.16 on Sun Sep 29 06:25:21 2024
+// Sample 4, Stats screen
+
 
 #include "./shared.h"
+
 
 Texture3D<float4> t3 : register(t3);
 
@@ -26,7 +28,7 @@ cbuffer cb1 : register(b1)
 
 cbuffer cb0 : register(b0)
 {
-  float4 cb0[71];
+  float4 cb0[68];
 }
 
 
@@ -53,51 +55,34 @@ void main(
   r0.x = sin(r0.x);
   r0.x = 493013 * r0.x;
   r0.x = frac(r0.x);
-  r0.yz = w0.xy * cb0[67].zw + cb0[67].xy;
-  r1.xyzw = cmp(float4(0,0,0,0) < r0.yzyz);
-  r2.xyzw = cmp(r0.yzyz < float4(0,0,0,0));
-  r1.xyzw = (int4)-r1.xyzw + (int4)r2.xyzw;
-  r1.xyzw = (int4)r1.xyzw;
-  r2.xyzw = saturate(-cb0[70].zzzz + abs(r0.yzyz));
-  r1.xyzw = r2.xyzw * r1.xyzw;
-  r1.xyzw = -r1.xyzw * cb0[70].xxyy + r0.yzyz;
-  r1.xyzw = r1.xyzw * cb0[68].zwzw + cb0[68].xyxy;
-  r1.xyzw = r1.xyzw * cb0[38].zwzw + cb0[39].xyxy;
-  r1.xyzw = cb0[38].xyxy * r1.xyzw;
-  r2.x = t0.Sample(s0_s, r1.xy).x;
-  r2.y = t0.Sample(s0_s, r1.zw).y;
-  r2.z = t0.Sample(s0_s, v0.xy).z;
-  r1.xyz = cb1[135].zzz * r2.xyz;
-  r2.xy = cb0[58].zw * v0.xy + cb0[59].xy;
-  r2.xy = max(cb0[50].zw, r2.xy);
-  r2.xy = min(cb0[51].xy, r2.xy);
-  r2.xyz = t1.Sample(s1_s, r2.xy).xyz;
-  r2.xyz = cb1[135].zzz * r2.xyz;
-  r0.yz = r0.yz * float2(0.5,-0.5) + float2(0.5,0.5);
-  r0.yzw = t2.Sample(s2_s, r0.yz).xyz;
-  r0.yzw = r0.yzw * cb0[66].xyz + cb0[61].xyz;
-  r0.yzw = r2.xyz * r0.yzw;
-  r0.yzw = r1.xyz * cb0[60].xyz + r0.yzw;
-  r0.yzw = v1.xxx * r0.yzw;
-  r1.xy = cb0[62].xx * v1.yz;
-  r1.x = dot(r1.xy, r1.xy);
-  r1.x = 1 + r1.x;
-  r1.x = rcp(r1.x);
-  r1.x = r1.x * r1.x;
+  r0.yzw = t0.Sample(s0_s, v0.xy).xyz;
+  r0.yzw = cb1[135].zzz * r0.yzw;
+  r1.xy = cb0[58].zw * v0.xy + cb0[59].xy;
+  r1.xy = max(cb0[50].zw, r1.xy);
+  r1.xy = min(cb0[51].xy, r1.xy);
+  r1.xyz = t1.Sample(s1_s, r1.xy).xyz;
+  r1.xyz = cb1[135].zzz * r1.xyz;
+  r2.xy = w0.xy * cb0[67].zw + cb0[67].xy;
+  r2.xy = r2.xy * float2(0.5,-0.5) + float2(0.5,0.5);
+  r2.xyz = t2.Sample(s2_s, r2.xy).xyz;
+  r2.xyz = r2.xyz * cb0[66].xyz + cb0[61].xyz;
+  r1.xyz = r2.xyz * r1.xyz;
+  r0.yzw = r0.yzw * cb0[60].xyz + r1.xyz;
     
     
-  //r0.yzw = r0.yzw * r1.xxx + float3(0.00266771927,0.00266771927,0.00266771927);
+  //r0.yzw = r0.yzw * v1.xxx + float3(0.00266771927,0.00266771927,0.00266771927);
   //r0.yzw = log2(r0.yzw);
   //r0.yzw = saturate(r0.yzw * float3(0.0714285746,0.0714285746,0.0714285746) + float3(0.610726953,0.610726953,0.610726953));
   //r0.yzw = r0.yzw * float3(0.96875,0.96875,0.96875) + float3(0.015625,0.015625,0.015625);
   //r0.yzw = t3.Sample(s3_s, r0.yzw).xyz;
   //r1.xyz = float3(1.04999995,1.04999995,1.04999995) * r0.yzw;
     
-    float3 untonemapped = r0.yzw * r1.x;
+    float3 untonemapped = r0.yzw;
     float3 lut_input = renodx::color::pq::from::BT2020(untonemapped, 100.f);
     float3 sampled = renodx::lut::Sample(t3, s3_s, lut_input);
     float3 post_lut = renodx::color::bt2020::from::PQ(sampled, 100.f);
     r1.xyz = post_lut;
+    
     
   o0.w = saturate(dot(r1.xyz, float3(0.298999995,0.587000012,0.114)));
   r0.x = r0.x * 0.00390625 + -0.001953125;
@@ -130,7 +115,5 @@ void main(
     o0.rgb = post_lut.rgb;
     
     o0.w = 1.f;
-    
-
   return;
 }

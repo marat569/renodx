@@ -82,10 +82,15 @@ void main(
   r0.xyz = r2.xyz / cb1[10].xxx;
   r1.xyz = cb1[6].xyz + -r0.xyz;
   r0.xyz = cb1[10].www * r1.xyz + r0.xyz;
-  o0.xyz = max(float3(0,0,0), r0.xyz);
+    if (injectedData.toneMapType == 0){
+        o0.xyz = max(float3(0, 0, 0), r0.xyz);
+    }
+    else{
+        o0.rgb = r0.xyz; //unclamp rec709
+    }
   o0.w = 1;
   
-    o0.rgb = renodx::math::SafePow(o0.rgb, 2.2f); //2.2 gamma correction
-  o0.rgb *= injectedData.toneMapGameNits / 80.f; //Added ui slider
+  // o0.rgb = renodx::math::SafePow(o0.rgb, 2.2f); //2.2 gamma correction
+  //o0.rgb *= injectedData.toneMapGameNits / 80.f; //Added ui slider
   return;
 }

@@ -11,8 +11,9 @@
 
 
 #include <embed/0xC1BCC6B5.h> // Lutbuilder
-
-
+#include <embed/0xBBA0606A.h> // Sample1
+#include <embed/0xD019CA1A.h> // Final1
+ 
 
 
 
@@ -28,7 +29,9 @@ namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
 
-    CustomShaderEntry(0xC1BCC6B5),  // Lutbuilder
+    CustomShaderEntry(0xC1BCC6B5),  // Lutbuilder1
+    CustomShaderEntry(0xBBA0606A), // Sample1
+    CustomShaderEntry(0xD019CA1A), // Final1
 
 
 	
@@ -189,6 +192,38 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
 	  renodx::mods::shader::force_pipeline_cloning = true; //So the mod works with the toolkit
       renodx::mods::swapchain::force_borderless = false; //needed for stability
       renodx::mods::swapchain::prevent_full_screen = false; //needed for stability
+
+      // BGRA8_TYPELESS
+      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+          .old_format = reshade::api::format::b8g8r8a8_typeless,
+          .new_format = reshade::api::format::r16g16b16a16_float,
+
+      });
+
+      // BGRA8_UNORM
+      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+          .old_format = reshade::api::format::b8g8r8a8_unorm,
+          .new_format = reshade::api::format::r16g16b16a16_float,
+
+      });
+
+      //// BGRA8_TYPELESS 16:9
+      //renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      //    .old_format = reshade::api::format::b8g8r8a8_typeless,
+      //    .new_format = reshade::api::format::r16g16b16a16_float,
+      //    .aspect_ratio = 16.f/9.f,
+
+      //});
+
+      //// BGRA8_UNORM 16:9
+      //renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      //    .old_format = reshade::api::format::b8g8r8a8_unorm,
+      //    .new_format = reshade::api::format::r16g16b16a16_float,
+      //    .aspect_ratio = 16.f/9.f,
+
+      //});
+
+
       break;
     case DLL_PROCESS_DETACH:
       reshade::unregister_addon(h_module);

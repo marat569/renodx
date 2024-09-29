@@ -66,6 +66,7 @@ void main(
   r2.xy = r0.yw * cb1[130].xy + cb1[129].xy;
   r0.yw = r0.yw * cb0[5].xy + cb0[4].xy;
   r3.xyz = t2.Sample(s1_s, r0.yw).xyz;
+    float3 untonemapped = r3.xyz;
   r0.yw = cb1[132].zw * r2.xy;
   r2.x = t0.SampleLevel(s0_s, r0.yw, 0).x;
   r0.y = t1.SampleLevel(s0_s, r0.yw, 0).x;
@@ -156,5 +157,9 @@ void main(
     }
     
   o0.w = 1;
+    
+    //o0.rgb = untonemapped;
+    //o0.w = 1.f;
+    
   return;
 }

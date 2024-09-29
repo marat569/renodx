@@ -4,6 +4,7 @@
 #include "./shared.h"
 
 
+
 Texture3D<float4> t3 : register(t3);
 
 Texture2D<float4> t2 : register(t2);
@@ -67,24 +68,37 @@ void main(
   r2.xyz = r2.xyz * cb0[66].xyz + cb0[61].xyz;
   r1.xyz = r2.xyz * r1.xyz;
   r0.yzw = r0.yzw * cb0[60].xyz + r1.xyz;
+  
+    
+    
   r0.yzw = v1.xxx * r0.yzw;
   r1.xy = cb0[62].xx * v1.yz;
   r1.x = dot(r1.xy, r1.xy);
   r1.x = 1 + r1.x;
   r1.x = rcp(r1.x);
   r1.x = r1.x * r1.x;
+
+    
+
   
-    float3 untonemapped = r0.yzw;
   r0.yzw = r0.yzw * r1.xxx + float3(0.00266771927,0.00266771927,0.00266771927);
   r0.yzw = log2(r0.yzw);
   r0.yzw = saturate(r0.yzw * float3(0.0714285746,0.0714285746,0.0714285746) + float3(0.610726953,0.610726953,0.610726953));
   
+
+    
   r0.yzw = r0.yzw * float3(0.96875,0.96875,0.96875) + float3(0.015625,0.015625,0.015625);
   r0.yzw = t3.Sample(s3_s, r0.yzw).xyz; //sampling lutbuilder
   
     
   r1.xyz = float3(1.04999995,1.04999995,1.04999995) * r0.yzw;
-   float3 post_lut = r1.xyz;
+  
+    //float3 untonemapped = r0.yzw * r1.x;
+    //float3 lut_input = renodx::color::pq::from::BT2020(untonemapped, 100.f);
+    //float3 sampled = renodx::lut::Sample(t3, s3_s, lut_input);
+    //float3 post_lut = renodx::color::bt2020::from::PQ(sampled, 100.f);
+    //r1.xyz = post_lut;
+    
     
   o0.w = saturate(dot(r1.xyz, float3(0.298999995,0.587000012,0.114)));
   r0.x = r0.x * 0.00390625 + -0.001953125;
@@ -114,5 +128,14 @@ void main(
   } else {
     o0.xyz = r0.xyz;
   }
+    
+    //o0.rgb = post_lut;
+    //o0.rgb = renodx::color::bt2020::from::BT709(o0.rgb);
+    //o0.rgb *= 203.f;
+    //o0.rgb /= 10000.f;
+    //o0.rgb = renodx::color::pq::from::BT2020(o0.rgb);
+
+    //o0.rgb = t0.Sample(s0_s, v0.xy).xyz;
+    //o0.w = 1.f;
   return;
 }

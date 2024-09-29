@@ -208,8 +208,8 @@ void main(
     float FilmWhiteClip = cb0[37].x;
     float FilmShoulder = cb0[36].z;
 
-   // bool is_hdr = (output_type >= 3u && output_type <= 6u);
-   bool is_hdr = true;
+    bool is_hdr = (output_type >= 3u && output_type <= 6u);
+   //bool is_hdr = true;
     
   // AP1_2_sRGB (4) : Identity (5)
     r1.x = dot(float3(1.70505154, -0.621790707, -0.0832583979), r0.xyz);
@@ -517,7 +517,7 @@ void main(
             final_color = renodx::color::bt2020::from::BT709(final_color);
             final_color = renodx::color::pq::from::BT2020(final_color, injectedData.toneMapGameNits);
         }
-        o0.rgba = float4(final_color * 0.9523810148239136f, 0);
+        o0.rgba = float4(final_color.rgb, 0);
         return;
     }
 

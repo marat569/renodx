@@ -69,7 +69,7 @@ void main(
     float3 log_input_color = r1.rgb;
 
     r0.xyz = r0.zzz ? r0.xyw : r1.xyz;
-    r0.xyw = pq_input_color;
+    r0.rgb = pq_input_color;
 
 
     float3 lut_input_color = r0.rgb;
@@ -393,6 +393,10 @@ void main(
             config.reno_drt_flare = 0.1355f;
 
             float3 config_color = renodx::color::bt709::from::AP1(ap1_graded_color);
+            
+            if (injectedData.toneMapType == 3.f){ //Only apply hue correction if RenoDRT is selected
+                config_color = renodx::color::correct::Hue(config_color, renodx::tonemap::ACESFittedAP1(config_color));
+            }
 
             renodx::tonemap::config::DualToneMap dual_tone_map = renodx::tonemap::config::ApplyToneMaps(config_color, config);
             hdr_color = dual_tone_map.color_hdr;

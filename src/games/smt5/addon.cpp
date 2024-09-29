@@ -34,7 +34,7 @@
 ////
 #include <embed/0x3CFCA6D5.h>  // Final2 [Tokyo]
 #include <embed/0x4D541E80.h>  // Final3 [Map, Shops, Etc.]
-#include <embed/0x4D541E80.h>  // Sample 2 [Cutscenes?]
+#include <embed/0x60E37F45.h>  // Sample 2 [Cutscenes?]
 #include <embed/0xBBA0606A.h>  // Sample1
 #include <embed/0xC1BCC6B5.h>  // Lutbuilder1 [Game world]
 #include <embed/0xD019CA1A.h>  // Final1 [Game world]
@@ -81,7 +81,7 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0xE6EB2840),  // Lutbuilder 2 [Tokyo]
     CustomShaderEntry(0x3CFCA6D5),  // Final2 [Tokyo]
     CustomShaderEntry(0x4D541E80),  // Final3 [Map, shops, etc]
-    CustomShaderEntry(0x4D541E80),  // Sample 2 [Cutscenes?]
+    CustomShaderEntry(0x60E37F45),  // Sample 2 [Cutscenes?]
 
 };
 

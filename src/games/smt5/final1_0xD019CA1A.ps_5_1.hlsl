@@ -158,8 +158,9 @@ void main(
     
   o0.w = 1;
     
-    //o0.rgb = untonemapped;
-    //o0.w = 1.f;
+    o0.rgb = untonemapped;
+    o0.w = 1.f;
+    
     
   return;
 }

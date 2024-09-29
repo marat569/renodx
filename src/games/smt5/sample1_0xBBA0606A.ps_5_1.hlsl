@@ -41,7 +41,7 @@ cbuffer cb0 : register(b0)
 void main(
   linear noperspective float2 v0 : TEXCOORD0,
   linear noperspective float2 w0 : TEXCOORD3,
-  linear noperspective float4 v1 : TEXCOORD1,
+  linear noperspective float3 v1 : TEXCOORD1,
   linear noperspective float4 v2 : TEXCOORD2,
   float2 v3 : TEXCOORD4,
   float4 v4 : SV_POSITION0,
@@ -81,23 +81,18 @@ void main(
     
 
   
-  r0.yzw = r0.yzw * r1.xxx + float3(0.00266771927,0.00266771927,0.00266771927);
-  r0.yzw = log2(r0.yzw);
-  r0.yzw = saturate(r0.yzw * float3(0.0714285746,0.0714285746,0.0714285746) + float3(0.610726953,0.610726953,0.610726953));
+  //r0.yzw = r0.yzw * r1.xxx + float3(0.00266771927,0.00266771927,0.00266771927);
+  //r0.yzw = log2(r0.yzw);
+  //r0.yzw = saturate(r0.yzw * float3(0.0714285746,0.0714285746,0.0714285746) + float3(0.610726953,0.610726953,0.610726953));
+  //r0.yzw = r0.yzw * float3(0.96875,0.96875,0.96875) + float3(0.015625,0.015625,0.015625);
+  //r0.yzw = t3.Sample(s3_s, r0.yzw).xyz; //sampling lutbuilder
+  //r1.xyz = float3(1.04999995,1.04999995,1.04999995) * r0.yzw;
   
-
-    
-  r0.yzw = r0.yzw * float3(0.96875,0.96875,0.96875) + float3(0.015625,0.015625,0.015625);
-  r0.yzw = t3.Sample(s3_s, r0.yzw).xyz; //sampling lutbuilder
-  
-    
-  r1.xyz = float3(1.04999995,1.04999995,1.04999995) * r0.yzw;
-  
-    //float3 untonemapped = r0.yzw * r1.x;
-    //float3 lut_input = renodx::color::pq::from::BT2020(untonemapped, 100.f);
-    //float3 sampled = renodx::lut::Sample(t3, s3_s, lut_input);
-    //float3 post_lut = renodx::color::bt2020::from::PQ(sampled, 100.f);
-    //r1.xyz = post_lut;
+    float3 untonemapped = r0.yzw * r1.x;
+    float3 lut_input = renodx::color::pq::from::BT2020(untonemapped, 100.f);
+    float3 sampled = renodx::lut::Sample(t3, s3_s, lut_input);
+    float3 post_lut = renodx::color::bt2020::from::PQ(sampled, 100.f);
+    r1.xyz = post_lut;
     
     
   o0.w = saturate(dot(r1.xyz, float3(0.298999995,0.587000012,0.114)));
@@ -127,6 +122,7 @@ void main(
     o0.xyz = min(r2.xyz, r1.xyz);
   } else {
     o0.xyz = r0.xyz;
+   
   }
     
     //o0.rgb = post_lut;
@@ -135,7 +131,9 @@ void main(
     //o0.rgb /= 10000.f;
     //o0.rgb = renodx::color::pq::from::BT2020(o0.rgb);
 
-    //o0.rgb = t0.Sample(s0_s, v0.xy).xyz;
-    //o0.w = 1.f;
+    o0.rgb = post_lut.rgb;
+    o0.w = 1.f;
+    
+    //o0.rgb = 2.f;
   return;
 }

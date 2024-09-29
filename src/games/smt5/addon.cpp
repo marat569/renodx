@@ -189,7 +189,7 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       };
       renodx::mods::shader::expected_constant_buffer_space = 50; //Cbuffer slot 50
 	  
-	  renodx::mods::shader::force_pipeline_cloning = true; //So the mod works with the toolkit
+	    //renodx::mods::shader::force_pipeline_cloning = true; //So the mod works with the toolkit
       renodx::mods::swapchain::force_borderless = false; //needed for stability
       renodx::mods::swapchain::prevent_full_screen = false; //needed for stability
 

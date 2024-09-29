@@ -40,6 +40,8 @@ void main(
     uint4 bitmask, uiDest;
     float4 fDest;
 
+
+    
     r0.xy = float2(-0.015625, -0.015625) + v0.xy;
     r0.xy = float2(1.03225803, 1.03225803) * r0.xy;
     r0.z = (uint) v2.x;
@@ -208,8 +210,8 @@ void main(
     float FilmWhiteClip = cb0[37].x;
     float FilmShoulder = cb0[36].z;
 
-    bool is_hdr = (output_type >= 3u && output_type <= 6u);
-   //bool is_hdr = true;
+    //bool is_hdr = (output_type >= 3u && output_type <= 6u);
+   bool is_hdr = true;
     
   // AP1_2_sRGB (4) : Identity (5)
     r1.x = dot(float3(1.70505154, -0.621790707, -0.0832583979), r0.xyz);

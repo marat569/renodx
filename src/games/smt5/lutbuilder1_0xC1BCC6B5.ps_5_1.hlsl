@@ -65,11 +65,12 @@ void main(
     r1.xyz = exp2(r1.xyz);
     r1.xyz = r1.xyz * float3(0.180000007, 0.180000007, 0.180000007) + float3(-0.00266771927, -0.00266771927, -0.00266771927);
 
-    //float3 pq_input_color = r1.rgb;
-    float3 log_input_color = r0.xyw;
+    float3 pq_input_color = r0.xyw;
+    float3 log_input_color = r1.rgb;
 
-    r0.xyz = r0.zzz ? r0.xyw : r1.xyz; // if (_50) { in thaumaturge
-    float3 pq_input_color = r0.xyz;
+    r0.xyz = r0.zzz ? r0.xyw : r1.xyz;
+    r0.xyw = pq_input_color;
+
 
     float3 lut_input_color = r0.rgb;
 
@@ -212,6 +213,7 @@ void main(
 
     //bool is_hdr = (output_type >= 3u && output_type <= 6u);
    bool is_hdr = true;
+    
     
   // AP1_2_sRGB (4) : Identity (5)
     r1.x = dot(float3(1.70505154, -0.621790707, -0.0832583979), r0.xyz);
@@ -513,10 +515,11 @@ void main(
     // if (injectedData.toneMapGammaCorrection == 1.f) {
         final_color = renodx::color::correct::GammaSafe(final_color);
     //}
-        bool is_pq = (output_type == 3u || output_type == 4u);
+        //bool is_pq = (output_type == 3u || output_type == 4u);
+        bool is_pq = true;
         if (is_pq)
         {
-            final_color = renodx::color::bt2020::from::BT709(final_color);
+            //final_color = renodx::color::bt2020::from::BT709(final_color);
             final_color = renodx::color::pq::from::BT2020(final_color, injectedData.toneMapGameNits);
         }
         o0.rgba = float4(final_color.rgb, 0);

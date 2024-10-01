@@ -132,9 +132,9 @@ void main(
     //o0.rgb = renodx::color::pq::from::BT2020(o0.rgb);
 
     o0.rgb = post_lut.rgb;
-    //o0.rgb *= 100.f;
+
     o0.w = 1.f;
     
-    //o0.rgb = 2.f;
+    
   return;
 }

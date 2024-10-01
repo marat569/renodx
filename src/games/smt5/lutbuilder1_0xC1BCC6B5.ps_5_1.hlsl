@@ -489,6 +489,7 @@ void main(
         r3.y = dot(float3(-0.130257145, 1.14080286, -0.0105485283), r0.xyz);
         r3.z = dot(float3(-0.0240032747, -0.128968775, 1.15297174), r0.xyz);
         r2.xyz = max(float3(0, 0, 0), r3.xyz); // Convert to Target Colorspace ?
+        
     }
 
   // float3 lut_input_color = r2.xyz; (no lut)

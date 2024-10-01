@@ -152,6 +152,8 @@ void main(
     }
     
     o0.rgb = untonemapped;
+    
+
   o0.w = 1;
 
   return;

@@ -44,6 +44,7 @@ void main(
   r0.xyzw = asuint(cb0[37].xyxy);
   r0.xyzw = v0.xyxy + -r0.xyzw;
   r0.xyzw = cb0[38].zwzw * r0.xyzw;
+    
   r1.xy = r0.zw * cb0[5].xy + cb0[4].xy;
   r1.xyz = t1.Sample(s1_s, r1.xy).xyz;
   r0.xyzw = r0.xyzw * float4(2,-2,2,-2) + float4(-1,1,-1,1);

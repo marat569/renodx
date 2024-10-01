@@ -41,6 +41,8 @@
 #include <embed/0xE6EB2840.h>  // Lutbuilder 2 [Tokyo]
 #include <embed/0x6BC6B830.h> // Sample 3 [Stats UI]
 #include <embed/0xD2F5778E.h> // Stats [Stats UI]
+#include <embed/0xD0AE0A40.h> // Final 5 [Final 5, Tenzou // Shinigawa]
+#include <embed/0x84676A8E.h> //Final 6 [ Shinjuku]
 
 #include <deps/imgui/imgui.h>
 #include <include/reshade.hpp>
@@ -86,6 +88,8 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0x60E37F45),  // Sample 2 [Cutscenes?]
     CustomShaderEntry(0x6BC6B830), // Sample 3 [ Stats UI ]
     CustomShaderEntry(0xD2F5778E), // Final4 [ Stats UI ]
+    CustomShaderEntry(0xD0AE0A40), // Final 5 [Final 5, Tenzou // Shinigawa]
+    CustomShaderEntry(0x84676A8E), // Final 6 [ Shinjuku ]
 
 };
 

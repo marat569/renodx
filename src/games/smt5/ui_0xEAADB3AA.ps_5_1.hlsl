@@ -1,4 +1,6 @@
 // ---- Created with 3Dmigoto v1.3.16 on Sun Jul  7 04:03:57 2024
+// Minimap contents
+
 #include "./shared.h"
 
 Texture2D<float4> t1 : register(t1);
@@ -80,7 +82,7 @@ void main(
   o0.xyz = r2.yyy ? r1.xyz : r0.xyz;
 
   o0.rgb = renodx::math::SafePow(o0.rgb, 2.2f); //2.2 gamma correction
-  o0.a = sign(o0.a) * pow(abs(o0.a), 2.2f); // 2.2 gamma on Alpha
+  //o0.a = sign(o0.a) * pow(abs(o0.a), 2.2f); // 2.2 gamma on Alpha
   o0.rgb *= injectedData.toneMapUINits / 80.f; //Added ui slider
 
   return;

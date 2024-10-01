@@ -47,6 +47,7 @@ void main(
     
   r1.xy = r0.zw * cb0[5].xy + cb0[4].xy;
   r1.xyz = t1.Sample(s1_s, r1.xy).xyz;
+    float3 untonemapped = r1.xyz;
   r0.xyzw = r0.xyzw * float4(2,-2,2,-2) + float4(-1,1,-1,1);
   r0.xyzw = r0.xyzw / v0.wwww;
   r0.xyzw = r0.xyzw * cb1[66].xyxy + cb1[66].wzwz;
@@ -149,6 +150,7 @@ void main(
   r5.xyz = t1.Sample(s1_s, r4.xy).xyz;
   r4.xyz = t1.Sample(s1_s, r4.zw).xyz;
   r6.xyz = t1.Sample(s1_s, r0.zw).xyz;
+   
   r2.w = dot(r3.xyz, float3(0.298999995,0.587000012,0.114));
   r2.x = dot(r2.xyz, float3(0.298999995,0.587000012,0.114));
   r2.y = dot(r5.xyz, float3(0.298999995,0.587000012,0.114));
@@ -196,7 +198,9 @@ void main(
     r2.x = cmp(r0.w < r3.y);
     r0.w = cmp(r3.x < r0.w);
     r0.w = (int)r0.w | (int)r2.x;
+        if (injectedData.toneMapType == 0.f){
     r6.xyz = r0.www ? r5.xyz : r0.xyz;
+        }
   }
   r0.x = -1 + r1.w;
   r0.x = cmp(0 < abs(r0.x));
@@ -211,6 +215,10 @@ void main(
         o0.rgb = r0.xyz; //unclamp rec709
     }
     
+    
+    o0.rgb = untonemapped;
+    //o0.rgb = renodx::math::SafePow(o0.rgb, 2.2f); //2.2 gamma correction 
+    //o0.a = sign(o0.a) * pow(abs(o0.a), 2.2f); // 2.2 gamma on Alpha
     
   o0.w = 1;
   return;

@@ -35,7 +35,7 @@ void main(
   float4 v0 : SV_POSITION0,
   float4 v1 : COLOR0,
   float4 v2 : ORIGINAL_POSITION0,
-  float4 v3 : TEXCOORD0,
+  float2 v3 : TEXCOORD0,
   float4 v4 : TEXCOORD1,
   float4 v5 : TEXCOORD2,
   float4 v6 : TEXCOORD3,
@@ -102,6 +102,7 @@ void main(
   o0.w = saturate(r0.w * r0.x);
   
     o0.rgb = renodx::math::SafePow(o0.rgb, 2.2f); //2.2 gamma correction
+	o0.a = sign(o0.a) * pow(abs(o0.a), 2.2f); // 2.2 gamma on Alpha
   o0.rgb *= injectedData.toneMapUINits / 80.f; //Added ui slider
   return;
 }

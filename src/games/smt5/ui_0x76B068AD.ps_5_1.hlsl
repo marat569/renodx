@@ -67,6 +67,7 @@ void main(
   o0.w = 0;
   
   o0.rgb = renodx::math::SafePow(o0.rgb, 2.2f); //2.2 gamma correction
+  o0.a = sign(o0.a) * pow(abs(o0.a), 2.2f); // 2.2 gamma on Alpha
   o0.rgb *= injectedData.toneMapUINits / 80.f; //Added ui slider
   
   return;

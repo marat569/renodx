@@ -379,7 +379,7 @@ void main(
             config.shadows = injectedData.colorGradeShadows;
             config.contrast = injectedData.colorGradeContrast;
             config.saturation = injectedData.colorGradeSaturation;
-            //config.hue_correction_color = ap1_aces_colored;
+           // config.hue_correction_color = ap1_aces_colored;
             const float ACES_HIGHLIGHTS = 0.96f;
             const float ACES_SHADOWS = 1.12f;
             const float ACES_CONTRAST = 1.2f;

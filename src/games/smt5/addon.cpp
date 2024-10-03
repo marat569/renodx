@@ -41,7 +41,7 @@
 #include <embed/0xD019CA1A.h>  // Final1 [Game world]
 #include <embed/0xE6EB2840.h>  // Lutbuilder 2 [Tokyo]
 #include <embed/0x6BC6B830.h> // Sample 3 [Stats UI]
-#include <embed/0xD2F5778E.h> // Stats [Stats UI]
+#include <embed/0xD2F5778E.h> // Final4 Stats [Stats UI]
 #include <embed/0xD0AE0A40.h> // Final 5 [Final 5, Tenzou // Shinigawa]
 #include <embed/0x84676A8E.h> //Final 6 [ Shinjuku]
 
@@ -197,20 +197,20 @@ renodx::utils::settings::Settings settings = {
         .parse = [](float value) { return value * 0.01f; },
     },
 
-    new renodx::utils::settings::Setting{
-        .key = "toneMapHueCorrection",
-        .binding = &shader_injection.toneMapHueCorrection,
-        .default_value = 50.f,
-        .label = "Hue Correction",
-        .section = "Color Grading",
-        .tooltip = "Emulates hue shifting from the vanilla tonemapper",
-        .max = 100.f,
-        .parse = [](float value) { return value * 0.01f; },
-    },
+    //new renodx::utils::settings::Setting{
+    //    .key = "toneMapHueCorrection",
+    //    .binding = &shader_injection.toneMapHueCorrection,
+    //    .default_value = 50.f,
+    //    .label = "Hue Correction",
+    //    .section = "Color Grading",
+    //    .tooltip = "Emulates hue shifting from the vanilla tonemapper",
+    //    .max = 100.f,
+    //    .parse = [](float value) { return value * 0.01f; },
+    //},
 
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
-        .label = "Join the HDR Den discord for help!",
+        .label = " - Please make sure 'Screen Brightness' and 'Field Brightness' are set to default in System Settings/Graphics Settings. \r\n - You can hit 'Revert Category' under Graphics settings to reset said settings to default. \r\n \r\n - Join the HDR Den discord for help!",
         .section = "Instructions",
     },
 
@@ -238,7 +238,7 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("colorGradeContrast", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeSaturation", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeBlowout", 50.f);
-  renodx::utils::settings::UpdateSetting("toneMapHueCorrection", 50.f);
+  //renodx::utils::settings::UpdateSetting("toneMapHueCorrection", 50.f);
 }
 
 }  // namespace
@@ -276,6 +276,13 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
           .new_format = reshade::api::format::r16g16b16a16_float,
 
       });
+
+      //// RGB10A2_UNORM
+      //renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      //    .old_format = reshade::api::format::b10g10r10a2_unorm,
+      //    .new_format = reshade::api::format::r16g16b16a16_float,
+
+      //});
 
       //// BGRA8_TYPELESS 16:9
       // renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({

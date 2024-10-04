@@ -120,7 +120,7 @@ void main(
   r2.w = (uint)r2.w;
   if (1 == 0) r0.w = 0; else if (1+6 < 32) {   r0.w = (uint)r0.w << (32-(1 + 6)); r0.w = (uint)r0.w >> (32-1);  } else r0.w = (uint)r0.w >> 6;
   r0.w = (uint)r0.w;
-  r0.w = max(r2.w, r0.w);
+  r0.w = max(r2.w, r0.w); //removed artifacts with gamut clamp?
   r0.xyz = r0.www * r2.xyz + r0.xyz;
   r2.xyz = float3(1,1,1) + -r0.xyz;
   r0.xyz = r1.xzw * r0.xyz;
@@ -129,9 +129,11 @@ void main(
   r1.xzw = cmp(r1.xzw >= float3(0.5,0.5,0.5));
   r3.xyz = r3.xyz + r3.xyz;
   r2.xyz = -r3.xyz * r2.xyz + float3(1,1,1);
+    
     if (injectedData.toneMapType == 0.f){
   r0.xyz = r1.xzw ? r2.xyz : r0.xyz;
     }
+    
   r1.xzw = float3(-1,-1,-1) + cb3[7].xyz;
   r1.xyz = r1.yyy * r1.xzw + float3(1,1,1);
   r2.xyz = r1.xyz * r0.xyz;
@@ -149,7 +151,16 @@ void main(
     
   o0.w = 1;
     
-    o0.rgb = untonemapped;
+    //o0.rgb = untonemapped;
+    //hdr color, sdr color, post process color, strength
+    //o0.rgb = renodx::tonemap::UpgradeToneMap(saturate(untonemapped.rgb), untonemapped.rgb, o0.rgb, 1.f);
+    
+    //if (renodx::color::y::from::BT709(o0.rgb) > injectedData.toneMapPeakNits / 80.f) { // If the MaxCll is over peaknits   
+    //    o0.rgb = min(o0.rgb, injectedData.toneMapPeakNits / 80.f); //clamp output to peak nits slider, bandaid for a few effects
+    //}
+    
+    o0.rgb = renodx::tonemap::dice::BT709(o0.rgb, injectedData.toneMapPeakNits / 80.f);
+    
     o0.w = 1.f;
   return;
 }

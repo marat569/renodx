@@ -120,6 +120,8 @@ void main(
     if (injectedData.toneMapType == 0){
   r1.xyz = r1.xyz ? r3.xyz : r2.xyz;
     }
+
+    
   r1.xyz = float3(1,1,1) + -r1.xyz;
   r2.xyz = -cb3[6].xyz + cb3[5].xyz;
   r0.yzw = r0.yyy * r2.xyz + cb3[6].xyz;
@@ -127,9 +129,20 @@ void main(
   r0.xyz = -r1.xyz * r0.xyz + float3(1,1,1);
   r1.xyz = cb3[7].xyz + -r0.xyz;
   r0.xyz = cb3[12].www * r1.xyz + r0.xyz;
+    
+    if (injectedData.toneMapType == 0){
   o0.xyz = max(float3(0,0,0), r0.xyz);
+    }
+    else{
+        o0.rgb = r0.rgb;
+    }
     
     o0.rgb = untonemapped.rgb;
+    
+       //hdr color, sdr color, post process color, strength
+    //o0.rgb = renodx::tonemap::UpgradeToneMap(saturate(untonemapped.rgb), untonemapped.rgb, o0.rgb, 1.f);
+    o0.rgb = renodx::tonemap::dice::BT709(o0.rgb, injectedData.toneMapPeakNits / 80.f);
+    
   o0.w = 1;
   return;
 }

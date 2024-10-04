@@ -198,6 +198,7 @@ void main(
     r2.x = cmp(r0.w < r3.y);
     r0.w = cmp(r3.x < r0.w);
     r0.w = (int)r0.w | (int)r2.x;
+        
         if (injectedData.toneMapType == 0.f){
     r6.xyz = r0.www ? r5.xyz : r0.xyz;
         }
@@ -216,10 +217,9 @@ void main(
     }
     
     
-    o0.rgb = untonemapped;
-    //o0.rgb = renodx::math::SafePow(o0.rgb, 2.2f); //2.2 gamma correction 
-    //o0.a = sign(o0.a) * pow(abs(o0.a), 2.2f); // 2.2 gamma on Alpha
-    
+    //o0.rgb = untonemapped;
+
+    o0.rgb = renodx::tonemap::dice::BT709(o0.rgb, injectedData.toneMapPeakNits / 80.f);
   o0.w = 1;
   return;
 }

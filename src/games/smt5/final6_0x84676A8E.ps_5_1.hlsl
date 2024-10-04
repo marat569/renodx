@@ -147,12 +147,13 @@ void main(
   r0.xyz = cb4[6].zzz * r1.xyz + r0.xyz;
     if (injectedData.toneMapType == 0.f){
   o0.xyz = max(float3(0,0,0), r0.xyz);
-    }
-    else{
-        o0.rgb = r0.rgb;
+    } else{
+  o0.rgb = r0.rgb;
     }
     
-    o0.rgb = untonemapped;
+    //o0.rgb = untonemapped;
+           //hdr color, sdr color, post process color, strength
+    o0.rgb = renodx::tonemap::UpgradeToneMap(saturate(untonemapped.rgb), untonemapped.rgb, o0.rgb, 1.f);
   o0.w = 1;
   return;
 }

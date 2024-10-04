@@ -117,6 +117,8 @@ void main(
     if (injectedData.toneMapType == 0) {
   r0.xyw = r3.xyz ? r2.xyz : r0.xyw; //unclamp game
     }
+ 
+    
     
   r0.xyw = float3(1,1,1) + -r0.xyw;
 
@@ -158,7 +160,17 @@ void main(
     
   o0.w = 1;
     
-    o0.rgb = untonemapped;
+    //o0.rgb = untonemapped;
+   //hdr color, sdr color, post process color, strength
+    //o0.rgb = renodx::tonemap::UpgradeToneMap(saturate(untonemapped.rgb), untonemapped.rgb, o0.rgb, 1.f);
+    
+    //if (renodx::color::y::from::BT709(o0.rgb) > injectedData.toneMapPeakNits / 80.f) { // If the MaxCll is over peaknits   
+    //    o0.rgb = min(o0.rgb, injectedData.toneMapPeakNits / 80.f); //clamp output to peak nits slider, bandaid for a few effects
+    //}
+    
+    o0.rgb = renodx::tonemap::dice::BT709(o0.rgb, injectedData.toneMapPeakNits / 80.f);
+
+    
     o0.w = 1.f;
     
     

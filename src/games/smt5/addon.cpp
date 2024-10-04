@@ -109,6 +109,7 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Sets the tone mapper type",
         .labels = {"Vanilla", "None", "ACES"},
     },
+
     new renodx::utils::settings::Setting{
         .key = "toneMapPeakNits",
         .binding = &shader_injection.toneMapPeakNits,
@@ -228,7 +229,7 @@ renodx::utils::settings::Settings settings = {
 };
 
 void OnPresetOff() {
-  renodx::utils::settings::UpdateSetting("toneMapType", 0.f);
+  renodx::utils::settings::UpdateSetting("toneMapType", 2.f);
   renodx::utils::settings::UpdateSetting("toneMapPeakNits", 203.f);
   renodx::utils::settings::UpdateSetting("toneMapGameNits", 203.f);
   renodx::utils::settings::UpdateSetting("toneMapUINits", 203.f);

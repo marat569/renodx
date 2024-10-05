@@ -30,6 +30,7 @@
 #include <embed/0xC90A6F07.h>  //ui
 #include <embed/0xEAADB3AA.h>  //ui
 #include <embed/0xA6BF5D3C.h> // ui -- World map
+#include <embed/0x039B084D.h> // ui -- "take her hand"
 ////
 #include <embed/0x82F9B4AC.h>  // Movies, Intro
 ////
@@ -78,6 +79,7 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0x4ADD8064),  // UI
     CustomShaderEntry(0x23729AED),  // UI -- Main Menu
     CustomShaderEntry(0xA6BF5D3C), // UI -- World Map
+    CustomShaderEntry(0x039B084D), // UI -- "Take Her Hand"
     ////
     CustomShaderEntry(0x82F9B4AC),  // Movies, Intro
     ////

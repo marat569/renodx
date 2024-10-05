@@ -1,4 +1,6 @@
 // ---- Created with 3Dmigoto v1.3.16 on Sun Jul  7 17:53:22 2024
+// UI -- "Take her Hand" outline, Minimap outline, HP/MP bar outline
+
 #include "./shared.h"
 Texture2D<float4> t0 : register(t0);
 
@@ -49,7 +51,7 @@ void main(
   o0.w = cb0[0].z * r0.x + r0.w;
     
   o0.rgb = renodx::math::SafePow(o0.rgb, 2.2f); //2.2 gamma correction 
-  o0.a = sign(o0.a) * pow(abs(o0.a), 2.2f); // 2.2 gamma on Alpha
+  //o0.a = sign(o0.a) * pow(abs(o0.a), 2.2f); // 2.2 gamma on Alpha
   o0.rgb *= injectedData.toneMapUINits / 80.f; //Added ui slider
   return;
 }

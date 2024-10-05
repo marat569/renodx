@@ -1,5 +1,5 @@
 // ---- Created with 3Dmigoto v1.3.16 on Mon Sep 30 22:20:22 2024
-// Final 5, Tenzou // Shinigawa
+// Final 5, Tenzou // Shinigawa // Demon's King Castle [ Vanilla Route ]
 
 #include "./shared.h"
 
@@ -128,33 +128,37 @@ void main(
   r2.xyz = cmp(r2.xyz >= float3(0.5,0.5,0.5));
   r4.xyz = r4.xyz + r4.xyz;
   r3.xyz = -r4.xyz * r3.xyz + float3(1,1,1);
+    
     if (injectedData.toneMapType == 0.f){
   r0.xyw = r2.xyz ? r3.xyz : r0.xyw;
+    } else {
+     //r0.xyw = r0.xyw;
     }
+    
   r0.xyw = float3(1,1,1) + -r0.xyw;
   r1.w = dot(-r1.xyz, -r1.xyz);
   r1.w = rsqrt(r1.w);
   r1.xyz = -r1.xyz * r1.www;
   r1.x = dot(-cb3[2].xyz, r1.xyz);
   r1.x = cb4[7].w + r1.x;
-  r1.x = saturate(r1.x / cb4[8].x);
+  r1.x = saturate(r1.x / cb4[8].x); //unclamps gamut, but colors get too wide
   r1.yzw = cb2[6].xyz + -cb2[5].xyz;
   r1.xyz = r1.xxx * r1.yzw + cb2[5].xyz;
   r1.xyz = -r0.zzz * r1.xyz + float3(1,1,1);
   r0.xyz = -r0.xyw * r1.xyz + float3(1,1,1);
   r1.xyz = cb4[3].xyz + -r0.xyz;
   r0.xyz = cb4[8].zzz * r1.xyz + r0.xyz;
+    
     if (injectedData.toneMapType == 0.f){
         o0.xyz = max(float3(0, 0, 0), r0.xyz);
-    }
-    else{
+    } else {
         o0.rgb = r0.rgb;
     }
     
-   // o0.rgb = untonemapped;
+    o0.rgb = untonemapped;
            //hdr color, sdr color, post process color, strength
     //o0.rgb = renodx::tonemap::UpgradeToneMap(saturate(untonemapped.rgb), untonemapped.rgb, o0.rgb, 1.f);
-    o0.rgb = renodx::tonemap::dice::BT709(o0.rgb, injectedData.toneMapPeakNits / 80.f);
+   o0.rgb = renodx::tonemap::dice::BT709(o0.rgb, injectedData.toneMapPeakNits / 80.f);
 
   o0.w = 1;
 

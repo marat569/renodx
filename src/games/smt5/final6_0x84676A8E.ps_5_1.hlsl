@@ -181,6 +181,8 @@ void main(
         o0.rgb = r0.rgb;
     }
     
+    //o0.rgb = untonemapped;
+    
     o0.rgb = renodx::tonemap::dice::BT709(o0.rgb, injectedData.toneMapPeakNits / 80.f);
     
     o0.w = 1;

@@ -4,12 +4,11 @@
 #include "./shared.h"
 #include "./tonemapper.hlsl"
 
-cbuffer _Globals : register(b0)
-{
+cbuffer _Globals : register(b0) {
   float4 vTexUVOffset : packoffset(c0);
   int nSceneID : packoffset(c1);
   float fExposure : packoffset(c1.y);
-  float2 vReverseZParam : packoffset(c1.z) = {1,0};
+  float2 vReverseZParam : packoffset(c1.z) = { 1, 0 };
   float4 vViewInfo : packoffset(c2);
   float fDistantBlurZThreshold : packoffset(c3);
   float fFar : packoffset(c3.y);
@@ -38,17 +37,14 @@ Texture2D<float4> smplBloom_Tex : register(t3);
 Texture2D<float4> smplLightShaftLinWork2_Tex : register(t4);
 Texture2D<float4> smplFXAA_Tex : register(t5);
 
-
 // 3Dmigoto declarations
 #define cmp -
 
-
 void main(
-  float4 v0 : SV_Position0,
-  float2 v1 : TEXCOORD0,
-  out float4 o0 : SV_Target0)
-{
-  float4 r0,r1,r2;
+    float4 v0: SV_Position0,
+    float2 v1: TEXCOORD0,
+    out float4 o0: SV_Target0) {
+  float4 r0, r1, r2;
   uint4 bitmask, uiDest;
   float4 fDest;
 
@@ -68,26 +64,26 @@ void main(
   r2.x = 0.5 * r0.y;
   r2.y = 0.5;
 
-
   r0.y = smplAdaptedLumLast_Tex.Sample(smplAdaptedLumLast_s, r2.xy).x;
-  r2.xyz = max(float3(0,0,0), r1.xyz);
+  // r2.xyz = max(float3(0, 0, 0), r1.xyz); //709 clamp
+  r2.rgb = r1.rgb; //Rewrite of above with no max/clamp
+
   r2.xyz = fExposure * r2.xyz;
   r1.xyz = r2.xyz * r0.yyy;
-
 
   r2.xyzw = smplBlur_Tex.Sample(smplBlur_s, v1.xy).xyzw;
   r2.xyzw = r2.xyzw + -r1.xyzw;
   r0.xyzw = r0.xxxx * r2.xyzw + r1.xyzw;
 
-
-  r1.xyz = smplBloom_Tex.Sample(smplBloom_s, v1.xy).xyz;
-  r0.xyz = r1.xyz * fBloomWeight + r0.xyz;
-
+  if (injectedData.fxBloom) { // Enable/disable bloom
+    r1.xyz = smplBloom_Tex.Sample(smplBloom_s, v1.xy).xyz;
+    r0.xyz = r1.xyz * (fBloomWeight * injectedData.fxBloom) + r0.xyz; //Control Bloom Strength
+  }
 
   o0.w = r0.w;
   r1.xyz = smplLightShaftLinWork2_Tex.Sample(smplLightShaftLinWork2_s, v1.xy).xyz;
   r0.xyz = r1.xyz * vLightShaftPower.xyz + r0.xyz;
-  r0.w = dot(float3(0.298909992,0.586610019,0.114480004), r0.xyz);
+  r0.w = dot(float3(0.298909992, 0.586610019, 0.114480004), r0.xyz);
   r0.xyz = r0.xyz * vColorScale.xyz + -r0.www;
   r0.xyz = vSaturationScale.xyz * r0.xyz + r0.www;
   r1.xy = v1.xy * vScreen.xy + -vSpotParams.xy;
@@ -109,13 +105,13 @@ void main(
   float3 untonemapped = r0.rgb;
   // r0.xyz = max(float3(0,0,0), r0.xyz); // Clamp
 
-  //vanilla tonemapper, hable
-  r1.xyz = r0.xyz * float3(0.219999999,0.219999999,0.219999999) + float3(0.0299999993,0.0299999993,0.0299999993);
-  r1.xyz = r0.xyz * r1.xyz + float3(0.00200000009,0.00200000009,0.00200000009);
-  r2.xyz = r0.xyz * float3(0.219999999,0.219999999,0.219999999) + float3(0.300000012,0.300000012,0.300000012);
-  r0.xyz = r0.xyz * r2.xyz + float3(0.0599999987,0.0599999987,0.0599999987);
+  // vanilla tonemapper, hable
+  r1.xyz = r0.xyz * float3(0.219999999, 0.219999999, 0.219999999) + float3(0.0299999993, 0.0299999993, 0.0299999993);
+  r1.xyz = r0.xyz * r1.xyz + float3(0.00200000009, 0.00200000009, 0.00200000009);
+  r2.xyz = r0.xyz * float3(0.219999999, 0.219999999, 0.219999999) + float3(0.300000012, 0.300000012, 0.300000012);
+  r0.xyz = r0.xyz * r2.xyz + float3(0.0599999987, 0.0599999987, 0.0599999987);
   r0.xyz = r1.xyz / r0.xyz;
-  r0.xyz = float3(-0.0333000012,-0.0333000012,-0.0333000012) + r0.xyz;
+  r0.xyz = float3(-0.0333000012, -0.0333000012, -0.0333000012) + r0.xyz;
   r0.rgb = fToneMapInvWhitePoint * r0.xyz;
   float3 vanillaColor = r0.rgb;
 
@@ -132,10 +128,10 @@ void main(
 
   float3 vanMidGray = r0.rgb;
 
+  o0.rgb = applyUserTonemap(untonemapped.rgb, vanillaColor, renodx::color::y::from::BT709(vanMidGray));
+  // o0.rgb = fast_reinhard(untonemapped.rgb, injectedData.toneMapPeakNits / injectedData.toneMapGameNits, 0, vanMidGray.r);
 
-  o0.rgb = applyUserTonemap(untonemapped.rgb, renodx::color::y::from::BT709(vanMidGray));
-
-  o0.rgb *= injectedData.toneMapGameNits / injectedData.toneMapUINits; //scale output by gamenits / ui nits -- will restore in the final shader
+  o0.rgb *= injectedData.toneMapGameNits / injectedData.toneMapUINits;  // scale output by gamenits / ui nits -- will restore in the final shader
 
   return;
 }

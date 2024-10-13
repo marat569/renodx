@@ -21,6 +21,7 @@ struct ShaderInjectData {
   float toneMapHueCorrection;
   float clipPeak;
   float fxaa;
+  float fxBloom;
 };
 
 #ifndef __cplusplus

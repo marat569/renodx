@@ -430,12 +430,12 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       reshade::register_event<reshade::addon_event::present>(OnPresent);
      //final shader copy pasta end
       
-      // R8G8B8A8_UNORM_sRGB to unclamp
-      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
-          .old_format = reshade::api::format::r8g8b8a8_unorm_srgb,
-          .new_format = reshade::api::format::r16g16b16a16_float,
+      // // R8G8B8A8_UNORM_sRGB to unclamp
+      // renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      //     .old_format = reshade::api::format::r8g8b8a8_unorm_srgb,
+      //     .new_format = reshade::api::format::r16g16b16a16_float,
 
-      });
+      // });
 
       // R8G8B8A8_TYPELESS to unclamp
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({

@@ -13,7 +13,7 @@ float3 fast_reinhard(float3 color, float y_max = 1.f, float y_min = 0.f, float g
   return (color * x + z) / (color * y + w);
 }
 
-float3 applyUserTonemap(float3 untonemapped) {
+float3 applyUserTonemap(float3 untonemapped, float3 midGray) {
   float3 outputColor;
 
   if (injectedData.toneMapType == 0.f) {
@@ -24,7 +24,7 @@ float3 applyUserTonemap(float3 untonemapped) {
   }
 
   // float vanillaMidGray = 0.1f; //0.18f old default
-  float vanillaMidGray = 0.18f;  // calculate mid grey from the second hable run
+  float vanillaMidGray = midGray;  // calculate mid grey from the second hable run
   float renoDRTContrast = 1.f;
   float renoDRTFlare = 0.f;
   float renoDRTShadows = 1.f;

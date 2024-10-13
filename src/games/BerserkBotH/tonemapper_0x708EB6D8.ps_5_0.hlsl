@@ -109,16 +109,31 @@ void main(
   float3 untonemapped = r0.rgb;
   // r0.xyz = max(float3(0,0,0), r0.xyz); // Clamp
 
-  // //vanilla tonemapper, hable
-  // r1.xyz = r0.xyz * float3(0.219999999,0.219999999,0.219999999) + float3(0.0299999993,0.0299999993,0.0299999993);
-  // r1.xyz = r0.xyz * r1.xyz + float3(0.00200000009,0.00200000009,0.00200000009);
-  // r2.xyz = r0.xyz * float3(0.219999999,0.219999999,0.219999999) + float3(0.300000012,0.300000012,0.300000012);
-  // r0.xyz = r0.xyz * r2.xyz + float3(0.0599999987,0.0599999987,0.0599999987);
-  // r0.xyz = r1.xyz / r0.xyz;
-  // r0.xyz = float3(-0.0333000012,-0.0333000012,-0.0333000012) + r0.xyz;
-  // o0.xyz = fToneMapInvWhitePoint * r0.xyz;
+  //vanilla tonemapper, hable
+  r1.xyz = r0.xyz * float3(0.219999999,0.219999999,0.219999999) + float3(0.0299999993,0.0299999993,0.0299999993);
+  r1.xyz = r0.xyz * r1.xyz + float3(0.00200000009,0.00200000009,0.00200000009);
+  r2.xyz = r0.xyz * float3(0.219999999,0.219999999,0.219999999) + float3(0.300000012,0.300000012,0.300000012);
+  r0.xyz = r0.xyz * r2.xyz + float3(0.0599999987,0.0599999987,0.0599999987);
+  r0.xyz = r1.xyz / r0.xyz;
+  r0.xyz = float3(-0.0333000012,-0.0333000012,-0.0333000012) + r0.xyz;
+  r0.rgb = fToneMapInvWhitePoint * r0.xyz;
+  float3 vanillaColor = r0.rgb;
 
-  o0.rgb = applyUserTonemap(untonemapped.rgb);
+  // Second hable run for midGray
+  r0.rgb = (0.18f, 0.18f, 0.18f);
+
+  r1.xyz = r0.xyz * float3(0.219999999, 0.219999999, 0.219999999) + float3(0.0299999993, 0.0299999993, 0.0299999993);
+  r1.xyz = r0.xyz * r1.xyz + float3(0.00200000009, 0.00200000009, 0.00200000009);
+  r2.xyz = r0.xyz * float3(0.219999999, 0.219999999, 0.219999999) + float3(0.300000012, 0.300000012, 0.300000012);
+  r0.xyz = r0.xyz * r2.xyz + float3(0.0599999987, 0.0599999987, 0.0599999987);
+  r0.xyz = r1.xyz / r0.xyz;
+  r0.xyz = float3(-0.0333000012, -0.0333000012, -0.0333000012) + r0.xyz;
+  r0.rgb = fToneMapInvWhitePoint * r0.xyz;
+
+  float3 vanMidGray = r0.rgb;
+
+
+  o0.rgb = applyUserTonemap(untonemapped.rgb, renodx::color::y::from::BT709(vanMidGray));
 
   o0.rgb *= injectedData.toneMapGameNits / injectedData.toneMapUINits; //scale output by gamenits / ui nits -- will restore in the final shader
 

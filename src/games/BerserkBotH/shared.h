@@ -19,6 +19,7 @@ struct ShaderInjectData {
   float colorGradeSaturation;
   float colorGradeBlowout;
   float toneMapHueCorrection;
+  float colorGradeFlare;
   float clipPeak;
   float fxaa;
   float fxBloom;
@@ -26,7 +27,7 @@ struct ShaderInjectData {
 
 #ifndef __cplusplus
 cbuffer cb13 : register(b13) {
-  ShaderInjectData injectedData : packoffset(c0); //
+  ShaderInjectData injectedData : packoffset(c0);  //
 }
 #endif
 

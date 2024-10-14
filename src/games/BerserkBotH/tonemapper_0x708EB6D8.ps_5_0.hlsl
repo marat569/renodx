@@ -66,7 +66,7 @@ void main(
 
   r0.y = smplAdaptedLumLast_Tex.Sample(smplAdaptedLumLast_s, r2.xy).x;
   // r2.xyz = max(float3(0, 0, 0), r1.xyz); //709 clamp
-  r2.rgb = r1.rgb; //Rewrite of above with no max/clamp
+  r2.rgb = r1.rgb;  // Rewrite of above with no max/clamp
 
   r2.xyz = fExposure * r2.xyz;
   r1.xyz = r2.xyz * r0.yyy;
@@ -75,9 +75,9 @@ void main(
   r2.xyzw = r2.xyzw + -r1.xyzw;
   r0.xyzw = r0.xxxx * r2.xyzw + r1.xyzw;
 
-  if (injectedData.fxBloom) { // Enable/disable bloom
+  if (injectedData.fxBloom) {  // Enable/disable bloom
     r1.xyz = smplBloom_Tex.Sample(smplBloom_s, v1.xy).xyz;
-    r0.xyz = r1.xyz * (fBloomWeight * injectedData.fxBloom) + r0.xyz; //Control Bloom Strength
+    r0.xyz = r1.xyz * (fBloomWeight * injectedData.fxBloom) + r0.xyz;  // Control Bloom Strength
   }
 
   o0.w = r0.w;
@@ -131,7 +131,9 @@ void main(
   o0.rgb = applyUserTonemap(untonemapped.rgb, vanillaColor, renodx::color::y::from::BT709(vanMidGray));
   // o0.rgb = fast_reinhard(untonemapped.rgb, injectedData.toneMapPeakNits / injectedData.toneMapGameNits, 0, vanMidGray.r);
 
+  o0.xyz = renodx::color::correct::GammaSafe(o0.xyz); //sRGB -> pow2.2
   o0.rgb *= injectedData.toneMapGameNits / injectedData.toneMapUINits;  // scale output by gamenits / ui nits -- will restore in the final shader
+  o0.xyz = renodx::color::correct::GammaSafe(o0.xyz, true); //pow2.2 -> sRGB
 
   return;
 }

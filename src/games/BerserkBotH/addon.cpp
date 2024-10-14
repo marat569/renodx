@@ -7,18 +7,11 @@
 
 #define DEBUG_LEVEL_0
 
-//#define DEBUG_LEVEL_1 //added
+// #define DEBUG_LEVEL_1 //added
 
-
-
-#include <embed/0xFFFFFFFD.h> // Custom final VS
-#include <embed/0xFFFFFFFE.h> // Custom final PS
-#include <embed/0x708EB6D8.h> // Tonemapper
-
-
-
-
-
+#include <embed/0x708EB6D8.h>  // Tonemapper
+#include <embed/0xFFFFFFFD.h>  // Custom final VS
+#include <embed/0xFFFFFFFE.h>  // Custom final PS
 
 #include <deps/imgui/imgui.h>
 #include <include/reshade.hpp>
@@ -32,9 +25,7 @@ namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
 
-CustomShaderEntry(0x708EB6D8), // Tonemapper
-
-
+    CustomShaderEntry(0x708EB6D8),  // Tonemapper
 
 };
 
@@ -153,7 +144,19 @@ renodx::utils::settings::Settings settings = {
         .parse = [](float value) { return value * 0.02f; },
     },
 
-     new renodx::utils::settings::Setting{
+        new renodx::utils::settings::Setting{
+        .key = "colorGradeFlare",
+        .binding = &shader_injection.colorGradeFlare,
+        .default_value = 0.05f,
+        .label = "Flare",
+        .section = "Color Grading",
+        .tooltip = "A form of contrast that is biased to shadows.",
+        .max = 0.1f,
+        //.parse = [](float value) { return value * 0.01f; },
+        .format = "%.2f",
+    },
+
+    new renodx::utils::settings::Setting{
         .key = "fxBloom",
         .binding = &shader_injection.fxBloom,
         .default_value = 100.f,
@@ -178,7 +181,7 @@ renodx::utils::settings::Settings settings = {
 
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
-        .label = "Please make sure FXAA is enabled! Join the HDR Den discord for help!",
+        .label = "- Please make all post process effects are on in settings! \r\n - Join the HDR Den discord for help!",
         .section = "Instructions",
     },
 
@@ -207,10 +210,10 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("colorGradeShadows", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeContrast", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeSaturation", 50.f);
-  //Start PostProcess effects on/off
+  renodx::utils::settings::UpdateSetting("colorGradeFlare", 0.05f);
+  // Start PostProcess effects on/off
   renodx::utils::settings::UpdateSetting("fxBloom", 100.f);
   renodx::utils::settings::UpdateSetting("fxaa", 1.f);
-
 }
 
 }  // namespace
@@ -419,8 +422,8 @@ void OnPresent(reshade::api::command_queue* queue, reshade::api::swapchain* swap
   cmd_list->barrier(back_buffer_resource, reshade::api::resource_usage::render_target, reshade::api::resource_usage::shader_resource);
 
   // reset the copy tracker, entirely unrelated to the final shader above
-  //track_next_copy = false; // We dont need this, just pasted from FF14 code
-  //shader_injection.copyTracker = 0; // We dont need this, just pasted from FF14 code
+  // track_next_copy = false; // We dont need this, just pasted from FF14 code
+  // shader_injection.copyTracker = 0; // We dont need this, just pasted from FF14 code
 }
 // End custom final copy pasta
 
@@ -428,20 +431,19 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   switch (fdw_reason) {
     case DLL_PROCESS_ATTACH:
       if (!reshade::register_addon(h_module)) return FALSE;
-      renodx::mods::shader::force_pipeline_cloning = true; //So the mod works with the toolkit
+      renodx::mods::shader::force_pipeline_cloning = true;  // So the mod works with the toolkit
 
-      renodx::mods::swapchain::force_borderless = false; //needed for stability
-      renodx::mods::swapchain::prevent_full_screen = false; //needed for stability
+      renodx::mods::swapchain::force_borderless = false;     // needed for stability
+      renodx::mods::swapchain::prevent_full_screen = false;  // needed for stability
 
-
-     //final shader copy pasta start
+      // final shader copy pasta start
       reshade::register_event<reshade::addon_event::init_device>(OnInitDevice);
       reshade::register_event<reshade::addon_event::destroy_device>(OnDestroyDevice);
       reshade::register_event<reshade::addon_event::init_swapchain>(OnInitSwapchain);
       reshade::register_event<reshade::addon_event::destroy_swapchain>(OnDestroySwapchain);
       reshade::register_event<reshade::addon_event::present>(OnPresent);
-     //final shader copy pasta end
-      
+      // final shader copy pasta end
+
       // // R8G8B8A8_UNORM_sRGB to unclamp
       // renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
       //     .old_format = reshade::api::format::r8g8b8a8_unorm_srgb,
@@ -456,17 +458,29 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
 
       });
 
+      // R8G8B8A8_UNORM
+      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+          .old_format = reshade::api::format::r8g8b8a8_unorm,
+          .new_format = reshade::api::format::r16g16b16a16_float,
 
+      });
+
+      // // R11G11B10
+      //      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      //     .old_format = reshade::api::format::r11g11b10_float,
+      //     .new_format = reshade::api::format::r16g16b16a16_float,
+
+      // });
 
       break;
     case DLL_PROCESS_DETACH:
-      //Final shader copy pasta start
+      // Final shader copy pasta start
       reshade::unregister_event<reshade::addon_event::init_device>(OnInitDevice);
       reshade::unregister_event<reshade::addon_event::destroy_device>(OnDestroyDevice);
       reshade::unregister_event<reshade::addon_event::init_swapchain>(OnInitSwapchain);
       reshade::unregister_event<reshade::addon_event::destroy_swapchain>(OnDestroySwapchain);
       reshade::unregister_event<reshade::addon_event::present>(OnPresent);
-      //final shader copy pasta end
+      // final shader copy pasta end
 
       reshade::unregister_addon(h_module);
       break;

@@ -131,9 +131,9 @@ void main(
   o0.rgb = applyUserTonemap(untonemapped.rgb, vanillaColor, renodx::color::y::from::BT709(vanMidGray));
   // o0.rgb = fast_reinhard(untonemapped.rgb, injectedData.toneMapPeakNits / injectedData.toneMapGameNits, 0, vanMidGray.r);
 
-  o0.xyz = renodx::color::correct::GammaSafe(o0.xyz); //sRGB -> pow2.2
+  o0.xyz = renodx::color::correct::GammaSafe(o0.xyz);                   // sRGB -> pow2.2
   o0.rgb *= injectedData.toneMapGameNits / injectedData.toneMapUINits;  // scale output by gamenits / ui nits -- will restore in the final shader
-  o0.xyz = renodx::color::correct::GammaSafe(o0.xyz, true); //pow2.2 -> sRGB
+  o0.xyz = renodx::color::correct::GammaSafe(o0.xyz, true);             // pow2.2 -> sRGB
 
   return;
 }

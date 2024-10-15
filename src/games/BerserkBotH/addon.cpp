@@ -144,10 +144,10 @@ renodx::utils::settings::Settings settings = {
         .parse = [](float value) { return value * 0.02f; },
     },
 
-        new renodx::utils::settings::Setting{
+    new renodx::utils::settings::Setting{
         .key = "colorGradeFlare",
         .binding = &shader_injection.colorGradeFlare,
-        .default_value = 0.05f,
+        .default_value = 0.01f,
         .label = "Flare",
         .section = "Color Grading",
         .tooltip = "A form of contrast that is biased to shadows.",
@@ -181,7 +181,7 @@ renodx::utils::settings::Settings settings = {
 
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
-        .label = "- Please make all post process effects are on in settings! \r\n - Join the HDR Den discord for help!",
+        .label = " - Please enable all post process effects are on in settings! \r\n - Join the HDR Den discord for help!",
         .section = "Instructions",
     },
 
@@ -210,7 +210,7 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("colorGradeShadows", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeContrast", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeSaturation", 50.f);
-  renodx::utils::settings::UpdateSetting("colorGradeFlare", 0.05f);
+  renodx::utils::settings::UpdateSetting("colorGradeFlare", 0.01f);
   // Start PostProcess effects on/off
   renodx::utils::settings::UpdateSetting("fxBloom", 100.f);
   renodx::utils::settings::UpdateSetting("fxaa", 1.f);

@@ -144,16 +144,27 @@ renodx::utils::settings::Settings settings = {
         .parse = [](float value) { return value * 0.02f; },
     },
 
+    // new renodx::utils::settings::Setting{
+    //     .key = "colorGradeFlare",
+    //     .binding = &shader_injection.colorGradeFlare,
+    //     .default_value = 0.01f,
+    //     .label = "Flare",
+    //     .section = "Color Grading",
+    //     .tooltip = "A form of contrast that is biased to shadows.",
+    //     .max = 0.1f,
+    //     //.parse = [](float value) { return value * 0.01f; },
+    //     .format = "%.2f",
+    // },
+
     new renodx::utils::settings::Setting{
         .key = "colorGradeFlare",
         .binding = &shader_injection.colorGradeFlare,
-        .default_value = 0.01f,
+        .default_value = 50.f,
         .label = "Flare",
         .section = "Color Grading",
         .tooltip = "A form of contrast that is biased to shadows.",
-        .max = 0.1f,
-        //.parse = [](float value) { return value * 0.01f; },
-        .format = "%.2f",
+        .max = 100.f,
+        .parse = [](float value) { return value * 0.02f; },
     },
 
     new renodx::utils::settings::Setting{
@@ -210,7 +221,7 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("colorGradeShadows", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeContrast", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeSaturation", 50.f);
-  renodx::utils::settings::UpdateSetting("colorGradeFlare", 0.01f);
+  renodx::utils::settings::UpdateSetting("colorGradeFlare", 50.f);
   // Start PostProcess effects on/off
   renodx::utils::settings::UpdateSetting("fxBloom", 100.f);
   renodx::utils::settings::UpdateSetting("fxaa", 1.f);

@@ -33,14 +33,14 @@ float3 applyUserTonemap(float3 untonemapped) {
   float renoDRTSaturation = 1.f;  //
   float renoDRTHighlights = 1.f;
 
-  if (injectedData.toneMapType != 0) {  // UserColorGrading, pre-tonemap
+  if (injectedData.toneMapType != 0) {  // UserColorGrading, for our sliders
     outputColor.rgb = renodx::color::grade::UserColorGrading(
         outputColor.rgb,
         injectedData.colorGradeExposure,    // exposure
         injectedData.colorGradeHighlights,  // highlights
         injectedData.colorGradeShadows,     // shadows
         injectedData.colorGradeContrast,    // contrast
-        1.f,                                // saturation, we'll do this post-tonemap
+        injectedData.colorGradeSaturation,  // saturation
         0.f,                                // dechroma, we don't need it
         0.f);                               // hue correction, might not need it [yet]
   }
@@ -60,22 +60,9 @@ float3 applyUserTonemap(float3 untonemapped) {
   } else if (injectedData.toneMapType == 3.f) {  // baby reinhard
     float ReinhardPeak = injectedData.toneMapPeakNits / injectedData.toneMapGameNits;
     outputColor.rgb = fast_reinhard(outputColor.rgb, ReinhardPeak);
-
   } else if (injectedData.toneMapType == 4.f) {  // Frostbite
     float frostbitePeak = injectedData.toneMapPeakNits / injectedData.toneMapGameNits;
     outputColor = renodx::tonemap::frostbite::BT709(outputColor, frostbitePeak);
-  }
-
-  if (injectedData.toneMapType != 0) {  // UserColorGrading, post-tonemap
-    outputColor.rgb = renodx::color::grade::UserColorGrading(
-        outputColor.rgb,
-        1.f,                                // exposure
-        1.f,                                // highlights
-        1.f,                                // shadows
-        1.f,                                // contrast
-        injectedData.colorGradeSaturation,  // saturation
-        0.f,                                // dechroma, we don't need it
-        0.f);                               // hue correction, might not need it [yet]
   }
 
   return outputColor;

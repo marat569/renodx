@@ -64,6 +64,18 @@ renodx::utils::settings::Settings settings = {
     },
 
     new renodx::utils::settings::Setting{
+        .key = "gamma",
+        .binding = &shader_injection.gamma,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 1.f,
+        .can_reset = true,
+        .label = "Gamma",
+        .section = "Tone Mapping",
+        .tooltip = "The game defaults to 2.3 Gamma.",
+        .labels = {"2.2 Gamma", "2.3 Gamma"},
+    },
+
+    new renodx::utils::settings::Setting{
         .key = "colorGradeExposure",
         .binding = &shader_injection.colorGradeExposure,
         .default_value = 1.f,
@@ -177,20 +189,20 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       //   });
 
       // R11G11B10
-      //   renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({.old_format = reshade::api::format::r11g11b10_float,
-      //                                                                  .new_format = reshade::api::format::r16g16b16a16_float,
-      //                                                                  .ignore_size = true,
-      //                                                                  .view_upgrades = {
-      //                                                                      {{reshade::api::resource_usage::shader_resource,
-      //                                                                        reshade::api::format::r11g11b10_float},
-      //                                                                       reshade::api::format::r16g16b16a16_float},
-      //                                                                      {{reshade::api::resource_usage::unordered_access,
-      //                                                                        reshade::api::format::r11g11b10_float},
-      //                                                                       reshade::api::format::r16g16b16a16_float},
-      //                                                                      {{reshade::api::resource_usage::render_target,
-      //                                                                        reshade::api::format::r11g11b10_float},
-      //                                                                       reshade::api::format::r16g16b16a16_float},
-      //                                                                  }});
+      // renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({.old_format = reshade::api::format::r11g11b10_float,
+      //                                                                .new_format = reshade::api::format::r16g16b16a16_float,
+      //                                                                .ignore_size = true,
+      //                                                                .view_upgrades = {
+      //                                                                    {{reshade::api::resource_usage::shader_resource,
+      //                                                                      reshade::api::format::r11g11b10_float},
+      //                                                                     reshade::api::format::r16g16b16a16_float},
+      //                                                                    {{reshade::api::resource_usage::unordered_access,
+      //                                                                      reshade::api::format::r11g11b10_float},
+      //                                                                     reshade::api::format::r16g16b16a16_float},
+      //                                                                    {{reshade::api::resource_usage::render_target,
+      //                                                                      reshade::api::format::r11g11b10_float},
+      //                                                                     reshade::api::format::r16g16b16a16_float},
+      //                                                                }});
 
       break;
     case DLL_PROCESS_DETACH:

@@ -176,6 +176,22 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       //       .new_format = reshade::api::format::r16g16b16a16_float,
       //   });
 
+      // R11G11B10
+      //   renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({.old_format = reshade::api::format::r11g11b10_float,
+      //                                                                  .new_format = reshade::api::format::r16g16b16a16_float,
+      //                                                                  .ignore_size = true,
+      //                                                                  .view_upgrades = {
+      //                                                                      {{reshade::api::resource_usage::shader_resource,
+      //                                                                        reshade::api::format::r11g11b10_float},
+      //                                                                       reshade::api::format::r16g16b16a16_float},
+      //                                                                      {{reshade::api::resource_usage::unordered_access,
+      //                                                                        reshade::api::format::r11g11b10_float},
+      //                                                                       reshade::api::format::r16g16b16a16_float},
+      //                                                                      {{reshade::api::resource_usage::render_target,
+      //                                                                        reshade::api::format::r11g11b10_float},
+      //                                                                       reshade::api::format::r16g16b16a16_float},
+      //                                                                  }});
+
       break;
     case DLL_PROCESS_DETACH:
       reshade::unregister_addon(h_module);

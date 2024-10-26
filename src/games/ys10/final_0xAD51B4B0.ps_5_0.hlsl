@@ -31,8 +31,8 @@ void main(
   // colorAP1 = max(0, colorAP1);                                     // Clamp to AP1
   // r0.rgb = mul(renodx::color::AP1_TO_BT709_MAT, colorAP1);         // Clamp to AP1
 
-  r0.rgb = renodx::math::PowSafe(r0.rgb, 2.3f);  // The game does 2.3 gamma default
-  r0.rgb = applyUserTonemap(r0.rgb); // Send our color to tonemapper.hlsl to get processed!
+  r0.rgb = renodx::math::PowSafe(r0.rgb, 2.3f);   // The game does 2.3 gamma default
+  r0.rgb = applyUserTonemap(r0.rgb);              // Send our color to tonemapper.hlsl to get processed!
   r0.rgb *= injectedData.toneMapGameNits / 80.f;  // paper white
 
   o0.rgb = r0.rgb;

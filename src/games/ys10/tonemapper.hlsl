@@ -4,16 +4,6 @@
 #include "./DICE.hlsl"
 #include "./shared.h"
 
-// HDR Baby Reinhard -- Color, peak nits/ game nits for input
-float3 fast_reinhard(float3 color, float y_max = 1.f, float y_min = 0.f, float gray_in = 0.18f, float gray_out = 0.18f) {
-  float x = (y_max * (y_min * gray_out + y_min - gray_out))
-            / (gray_in * (gray_out - y_max));
-  float y = x / y_max;
-  float z = y_min;
-  float w = 1 - y_min;
-
-  return mad(color, x, z) / mad(color, y, w);
-}
 
 float3 applyUserTonemap(float3 untonemapped) {
   float3 outputColor;
@@ -24,14 +14,6 @@ float3 applyUserTonemap(float3 untonemapped) {
   } else {
     outputColor = untonemapped;
   }
-
-  float vanillaMidGray = 0.18f;
-  float renoDRTContrast = 1.f;
-  float renoDRTFlare = 0.f;
-  float renoDRTShadows = 1.f;
-  // float renoDRTDechroma = 0.8f;
-  float renoDRTSaturation = 1.f;  //
-  float renoDRTHighlights = 1.f;
 
   if (injectedData.toneMapType != 0) {  // UserColorGrading, pre-tonemap
     outputColor.rgb = renodx::color::grade::UserColorGrading(
@@ -47,7 +29,6 @@ float3 applyUserTonemap(float3 untonemapped) {
 
   // Start tonemapper if/else
   if (injectedData.toneMapType == 2.f) {  // DICE
-
     DICESettings DICEconfig = DefaultDICESettings();
     DICEconfig.Type = 3;
     DICEconfig.ShoulderStart = 0.33f;  // Start shoulder
@@ -59,7 +40,7 @@ float3 applyUserTonemap(float3 untonemapped) {
 
   } else if (injectedData.toneMapType == 3.f) {  // baby reinhard
     float ReinhardPeak = injectedData.toneMapPeakNits / injectedData.toneMapGameNits;
-    outputColor.rgb = fast_reinhard(outputColor.rgb, ReinhardPeak);
+    outputColor.rgb = renodx::tonemap::ReinhardScalable(outputColor.rgb, ReinhardPeak);
 
   } else if (injectedData.toneMapType == 4.f) {  // Frostbite
     float frostbitePeak = injectedData.toneMapPeakNits / injectedData.toneMapGameNits;

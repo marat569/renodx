@@ -27,11 +27,8 @@ void main(
 
   r0.xyz = tex.SampleLevel(smpl_s, v1.xy, 0).xyz;  // Sample game, already in gamma space
 
-  // float3 colorAP1 = mul(renodx::color::BT709_TO_AP1_MAT, r0.rgb);  // Clamp to AP1
-  // colorAP1 = max(0, colorAP1);                                     // Clamp to AP1
-  // r0.rgb = mul(renodx::color::AP1_TO_BT709_MAT, colorAP1);         // Clamp to AP1
+  r0.rgb = injectedData.gamma ? renodx::math::PowSafe(r0.rgb, 2.3f) : renodx::math::PowSafe(r0.rgb, 2.2f);  // The game does 2.3 gamma default
 
-  r0.rgb = renodx::math::PowSafe(r0.rgb, 2.3f);   // The game does 2.3 gamma default
   r0.rgb = applyUserTonemap(r0.rgb);              // Send our color to tonemapper.hlsl to get processed!
   r0.rgb *= injectedData.toneMapGameNits / 80.f;  // paper white
 

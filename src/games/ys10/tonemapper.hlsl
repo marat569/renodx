@@ -45,7 +45,7 @@ float3 applyUserTonemap(float3 untonemapped) {
     float frostbitePeak = injectedData.toneMapPeakNits / injectedData.toneMapGameNits;
     outputColor = renodx::tonemap::frostbite::BT709(outputColor, frostbitePeak);
 
-    outputColor = renodx::color::bt709::clamp::AP1(outputColor); // Clamp frostbite to AP1 to avoid invalid colors
+    outputColor = renodx::color::bt709::clamp::AP1(outputColor);  // Clamp frostbite to AP1 to avoid invalid colors
   }
 
   if (injectedData.toneMapType != 0) {  // UserColorGrading, post-tonemap

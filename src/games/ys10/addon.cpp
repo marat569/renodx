@@ -156,6 +156,7 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("toneMapType", 0.f);
   renodx::utils::settings::UpdateSetting("toneMapPeakNits", 203.f);
   renodx::utils::settings::UpdateSetting("toneMapGameNits", 203.f);
+  renodx::utils::settings::UpdateSetting("gamma", 1.f);
   renodx::utils::settings::UpdateSetting("colorGradeExposure", 1.f);
   renodx::utils::settings::UpdateSetting("colorGradeHighlights", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeShadows", 50.f);

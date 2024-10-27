@@ -174,6 +174,9 @@ extern "C" __declspec(dllexport) const char* DESCRIPTION = "RenoDX for YS:10 Nor
 
 // NOLINTEND(readability-identifier-naming)
 
+float screen_width = GetSystemMetrics(SM_CXSCREEN);   // Used to calculate aspect ratio
+float screen_height = GetSystemMetrics(SM_CYSCREEN);  // Used to calculate aspect ratio
+
 BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   switch (fdw_reason) {
     case DLL_PROCESS_ATTACH:
@@ -183,18 +186,18 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       renodx::mods::swapchain::force_borderless = false;     // needed for stability
       renodx::mods::swapchain::prevent_full_screen = false;  // needed for stability
 
-      // RGBA8_UNORM 16:9
+      // RGBA8_UNORM aspect ratio
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::r8g8b8a8_unorm,
           .new_format = reshade::api::format::r16g16b16a16_float,
-          .aspect_ratio = 16.f / 9.f,
+          .aspect_ratio = screen_width / screen_height,  // Calculate aspect ratio
       });
 
       // RGBA8_UNORM 512x512
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::r8g8b8a8_unorm,
           .new_format = reshade::api::format::r16g16b16a16_float,
-          .dimensions = {512,512},
+          .dimensions = {512, 512},
       });
 
       // R11G11B10

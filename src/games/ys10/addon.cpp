@@ -174,8 +174,8 @@ extern "C" __declspec(dllexport) const char* DESCRIPTION = "RenoDX for YS:10 Nor
 
 // NOLINTEND(readability-identifier-naming)
 
-float screen_width = GetSystemMetrics(SM_CXSCREEN);   // Used to calculate aspect ratio
-float screen_height = GetSystemMetrics(SM_CYSCREEN);  // Used to calculate aspect ratio
+//float screen_width = GetSystemMetrics(SM_CXSCREEN);   // Used to calculate aspect ratio
+//float screen_height = GetSystemMetrics(SM_CYSCREEN);  // Used to calculate aspect ratio
 
 BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   switch (fdw_reason) {
@@ -190,7 +190,7 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::r8g8b8a8_unorm,
           .new_format = reshade::api::format::r16g16b16a16_float,
-          .aspect_ratio = screen_width / screen_height,  // Calculate aspect ratio
+          .aspect_ratio = 16.f / 9.f,  // Calculate aspect ratio
       });
 
       // RGBA8_UNORM 512x512

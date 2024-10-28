@@ -187,11 +187,11 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       renodx::mods::swapchain::prevent_full_screen = false;  // needed for stability
 
       // RGBA8_UNORM aspect ratio
-      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
-          .old_format = reshade::api::format::r8g8b8a8_unorm,
-          .new_format = reshade::api::format::r16g16b16a16_float,
-          .aspect_ratio = 16.f / 9.f,  // Calculate aspect ratio
-      });
+    //   renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+    //       .old_format = reshade::api::format::r8g8b8a8_unorm,
+    //       .new_format = reshade::api::format::r16g16b16a16_float,
+    //       .aspect_ratio = 16.f / 9.f,  // Calculate aspect ratio
+    //   });
 
       // RGBA8_UNORM 512x512
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({

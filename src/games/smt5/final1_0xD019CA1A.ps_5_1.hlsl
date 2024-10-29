@@ -74,7 +74,8 @@ void main(
   r0.y = 255 * r0.y;
   r0.y = (uint)r0.y;
   r0.w = max(1.00000005e-18, r2.x);
-  r1.xyzw = r0.wwww * cb1[46].xyzw + r1.xyzw;
+    
+  r1.xyzw = r0.wwww * cb1[46].xyzw + r1.xyzw; //Vinegette
   r1.xyzw = cb1[47].xyzw + r1.xyzw;
   r1.xyz = r1.xyz / r1.www;
   r2.xyz = -cb1[70].xyz + r1.xyz;
@@ -146,6 +147,8 @@ void main(
   r2.xyz = r0.zzz * r2.xyz + float3(0.5,0.5,0.5);
   r3.xyz = float3(1,1,1) + -r2.xyz;
   r2.xyz = r2.xyz * r0.xyw;
+    
+ 
   r0.xyz = cmp(r0.xyw >= float3(0.5,0.5,0.5));
   r2.xyz = r2.xyz + r2.xyz;
   r1.xyz = -r1.xyz * r3.xyz + float3(1,1,1);

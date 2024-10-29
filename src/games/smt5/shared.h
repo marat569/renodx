@@ -20,6 +20,7 @@ struct ShaderInjectData {
   float colorGradeBlowout;
   float toneMapHueCorrection;
   float clipPeak;
+  float vignette;
 };
 
 #ifndef __cplusplus

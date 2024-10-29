@@ -7,18 +7,12 @@
 
 #define DEBUG_LEVEL_0
 
-//#define DEBUG_LEVEL_1 //added
+// #define DEBUG_LEVEL_1 //added
 
-
-
-#include <embed/0xFFFFFFFD.h> // Custom final VS
-#include <embed/0xFFFFFFFE.h> // Custom final PS
-#include <embed/0x23D22FD9.h> // Main UI
-#include <embed/0x87D8D283.h> // FXAA / Tonemapper
-
-
-
-
+#include <embed/0x23D22FD9.h>  // Main UI
+#include <embed/0x87D8D283.h>  // FXAA / Tonemapper
+#include <embed/0xFFFFFFFD.h>  // Custom final VS
+#include <embed/0xFFFFFFFE.h>  // Custom final PS
 
 #include <deps/imgui/imgui.h>
 #include <include/reshade.hpp>
@@ -32,10 +26,8 @@ namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
 
-
-  CustomShaderEntry(0x23D22FD9), // Main UI
-  CustomShaderEntry(0x87D8D283),  // FXAA / Tonemapper
-
+    CustomShaderEntry(0x23D22FD9),  // Main UI
+    CustomShaderEntry(0x87D8D283),  // FXAA / Tonemapper
 
 };
 
@@ -179,7 +171,19 @@ renodx::utils::settings::Settings settings = {
         .group = "button-line-1",
         .tint = 0x5865F2,
         .on_change = []() {
-          system("start https://discord.gg/5WZXDpmbpP");
+          static const std::string obfuscated_link = std::string("start https://discord.gg/5WZX") + std::string("DpmbpP");
+          system(obfuscated_link.c_str());
+        },
+    },
+
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
+        .label = "Get more RenoDX mods!",
+        .section = "About",
+        .group = "button-line-1",
+        .tint = 0x5865F2,
+        .on_change = []() {
+          system("start https://github.com/clshortfuse/renodx/wiki/Mods");
         },
     },
 
@@ -197,9 +201,8 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("colorGradeShadows", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeContrast", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeSaturation", 50.f);
-  //Start PostProcess effects on/off
+  // Start PostProcess effects on/off
   renodx::utils::settings::UpdateSetting("fxaa", 1.f);
-
 }
 
 }  // namespace
@@ -408,8 +411,8 @@ void OnPresent(reshade::api::command_queue* queue, reshade::api::swapchain* swap
   cmd_list->barrier(back_buffer_resource, reshade::api::resource_usage::render_target, reshade::api::resource_usage::shader_resource);
 
   // reset the copy tracker, entirely unrelated to the final shader above
-  //track_next_copy = false; // We dont need this, just pasted from FF14 code
-  //shader_injection.copyTracker = 0; // We dont need this, just pasted from FF14 code
+  // track_next_copy = false; // We dont need this, just pasted from FF14 code
+  // shader_injection.copyTracker = 0; // We dont need this, just pasted from FF14 code
 }
 // End custom final copy pasta
 
@@ -417,26 +420,25 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   switch (fdw_reason) {
     case DLL_PROCESS_ATTACH:
       if (!reshade::register_addon(h_module)) return FALSE;
-      renodx::mods::shader::force_pipeline_cloning = true; //So the mod works with the toolkit
+      renodx::mods::shader::force_pipeline_cloning = true;  // So the mod works with the toolkit
 
-      renodx::mods::swapchain::force_borderless = false; //needed for stability
-      renodx::mods::swapchain::prevent_full_screen = false; //needed for stability
+      renodx::mods::swapchain::force_borderless = false;     // needed for stability
+      renodx::mods::swapchain::prevent_full_screen = false;  // needed for stability
 
-
-     //final shader copy pasta start
+      // final shader copy pasta start
       reshade::register_event<reshade::addon_event::init_device>(OnInitDevice);
       reshade::register_event<reshade::addon_event::destroy_device>(OnDestroyDevice);
       reshade::register_event<reshade::addon_event::init_swapchain>(OnInitSwapchain);
       reshade::register_event<reshade::addon_event::destroy_swapchain>(OnDestroySwapchain);
       reshade::register_event<reshade::addon_event::present>(OnPresent);
-     //final shader copy pasta end
-      
+      // final shader copy pasta end
+
       // BGRA8_TYPELESS to unclamp
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::b8g8r8a8_typeless,
           .new_format = reshade::api::format::r16g16b16a16_float,
-    //   .index = 39, //Maybe find the specific render target that uncaps the game one day, but not right now
-    //   .ignore_size = true, //Ignoring size allows you to uncap when the game runs in a sub-native resolution, but tons of artifacts are created
+          //   .index = 39, //Maybe find the specific render target that uncaps the game one day, but not right now
+          //   .ignore_size = true, //Ignoring size allows you to uncap when the game runs in a sub-native resolution, but tons of artifacts are created
       });
 
       // BGRA8_UNORM
@@ -447,17 +449,15 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
           //   .ignore_size = true, //Ignoring size allows you to uncap when the game runs in a sub-native resolution, but tons of artifacts are created
       });
 
-
-
       break;
     case DLL_PROCESS_DETACH:
-      //Final shader copy pasta start
+      // Final shader copy pasta start
       reshade::unregister_event<reshade::addon_event::init_device>(OnInitDevice);
       reshade::unregister_event<reshade::addon_event::destroy_device>(OnDestroyDevice);
       reshade::unregister_event<reshade::addon_event::init_swapchain>(OnInitSwapchain);
       reshade::unregister_event<reshade::addon_event::destroy_swapchain>(OnDestroySwapchain);
       reshade::unregister_event<reshade::addon_event::present>(OnPresent);
-      //final shader copy pasta end
+      // final shader copy pasta end
 
       reshade::unregister_addon(h_module);
       break;

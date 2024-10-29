@@ -7,16 +7,13 @@
 
 #define DEBUG_LEVEL_0
 
-//#define DEBUG_LEVEL_1 //added
+// #define DEBUG_LEVEL_1 //added
 
-#include <embed/0xE53D74F1.h> // UI -- Main
-#include <embed/0x5D15CFEE.h> // videos -- pre-renderd movies
-#include <embed/0xA531D673.h> // Tonemap
-#include <embed/0x7894FC68.h> // Cursed effect
-#include <embed/0xBB055A34.h> // Final
-
-
-
+#include <embed/0x5D15CFEE.h>  // videos -- pre-renderd movies
+#include <embed/0x7894FC68.h>  // Cursed effect
+#include <embed/0xA531D673.h>  // Tonemap
+#include <embed/0xBB055A34.h>  // Final
+#include <embed/0xE53D74F1.h>  // UI -- Main
 
 #include <deps/imgui/imgui.h>
 #include <include/reshade.hpp>
@@ -30,12 +27,11 @@ namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
 
-    CustomShaderEntry(0xE53D74F1), // UI -- Main
-    CustomShaderEntry(0x5D15CFEE), // videos -- pre-rendered movies
-    CustomShaderEntry(0xA531D673), // Tonemap
-    CustomShaderEntry(0x7894FC68), // Cursed effect
-    CustomShaderEntry(0xBB055A34), // Final
-	
+    CustomShaderEntry(0xE53D74F1),  // UI -- Main
+    CustomShaderEntry(0x5D15CFEE),  // videos -- pre-rendered movies
+    CustomShaderEntry(0xA531D673),  // Tonemap
+    CustomShaderEntry(0x7894FC68),  // Cursed effect
+    CustomShaderEntry(0xBB055A34),  // Final
 
 };
 
@@ -144,7 +140,19 @@ renodx::utils::settings::Settings settings = {
         .group = "button-line-1",
         .tint = 0x5865F2,
         .on_change = []() {
-          system("start https://discord.gg/5WZXDpmbpP");
+          static const std::string obfuscated_link = std::string("start https://discord.gg/5WZX") + std::string("DpmbpP");
+          system(obfuscated_link.c_str());
+        },
+    },
+
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
+        .label = "Get more RenoDX mods!",
+        .section = "About",
+        .group = "button-line-1",
+        .tint = 0x5865F2,
+        .on_change = []() {
+          system("start https://github.com/clshortfuse/renodx/wiki/Mods");
         },
     },
 
@@ -160,7 +168,6 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("colorGradeShadows", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeContrast", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeSaturation", 50.f);
-
 }
 
 }  // namespace
@@ -176,32 +183,28 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   switch (fdw_reason) {
     case DLL_PROCESS_ATTACH:
       if (!reshade::register_addon(h_module)) return FALSE;
-      renodx::mods::shader::force_pipeline_cloning = true; //So the mod works with the toolkit
+      renodx::mods::shader::force_pipeline_cloning = true;  // So the mod works with the toolkit
 
-      renodx::mods::swapchain::force_borderless = false; //needed for stability
-      renodx::mods::swapchain::prevent_full_screen = false; //needed for stability
+      renodx::mods::swapchain::force_borderless = false;     // needed for stability
+      renodx::mods::swapchain::prevent_full_screen = false;  // needed for stability
 
+      // BGRA8_typeless needed to uncap luminance
 
-       // BGRA8_typeless needed to uncap luminance
-      
       // BGRA8_typeless
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::b8g8r8a8_typeless,
           .new_format = reshade::api::format::r16g16b16a16_float,
-    //   .index = 39, //Maybe find the specific render target that uncaps the game one day, but not right now
-    //   .ignore_size = true, //Ignoring size allows you to uncap when the game runs in a sub-native resolution, but tons of artifacts are created
+          //   .index = 39, //Maybe find the specific render target that uncaps the game one day, but not right now
+          //   .ignore_size = true, //Ignoring size allows you to uncap when the game runs in a sub-native resolution, but tons of artifacts are created
       });
 
-
-     // BGRA8_unorm
-    //  renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
-     //    .old_format = reshade::api::format::b8g8r8a8_unorm,
-     //    .new_format = reshade::api::format::r16g16b16a16_float,
-     //  .index = 39,
-     //.ignore_size = true,
-    //  });
-
-
+      // BGRA8_unorm
+      //  renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      //    .old_format = reshade::api::format::b8g8r8a8_unorm,
+      //    .new_format = reshade::api::format::r16g16b16a16_float,
+      //  .index = 39,
+      //.ignore_size = true,
+      //  });
 
       break;
     case DLL_PROCESS_DETACH:

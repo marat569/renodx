@@ -9,15 +9,15 @@
 
 // #define DEBUG_LEVEL_1 //added
 
-#include <embed/0xFFFFFFFD.h>  // Custom final VS
-#include <embed/0xFFFFFFFE.h>  // Custom final PS
 #include <embed/0x27B872F2.h>  // Game's vanilla final shader
 #include <embed/0x35832457.h>  // Idk / Saturates
 #include <embed/0x406B1825.h>  // UI, Game World
+#include <embed/0x5EE2913B.h>  // Premium Adventure Color Grade
 #include <embed/0x61D49EC3.h>  // Clamp game's gamut to fix aritfacting in differnet games
-#include <embed/0x7D90228C.h>  // Color Grading
 #include <embed/0x6370B56D.h>  // Movies
-
+#include <embed/0x7D90228C.h>  // Color Grading
+#include <embed/0xFFFFFFFD.h>  // Custom final VS
+#include <embed/0xFFFFFFFE.h>  // Custom final PS
 
 #include <deps/imgui/imgui.h>
 #include <include/reshade.hpp>
@@ -36,7 +36,8 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0x27B872F2),  // Game's vanilla final shader
     CustomShaderEntry(0x406B1825),  // UI, Game World
     CustomShaderEntry(0x61D49EC3),  // Clamp game's gamut to fix aritfacting in differnet games
-    CustomShaderEntry(0x6370B56D), // Movies
+    CustomShaderEntry(0x6370B56D),  // Movies
+    CustomShaderEntry(0x5EE2913B),  // Premium Adventure Color Grade
 
 };
 
@@ -180,7 +181,19 @@ renodx::utils::settings::Settings settings = {
         .group = "button-line-1",
         .tint = 0x5865F2,
         .on_change = []() {
-          system("start https://discord.gg/5WZXDpmbpP");
+          static const std::string obfuscated_link = std::string("start https://discord.gg/5WZX") + std::string("DpmbpP");
+          system(obfuscated_link.c_str());
+        },
+    },
+
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
+        .label = "Get more RenoDX mods!",
+        .section = "About",
+        .group = "button-line-1",
+        .tint = 0x5865F2,
+        .on_change = []() {
+          system("start https://github.com/clshortfuse/renodx/wiki/Mods");
         },
     },
 

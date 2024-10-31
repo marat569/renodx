@@ -214,6 +214,13 @@ renodx::utils::settings::Settings settings = {
         },
     },
 
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::TEXT,
+        .label = "Version: " + std::string(IsoDate),
+        .section = "About",
+        .tooltip = std::string(__DATE__),
+    },
+
 };
 
 void OnPresetOff() {

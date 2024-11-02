@@ -14,16 +14,26 @@ float3 applyUserTonemap(float3 untonemapped) {
     outputColor = untonemapped;
   }
 
+  // UserColorGrading offsets
+  // hard coded values that you can use to set as defaults
+  // Assuming the slider is 50 with 0.02 steps and, the math comes out to offset * 1.f -- or 1.f * 1.f = 1.f
+  // An offset of 1.1f will be 1.1f * 1.f = 1.1f with the sliders at 50 (default)
+  float highlights = 1.f;
+  float shadows = 1.f;
+  float contrast = 1.f;
+  float saturation = 1.f;
+  float dechroma = 1.f;
+
   if (injectedData.toneMapType != 0) {  // UserColorGrading, pre-tonemap
     outputColor.rgb = renodx::color::grade::UserColorGrading(
         outputColor.rgb,
-        injectedData.colorGradeExposure,    // exposure
-        injectedData.colorGradeHighlights,  // highlights
-        injectedData.colorGradeShadows,     // shadows
-        injectedData.colorGradeContrast,    // contrast
-        1.f,                                // saturation, we'll do this post-tonemap
-        0.f,                                // dechroma, we don't need it
-        0.f);                               // hue correction, might not need it [yet]
+        injectedData.colorGradeExposure,                 // exposure
+        highlights * injectedData.colorGradeHighlights,  // highlights
+        shadows * injectedData.colorGradeShadows,        // shadows
+        contrast * injectedData.colorGradeContrast,      // contrast
+        1.f,                                             // saturation, we'll do this post-tonemap
+        0.f,                                             // dechroma/blowout, we'll do this post-tonemap
+        0.f);                                            // hue correction, might not need it [yet]
   }
 
   // Start tonemapper if/else
@@ -51,13 +61,13 @@ float3 applyUserTonemap(float3 untonemapped) {
   if (injectedData.toneMapType != 0) {  // UserColorGrading, post-tonemap
     outputColor.rgb = renodx::color::grade::UserColorGrading(
         outputColor.rgb,
-        1.f,                                // exposure
-        1.f,                                // highlights
-        1.f,                                // shadows
-        1.f,                                // contrast
-        injectedData.colorGradeSaturation,  // saturation
-        0.f,                                // dechroma, we don't need it
-        0.f);                               // hue correction, might not need it [yet]
+        1.f,                                             // exposure
+        1.f,                                             // highlights
+        1.f,                                             // shadows
+        1.f,                                             // contrast
+        saturation * injectedData.colorGradeSaturation,  // saturation
+        dechroma * 0.f,                                  // dechroma/blowout, we do this post tonemap
+        0.f);                                            // hue correction, might not need it [yet]
   }
 
   return outputColor;

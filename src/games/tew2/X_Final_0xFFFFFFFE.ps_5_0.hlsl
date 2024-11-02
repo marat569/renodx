@@ -20,5 +20,7 @@ void main(
     }
   }
 
+  color.rgb = renodx::color::bt709::clamp::AP1(color.rgb);  // Clamp to AP1 to avoid invalid colors
+
   output.rgba = color;
 }

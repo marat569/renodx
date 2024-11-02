@@ -50,7 +50,7 @@ void main(
   r0.z = 1 + downsampletype.w;
   r1.xyz = r1.xyz * r1.xyz + -r2.xyz;
   r1.xyz = r0.zzz * r1.xyz + r2.xyz;
-  r1.xyz = max(float3(0,0,0), r1.xyz);
+  //r1.xyz = max(float3(0,0,0), r1.xyz); //709 clamp
   r0.z = cmp(downsampletype.z == 1.000000);
   if (r0.z != 0) {
     r0.z = dot(r1.xyz, float3(0.212599993,0.715200007,0.0722000003));

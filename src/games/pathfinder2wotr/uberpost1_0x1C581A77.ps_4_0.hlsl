@@ -116,8 +116,8 @@ void main(
   r0.xyz = r0.xxx * r0.yzw + r2.xyz;
 
   r0.rgb = applyUserTonemap(untonemapped, t2, s0_s, cb0[0].xyz);  // apply user tonemap
-  r0.rgb = renodx::math::PowSafe(r0.rgb, 1.f / 2.2f);
-  // o0.rgb = renodx::color::srgb::EncodeSafe(r0.rgb);
+  // r0.rgb = renodx::math::PowSafe(r0.rgb, 1.f / 2.2f);
+  //  o0.rgb = renodx::color::srgb::EncodeSafe(r0.rgb);
 
   o0.rgb = r0.rgb;
   o0.w = 1.f;

@@ -1,5 +1,6 @@
 // ---- Created with 3Dmigoto v1.3.16 on Mon Nov  4 00:21:29 2024
 // Game goes linear -> gamma here
+// We comment everything
 
 #include "./shared.h"
 
@@ -29,8 +30,8 @@ void main(
   // o0.w = r0.w;
   // r0.xyz = r0.xyz ? r2.xyz : r1.xyz;
 
-  r0.rgb = renodx::math::PowSafe(r0.rgb, 1.f / 2.2f);
-  //  r0.rgb = renodx::math::PowSafe(r0.rgb, 2.2f);  // Linearize
+  // r0.rgb = renodx::math::PowSafe(r0.rgb, 1.f / 2.2f);
+  // r0.rgb = renodx::math::PowSafe(r0.rgb, 2.2f);  // Linearize
 
   o0.rgb = r0.rgb;
   o0.w = r0.a;

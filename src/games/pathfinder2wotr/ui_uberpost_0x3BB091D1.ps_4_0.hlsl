@@ -116,6 +116,7 @@ void main(
   // r0.rgb = renodx::color::correct::GammaSafe(r0.rgb);
   // r0.rgb = renodx::math::PowSafe(r0.rgb, 1.f / 2.2f);
   // r0.rgb = renodx::color::srgb::EncodeSafe(r0.rgb);
+
   o0.rgb = r0.rgb;
   o0.w = 1;
 

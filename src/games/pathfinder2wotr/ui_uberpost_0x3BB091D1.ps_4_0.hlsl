@@ -1,9 +1,9 @@
 // ---- Created with 3Dmigoto v1.3.16 on Mon Nov  4 21:07:25 2024
 // Uberpost, but it handles the UI and a vignette
 // All we need to do here is SafePow
+// All effects on
 
 #include "./shared.h"
-#include "./tonemapper.hlsl"
 
 Texture2D<float4> t2 : register(t2);
 
@@ -109,10 +109,10 @@ void main(
   // r0.xyz = cmp(float3(0.00313080009,0.00313080009,0.00313080009) >= r0.xyz);
   // o0.xyz = r0.xyz ? r1.xyz : r2.xyz;
   // r0.rgb = renodx::color::correct::GammaSafe(r0.rgb);
-  //r0.rgb = renodx::math::PowSafe(r0.rgb, 1.f / 2.2f);
+  // r0.rgb = renodx::math::PowSafe(r0.rgb, 1.f / 2.2f);
   r0.rgb = renodx::color::srgb::EncodeSafe(r0.rgb);
   o0.rgb = r0.rgb;
   o0.w = 1;
-  
+
   return;
 }

@@ -29,8 +29,9 @@ void main(
   // o0.w = r0.w;
   // r0.xyz = r0.xyz ? r2.xyz : r1.xyz;
 
-  r0.rgb = renodx::math::PowSafe(r0.rgb, 2.2f);
-  r0.rgb *= injectedData.toneMapGameNits / 80.f;  // paper white
+  r0.rgb = renodx::math::PowSafe(r0.rgb, 1.f / 2.2f);
+  //  r0.rgb = renodx::math::PowSafe(r0.rgb, 2.2f);  // Linearize
+
   o0.rgb = r0.rgb;
   o0.w = r0.a;
 

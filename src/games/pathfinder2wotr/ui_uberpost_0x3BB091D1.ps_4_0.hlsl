@@ -29,6 +29,7 @@ void main(
   float4 fDest;
 
   r0.xyzw = t0.Sample(s0_s, v1.xy).xyzw;
+
   r0.w = cmp(0 < cb0[10].z);
   if (r0.w != 0) {
     r1.xy = -cb0[10].xy + v1.xy;
@@ -45,7 +46,11 @@ void main(
     r0.xyz = r1.xyz * r0.xyz;
   }
   r0.xyz = cb0[0].www * r0.zxy;
-  float3 untonemapped = r0.gbr;
+  // float3 untonemapped = r0.gbr;
+  // o0.rgb = untonemapped;
+  // o0.a = r0.a;
+  // o0.rgb = renodx::math::PowSafe(o0.rgb, 1.f / 2.2f);
+  // return;
 
   r0.xyz = r0.xyz * float3(5.55555582, 5.55555582, 5.55555582) + float3(0.0479959995, 0.0479959995, 0.0479959995);
   r0.xyz = max(float3(0, 0, 0), r0.xyz);
@@ -110,7 +115,7 @@ void main(
   // o0.xyz = r0.xyz ? r1.xyz : r2.xyz;
   // r0.rgb = renodx::color::correct::GammaSafe(r0.rgb);
   // r0.rgb = renodx::math::PowSafe(r0.rgb, 1.f / 2.2f);
-  r0.rgb = renodx::color::srgb::EncodeSafe(r0.rgb);
+  // r0.rgb = renodx::color::srgb::EncodeSafe(r0.rgb);
   o0.rgb = r0.rgb;
   o0.w = 1;
 

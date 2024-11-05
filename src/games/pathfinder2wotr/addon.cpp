@@ -11,11 +11,19 @@
 
 #include <embed/0x0F750BE1.h>  // Uberpost 4
 #include <embed/0x1C581A77.h>  // Uberpost 1
+#include <embed/0x20133A8B.h>  // Final
 #include <embed/0x3BB091D1.h>  // UI Uberpost 1
 #include <embed/0x49FD2384.h>  // Gamma/Final
 #include <embed/0x6134CFC2.h>  // Uberpost 3
 #include <embed/0x778CFAC9.h>  // Uberpost 2
+#include <embed/0xCB67E5FE.h>  // Paper white
 #include <embed/0xE45E5BE1.h>  // Clamp
+// UI
+#include <embed/0x57A63191.h>  // UI
+#include <embed/0x65EB4440.h>  // UI
+#include <embed/0x6D137AF2.h>  // UI
+#include <embed/0x848EACE6.h>  // UI
+#include <embed/0xA970065F.h>  // UI
 
 #include <deps/imgui/imgui.h>
 #include <include/reshade.hpp>
@@ -34,9 +42,17 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0x778CFAC9),  // Uberpost 2
     CustomShaderEntry(0x6134CFC2),  // Uberpost 3
     CustomShaderEntry(0x0F750BE1),  // Uberpost 4
+    CustomShaderEntry(0xCB67E5FE),  // Paper white -- Unused
     CustomShaderEntry(0x3BB091D1),  // UI Uberpost 1
     CustomShaderEntry(0xE45E5BE1),  // Clamp
-    CustomShaderEntry(0x49FD2384),  // Gamma/Final
+    CustomShaderEntry(0x49FD2384),  // Gamma
+    CustomShaderEntry(0x20133A8B),  // Final
+    // UI
+    CustomShaderEntry(0x848EACE6),  // UI
+    CustomShaderEntry(0x65EB4440),  // UI
+    CustomShaderEntry(0x6D137AF2),  // UI
+    CustomShaderEntry(0x57A63191),  // UI
+    CustomShaderEntry(0xA970065F),  // UI
 
 };
 

@@ -1,4 +1,4 @@
-// ---- Created with 3Dmigoto v1.3.16 on Tue Nov  5 00:45:40 2024
+// ---- Created with 3Dmigoto v1.3.16 on Tue Nov  5 03:23:19 2024
 // UI
 
 #include "./shared.h"
@@ -6,6 +6,10 @@
 Texture2D<float4> t0 : register(t0);
 
 SamplerState s0_s : register(s0);
+
+cbuffer cb0 : register(b0) {
+  float4 cb0[27];
+}
 
 // 3Dmigoto declarations
 #define cmp -
@@ -32,6 +36,11 @@ void main(
   r1.xyzw = t0.Sample(s0_s, v3.xy).xyzw;
   r1.x = saturate(r1.w * v4.x + -v4.w);
   r0.w = v1.w;
+  r0.xyzw = r1.xxxx * r0.xyzw;
+  r1.xy = cb0[26].zw + -cb0[26].xy;
+  r1.xy = -abs(v5.xy) + r1.xy;
+  r1.xy = saturate(v5.zw * r1.xy);
+  r1.x = r1.x * r1.y;
   o0.xyzw = r1.xxxx * r0.xyzw;
 
   o0.rgb = renodx::math::SafePow(o0.rgb, 2.2f);                         // 2.2 gamma correction

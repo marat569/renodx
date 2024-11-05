@@ -48,7 +48,9 @@ void main(
   r0.xyzw = r0.xyzw * r1.xxxx + r3.xyzw;
   o0.xyzw = v6.zzzz * r0.xyzw;
 
+  o0.rgb = renodx::math::SafePow(o0.rgb, 2.2f);                         // 2.2 gamma correction
   o0.rgb *= injectedData.toneMapUINits / injectedData.toneMapGameNits;  // Ratio of UI:Game brightness
+  o0.rgb = renodx::math::SafePow(o0.rgb, 1 / 2.2);                      // Inverse 2.2 gamma
 
   return;
 }

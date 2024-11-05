@@ -77,7 +77,8 @@ float3 applyUserTonemap(float3 untonemapped, Texture2D lutTexture, SamplerState 
   } else if (injectedData.toneMapType == 5.f) {  // RenoDRT
     float RenoDRTPeak = (injectedData.toneMapPeakNits / injectedData.toneMapGameNits) * 100.f;
 
-    outputColor = renodx::tonemap::renodrt::BT709(outputColor, RenoDRTPeak, 0.18f, 18.f, 1.f, 1.f, 1.f, 1.f, 1.f, 0.f, 0.f, 0.f);
+    // Color, Peak, midgray, midgraynits, exposure, highlights, shadows, contrast, saturation, dechroma, flare, hueCorrectionStrength
+    outputColor = renodx::tonemap::renodrt::BT709(outputColor, RenoDRTPeak, 0.18f, 18.f, 1.f, 1.f, 1.f, 1.f, 1.f, 0.5f, 0.f, 0.f);
 
     float3 lutColor = min(1.f, renodx::lut::Sample(lutTexture, lut_config, outputColor));
     outputColor = renodx::tonemap::UpgradeToneMap(outputColor, saturate(outputColor), lutColor, injectedData.colorGradeLUTStrength);

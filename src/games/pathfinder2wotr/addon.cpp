@@ -9,10 +9,11 @@
 
 // #define DEBUG_LEVEL_1 //added
 
-#include <embed/0x1C581A77.h>  //Uberpost 1
+#include <embed/0x1C581A77.h>  // Uberpost 1
+#include <embed/0x3BB091D1.h>  // UI Uberpost 1
 #include <embed/0x49FD2384.h>  // Gamma/Final
-#include <embed/0x778CFAC9.h>  //Uberpost 2
-#include <embed/0xE45E5BE1.h>  //Clamp
+#include <embed/0x778CFAC9.h>  // Uberpost 2
+#include <embed/0xE45E5BE1.h>  // Clamp
 
 #include <deps/imgui/imgui.h>
 #include <include/reshade.hpp>
@@ -30,6 +31,7 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0x778CFAC9),  // Uberpost 2
     CustomShaderEntry(0xE45E5BE1),  // Clamp
     CustomShaderEntry(0x49FD2384),  // Gamma/Final
+    CustomShaderEntry(0x3BB091D1),  // UI Uberpost 1
 
 };
 
@@ -148,7 +150,7 @@ renodx::utils::settings::Settings settings = {
 
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
-        .label = " - Please enable Native HDR in game! \r\n - Use the game's UI slider to control the UI!",
+        .label = " - Please make sure SMAA is on \r\n - The mod is still in beta, so please report all issues on the discord!",
         .section = "Instructions",
     },
 
@@ -204,7 +206,7 @@ void OnPresetOff() {
 // NOLINTBEGIN(readability-identifier-naming)
 
 extern "C" __declspec(dllexport) const char* NAME = "RenoDX";
-extern "C" __declspec(dllexport) const char* DESCRIPTION = "RenoDX for YS:10 Nordics";
+extern "C" __declspec(dllexport) const char* DESCRIPTION = "RenoDX for Pathfinder: Wrath of the Righteous";
 
 // NOLINTEND(readability-identifier-naming)
 

@@ -54,9 +54,15 @@ float3 applyUserTonemap(float3 untonemapped, Texture2D lutTexture, SamplerState 
 
     outputColor = DICETonemap(outputColor * dicePaperWhite, dicePeakWhite, DICEconfig) / dicePaperWhite;
 
+    float3 lutColor = min(1.f, renodx::lut::Sample(lutTexture, lut_config, outputColor));
+    outputColor = renodx::tonemap::UpgradeToneMap(outputColor, saturate(outputColor), lutColor, injectedData.colorGradeLUTStrength);
+
   } else if (injectedData.toneMapType == 3.f) {  // baby reinhard
     float ReinhardPeak = injectedData.toneMapPeakNits / injectedData.toneMapGameNits;
     outputColor.rgb = renodx::tonemap::ReinhardScalable(outputColor.rgb, ReinhardPeak);
+
+    float3 lutColor = min(1.f, renodx::lut::Sample(lutTexture, lut_config, outputColor));
+    outputColor = renodx::tonemap::UpgradeToneMap(outputColor, saturate(outputColor), lutColor, injectedData.colorGradeLUTStrength);
 
   } else if (injectedData.toneMapType == 4.f) {  // Frostbite
     float frostbitePeak = injectedData.toneMapPeakNits / injectedData.toneMapGameNits;

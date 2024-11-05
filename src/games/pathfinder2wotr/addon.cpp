@@ -9,9 +9,11 @@
 
 // #define DEBUG_LEVEL_1 //added
 
+#include <embed/0x0F750BE1.h>  // Uberpost 4
 #include <embed/0x1C581A77.h>  // Uberpost 1
 #include <embed/0x3BB091D1.h>  // UI Uberpost 1
 #include <embed/0x49FD2384.h>  // Gamma/Final
+#include <embed/0x6134CFC2.h>  // Uberpost 3
 #include <embed/0x778CFAC9.h>  // Uberpost 2
 #include <embed/0xE45E5BE1.h>  // Clamp
 
@@ -27,11 +29,14 @@ namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
 
+    // Added in render order
     CustomShaderEntry(0x1C581A77),  // Uberpost 1
     CustomShaderEntry(0x778CFAC9),  // Uberpost 2
+    CustomShaderEntry(0x6134CFC2),  // Uberpost 3
+    CustomShaderEntry(0x0F750BE1),  // Uberpost 4
+    CustomShaderEntry(0x3BB091D1),  // UI Uberpost 1
     CustomShaderEntry(0xE45E5BE1),  // Clamp
     CustomShaderEntry(0x49FD2384),  // Gamma/Final
-    CustomShaderEntry(0x3BB091D1),  // UI Uberpost 1
 
 };
 
@@ -47,7 +52,7 @@ renodx::utils::settings::Settings settings = {
         .label = "Tone Mapper",
         .section = "Tone Mapping",
         .tooltip = "Sets the tone mapper type",
-        .labels = {"Vanilla", "None", "DICE", "Reinhard+", "Frostbite"},
+        .labels = {"Vanilla", "None", "DICE", "Reinhard+", "Frostbite", "RenoDRT"},
     },
     new renodx::utils::settings::Setting{
         .key = "toneMapPeakNits",
@@ -150,7 +155,7 @@ renodx::utils::settings::Settings settings = {
 
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
-        .label = " - Please make sure SMAA is on \r\n - The mod is still in beta, so please report all issues on the discord!",
+        .label = " - Please make sure SMAA is on + all other post process effects \r\n - The mod is still in beta, so please report all issues on the discord!",
         .section = "Instructions",
     },
 

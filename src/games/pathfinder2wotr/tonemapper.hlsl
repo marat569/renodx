@@ -7,11 +7,7 @@
 float3 applyUserTonemap(float3 untonemapped, Texture2D lutTexture, SamplerState lutSampler, float3 preCompute) {
   float3 outputColor;
 
-  if (injectedData.toneMapType == 0.f) {  // If vanilla, saturate -- else send untonemapped
-    outputColor = saturate(untonemapped);
-  } else {
-    outputColor = untonemapped;
-  }
+  outputColor = untonemapped;
 
   // Sample our lut
   renodx::lut::Config lut_config = renodx::lut::config::Create(
@@ -21,6 +17,14 @@ float3 applyUserTonemap(float3 untonemapped, Texture2D lutTexture, SamplerState 
       renodx::lut::config::type::ARRI_C1000_NO_CUT,
       renodx::lut::config::type::LINEAR,
       preCompute);
+
+  // New way of handling vanilla
+  // Lerp untonemapped with lutcolor, and saturate
+  if (injectedData.toneMapType == 0.f) {
+    float3 lutColor = min(1.f, renodx::lut::Sample(lutTexture, lut_config, outputColor));
+    outputColor = lerp(outputColor, lutColor, injectedData.colorGradeLUTStrength);
+    outputColor = saturate(outputColor);
+  }
 
   // UserColorGrading offsets
   // hard coded values that you can use to set as defaults
@@ -33,8 +37,8 @@ float3 applyUserTonemap(float3 untonemapped, Texture2D lutTexture, SamplerState 
   float dechroma = 1.f;
 
   if (injectedData.toneMapType != 0) {  // UserColorGrading, pre-tonemap
-    outputColor.rgb = renodx::color::grade::UserColorGrading(
-        outputColor.rgb,
+    outputColor = renodx::color::grade::UserColorGrading(
+        outputColor,
         injectedData.colorGradeExposure,                 // exposure
         highlights * injectedData.colorGradeHighlights,  // highlights
         shadows * injectedData.colorGradeShadows,        // shadows
@@ -56,21 +60,22 @@ float3 applyUserTonemap(float3 untonemapped, Texture2D lutTexture, SamplerState 
     outputColor = DICETonemap(outputColor * dicePaperWhite, dicePeakWhite, DICEconfig) / dicePaperWhite;
 
     float3 lutColor = min(1.f, renodx::lut::Sample(lutTexture, lut_config, outputColor));
-    outputColor = renodx::tonemap::UpgradeToneMap(outputColor, saturate(outputColor), lutColor, injectedData.colorGradeLUTStrength);
+    outputColor = renodx::tonemap::UpgradeToneMap(outputColor, saturate(outputColor), lutColor, 1.f);
 
   } else if (injectedData.toneMapType == 3.f) {  // baby reinhard
     float ReinhardPeak = injectedData.toneMapPeakNits / injectedData.toneMapGameNits;
-    outputColor.rgb = renodx::tonemap::ReinhardScalable(outputColor.rgb, ReinhardPeak);
+    outputColor = renodx::tonemap::ReinhardScalable(outputColor, ReinhardPeak);
 
     float3 lutColor = min(1.f, renodx::lut::Sample(lutTexture, lut_config, outputColor));
-    outputColor = renodx::tonemap::UpgradeToneMap(outputColor, saturate(outputColor), lutColor, injectedData.colorGradeLUTStrength);
+    outputColor = renodx::tonemap::UpgradeToneMap(outputColor, saturate(outputColor), lutColor, 1.f);
 
   } else if (injectedData.toneMapType == 4.f) {  // Frostbite
     float frostbitePeak = injectedData.toneMapPeakNits / injectedData.toneMapGameNits;
     outputColor = renodx::tonemap::frostbite::BT709(outputColor, frostbitePeak);
 
-    float3 lutColor = min(1.f, renodx::lut::Sample(lutTexture, lut_config, outputColor));                                             // Sample our LUT
-    outputColor = renodx::tonemap::UpgradeToneMap(outputColor, saturate(outputColor), lutColor, injectedData.colorGradeLUTStrength);  // Combine our untonemapped image with the LUT
+    // float3 lutColor = min(1.f, renodx::lut::Sample(lutTexture, lut_config, outputColor));              // Sample our LUT
+    float3 lutColor = renodx::lut::Sample(lutTexture, lut_config, outputColor);                        // Min(1, caused artifacts with frostbite; so we'll remove it for now
+    outputColor = renodx::tonemap::UpgradeToneMap(outputColor, saturate(outputColor), lutColor, 1.f);  // Combine our untonemapped image with the LUT
 
     outputColor = renodx::color::bt709::clamp::AP1(outputColor);  // Clamp frostbite to AP1 to avoid invalid colors
 
@@ -81,12 +86,12 @@ float3 applyUserTonemap(float3 untonemapped, Texture2D lutTexture, SamplerState 
     outputColor = renodx::tonemap::renodrt::BT709(outputColor, RenoDRTPeak, 0.18f, 18.f, 1.f, 1.f, 1.f, 1.f, 1.f, 0.5f, 0.f, 0.f);
 
     float3 lutColor = min(1.f, renodx::lut::Sample(lutTexture, lut_config, outputColor));
-    outputColor = renodx::tonemap::UpgradeToneMap(outputColor, saturate(outputColor), lutColor, injectedData.colorGradeLUTStrength);
+    outputColor = renodx::tonemap::UpgradeToneMap(outputColor, saturate(outputColor), lutColor, 1.f);
   }
 
   if (injectedData.toneMapType != 0) {  // UserColorGrading, post-tonemap
-    outputColor.rgb = renodx::color::grade::UserColorGrading(
-        outputColor.rgb,
+    outputColor = renodx::color::grade::UserColorGrading(
+        outputColor,
         1.f,                                             // exposure
         1.f,                                             // highlights
         1.f,                                             // shadows

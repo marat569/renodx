@@ -48,12 +48,14 @@ void main(
   r0.xyz = cb0[0].www * r0.zxy;
   float3 untonemapped = r0.gbr;
   o0.rgb = untonemapped;
+  // o0.rgb = renodx::color::bt709::clamp::AP1(o0.rgb);  // Clamp to AP1
   o0.a = r0.a;
-  //o0.rgb = renodx::math::PowSafe(o0.rgb, 1.f / 2.2f);
-  return; // Early return here so we can unclamp rec709
+  // o0.rgb = renodx::math::PowSafe(o0.rgb, 1.f / 2.2f);
+
+  return;  // Early return here so we can unclamp rec709
 
   r0.xyz = r0.xyz * float3(5.55555582, 5.55555582, 5.55555582) + float3(0.0479959995, 0.0479959995, 0.0479959995);
-  // r0.xyz = max(float3(0, 0, 0), r0.xyz); // Rec709 clamp?
+  // r0.xyz = max(float3(0, 0, 0), r0.xyz);  // Rec709 clamp?
   r0.xyz = log2(r0.xyz);
   r0.xyz = saturate(r0.xyz * float3(0.0734997839, 0.0734997839, 0.0734997839) + float3(0.386036009, 0.386036009, 0.386036009));
   r0.yzw = cb0[0].zzz * r0.xyz;
@@ -69,12 +71,12 @@ void main(
   r0.x = r0.x * cb0[0].z + -r0.y;
   r0.yzw = r1.xyz + -r2.xyz;
   r0.xyz = r0.xxx * r0.yzw + r2.xyz;
-
-  // r0.rgb = applyUserTonemap(untonemapped, t1, s0_s, cb0[0].xyz);  // apply user tonemap
-  // r0.rgb = renodx::math::PowSafe(r0.rgb, 1.f / 2.2f);
-  //  o0.rgb = renodx::color::srgb::EncodeSafe(r0.rgb);
-  //  o0.rgb = r0.rgb;
-  //  o0.w = 1.f;
+  // r0.rgb = renodx::tonemap::UpgradeToneMap(untonemapped, saturate(untonemapped), r0.rgb, 1.f);
+  //  r0.rgb = applyUserTonemap(untonemapped, t1, s0_s, cb0[0].xyz);  // apply user tonemap
+  //  r0.rgb = renodx::math::PowSafe(r0.rgb, 1.f / 2.2f);
+  //   o0.rgb = renodx::color::srgb::EncodeSafe(r0.rgb);
+  //   o0.rgb = r0.rgb;
+  //   o0.w = 1.f;
 
   // return;
 

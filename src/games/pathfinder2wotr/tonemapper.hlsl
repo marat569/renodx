@@ -71,13 +71,11 @@ float3 applyUserTonemap(float3 untonemapped, Texture2D lutTexture, SamplerState 
 
   } else if (injectedData.toneMapType == 4.f) {  // Frostbite
     float frostbitePeak = injectedData.toneMapPeakNits / injectedData.toneMapGameNits;
-    outputColor = renodx::tonemap::frostbite::BT709(outputColor, frostbitePeak);
-
-    // float3 lutColor = min(1.f, renodx::lut::Sample(lutTexture, lut_config, outputColor));              // Sample our LUT
-    float3 lutColor = renodx::lut::Sample(lutTexture, lut_config, outputColor);                        // Min(1, caused artifacts with frostbite; so we'll remove it for now
-    outputColor = renodx::tonemap::UpgradeToneMap(outputColor, saturate(outputColor), lutColor, 1.f);  // Combine our untonemapped image with the LUT
-
-    outputColor = renodx::color::bt709::clamp::AP1(outputColor);  // Clamp frostbite to AP1 to avoid invalid colors
+    if (any(outputColor != 0.f)) {  // Avoid dividing by zero with frostbite
+      outputColor = renodx::tonemap::frostbite::BT709(outputColor, frostbitePeak);
+      float3 lutColor = min(1.f, renodx::lut::Sample(lutTexture, lut_config, outputColor));              // Sample our LUT
+      outputColor = renodx::tonemap::UpgradeToneMap(outputColor, saturate(outputColor), lutColor, 1.f);  // Combine our untonemapped image with the LUT
+    }
 
   } else if (injectedData.toneMapType == 5.f) {  // RenoDRT
     float RenoDRTPeak = (injectedData.toneMapPeakNits / injectedData.toneMapGameNits) * 100.f;
@@ -100,6 +98,8 @@ float3 applyUserTonemap(float3 untonemapped, Texture2D lutTexture, SamplerState 
         dechroma * 0.f,                                  // dechroma/blowout, we do this post tonemap
         0.f);                                            // hue correction, might not need it [yet]
   }
+
+  outputColor = renodx::color::bt709::clamp::AP1(outputColor);  // Clamp to AP1 to avoid negative colors
 
   return outputColor;
 }

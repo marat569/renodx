@@ -101,7 +101,7 @@ void main(
   float3 untonemapped = r0.gbr;
 
   r0.xyz = r0.xyz * float3(5.55555582, 5.55555582, 5.55555582) + float3(0.0479959995, 0.0479959995, 0.0479959995);
-  r0.xyz = max(float3(0, 0, 0), r0.xyz);
+  // r0.xyz = max(float3(0, 0, 0), r0.xyz);
   r0.xyz = log2(r0.xyz);
   r0.xyz = saturate(r0.xyz * float3(0.0734997839, 0.0734997839, 0.0734997839) + float3(0.386036009, 0.386036009, 0.386036009));
   r0.yzw = cb0[0].zzz * r0.xyz;

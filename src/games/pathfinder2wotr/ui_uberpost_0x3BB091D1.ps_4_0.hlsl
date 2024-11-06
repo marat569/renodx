@@ -46,14 +46,14 @@ void main(
     r0.xyz = r1.xyz * r0.xyz;
   }
   r0.xyz = cb0[0].www * r0.zxy;
-  // float3 untonemapped = r0.gbr;
-  // o0.rgb = untonemapped;
-  // o0.a = r0.a;
-  // o0.rgb = renodx::math::PowSafe(o0.rgb, 1.f / 2.2f);
-  // return;
+  float3 untonemapped = r0.gbr;
+  o0.rgb = untonemapped;
+  o0.a = r0.a;
+  //o0.rgb = renodx::math::PowSafe(o0.rgb, 1.f / 2.2f);
+  return; // Early return here so we can unclamp rec709
 
   r0.xyz = r0.xyz * float3(5.55555582, 5.55555582, 5.55555582) + float3(0.0479959995, 0.0479959995, 0.0479959995);
-  r0.xyz = max(float3(0, 0, 0), r0.xyz);
+  // r0.xyz = max(float3(0, 0, 0), r0.xyz); // Rec709 clamp?
   r0.xyz = log2(r0.xyz);
   r0.xyz = saturate(r0.xyz * float3(0.0734997839, 0.0734997839, 0.0734997839) + float3(0.386036009, 0.386036009, 0.386036009));
   r0.yzw = cb0[0].zzz * r0.xyz;

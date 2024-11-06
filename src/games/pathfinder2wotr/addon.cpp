@@ -27,6 +27,7 @@
 #include <embed/0x848EACE6.h>  // UI
 #include <embed/0xA970065F.h>  // UI
 #include <embed/0xBC4E0BCF.h>  // UI
+#include <embed/0xC2EF5A31.h>  // UI
 #include <embed/0xD5C38DDA.h>  // UI
 
 #include <deps/imgui/imgui.h>
@@ -61,6 +62,7 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0x54B47285),  // UI
     CustomShaderEntry(0xD5C38DDA),  // UI
     CustomShaderEntry(0x653A9A09),  // UI
+    CustomShaderEntry(0xC2EF5A31),  // UI
 
 };
 

@@ -34,7 +34,8 @@ void main(
   // r0.rgb = renodx::math::PowSafe(r0.rgb, 2.2f);  // Linearize
 
   o0.rgb = r0.rgb;
-  o0.w = r0.a;
+  //o0.w = r0.w;
+  o0.w = 1.f;
 
   // r1.xyz = (int3)r0.xyz & int3(0x7fffffff,0x7fffffff,0x7fffffff);
   // r2.xyz = cmp(int3(0x7f800000,0x7f800000,0x7f800000) < (uint3)r1.xyz);

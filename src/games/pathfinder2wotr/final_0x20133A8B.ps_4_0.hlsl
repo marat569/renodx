@@ -15,9 +15,11 @@ void main(
     out float4 o0 : SV_Target0) {
   o0.xyzw = BlitTexture.Sample(BlitSampler_s, v0.xy).xyzw;
 
-  o0.rgb = renodx::color::correct::GammaSafe(o0.rgb); // The entire game is Linear, so we don't need pow 2.2 here
+  o0.rgb = renodx::color::correct::GammaSafe(o0.rgb);  // The entire game is Linear, so we don't need pow 2.2 here
 
   o0.rgb *= injectedData.toneMapGameNits / 80.f;
+
+  // o0.rgb = renodx::color::bt709::clamp::BT2020(o0.rgb);
 
   return;
 }

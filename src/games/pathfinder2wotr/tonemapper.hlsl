@@ -99,7 +99,8 @@ float3 applyUserTonemap(float3 untonemapped, Texture2D lutTexture, SamplerState 
         0.f);                                            // hue correction, might not need it [yet]
   }
 
-  outputColor = renodx::color::bt709::clamp::AP1(outputColor);  // Clamp to AP1 to avoid negative colors
+  // outputColor = renodx::color::bt709::clamp::AP1(outputColor);  // Clamp to AP1 to avoid negative colors
+  outputColor = renodx::color::bt709::clamp::BT2020(outputColor);  // Clamp to BT2020 to avoid negative colors
 
   return outputColor;
 }

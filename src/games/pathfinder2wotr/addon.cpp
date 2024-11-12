@@ -35,6 +35,7 @@
 
 #include "../../mods/shader.hpp"
 #include "../../mods/swapchain.hpp"
+#include "../../utils/date.hpp"
 #include "../../utils/settings.hpp"
 #include "./shared.h"
 
@@ -210,7 +211,7 @@ renodx::utils::settings::Settings settings = {
 
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
-        .label = "Version: " + std::string(IsoDate),
+        .label = std::string("Build: ") + renodx::utils::date::ISO_DATE_TIME,
         .section = "About",
         .tooltip = std::string(__DATE__),
     },

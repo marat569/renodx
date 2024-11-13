@@ -21,8 +21,8 @@ float3 applyUserTonemap(float3 untonemapped) {
         injectedData.colorGradeShadows,     // shadows
         injectedData.colorGradeContrast,    // contrast
         1.f,                                // saturation, we'll do this post-tonemap
-        0.f,                                // dechroma, we don't need it
-        0.f);                               // hue correction, might not need it [yet]
+        0.f,                                // dechroma, post tonemapping
+        0.f);                               // hue correction, Post tonemapping
   }
 
   // Start tonemapper if/else
@@ -54,7 +54,8 @@ float3 applyUserTonemap(float3 untonemapped) {
         1.f,                                // contrast
         injectedData.colorGradeSaturation,  // saturation
         0.f,                                // dechroma, we don't need it
-        0.f);                               // hue correction, might not need it [yet]
+        injectedData.toneMapHueCorrection,  // Hue Correction
+        renodx::tonemap::Reinhard(untonemapped));
   }
 
   outputColor = renodx::color::bt709::clamp::BT2020(outputColor);  // Clamp to BT2020 to avoid negative colorsF

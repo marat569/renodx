@@ -65,6 +65,17 @@ renodx::utils::settings::Settings settings = {
     },
 
     new renodx::utils::settings::Setting{
+        .key = "toneMapHueCorrection",
+        .binding = &shader_injection.toneMapHueCorrection,
+        .default_value = 50.f,
+        .label = "Hue Correction",
+        .section = "Tone Mapping",
+        .tooltip = "Emulates hue shifting from the vanilla tonemapper",
+        .max = 100.f,
+        .parse = [](float value) { return value * 0.01f; },
+    },
+
+    new renodx::utils::settings::Setting{
         .key = "gamma",
         .binding = &shader_injection.gamma,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,

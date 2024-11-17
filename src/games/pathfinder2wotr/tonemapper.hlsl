@@ -58,28 +58,48 @@ float3 applyUserTonemap(float3 untonemapped, Texture2D lutTexture, SamplerState 
     float dicePeakWhite = injectedData.toneMapPeakNits / 80.f;
 
     float sdrColor = DICETonemap(outputColor * dicePaperWhite, dicePaperWhite, DICEconfig) / dicePaperWhite;
-    outputColor = DICETonemap(outputColor * dicePaperWhite, dicePeakWhite, DICEconfig) / dicePaperWhite;
 
-    float3 lutColor = min(1, renodx::lut::Sample(lutTexture, lut_config, outputColor));
+    float3 lutColor = renodx::lut::Sample(lutTexture, lut_config, outputColor);
+    // Normalize the SDR colors to 0-1 range, without clipping them
+    float lutColorPeak = max(max(max(lutColor.x, lutColor.y), lutColor.z), 1.f);
+    lutColor /= lutColorPeak;
+    sdrColor /= lutColorPeak;
+
     outputColor = renodx::tonemap::UpgradeToneMap(outputColor, sdrColor, lutColor, 1.f);
+    outputColor *= lutColorPeak;
+
+    outputColor = DICETonemap(outputColor * dicePaperWhite, dicePeakWhite, DICEconfig) / dicePaperWhite;
 
   } else if (injectedData.toneMapType == 3.f) {  // baby reinhard
     float ReinhardPeak = injectedData.toneMapPeakNits / injectedData.toneMapGameNits;
     float3 sdrColor = renodx::tonemap::ReinhardScalable(outputColor, 1.f);
-    outputColor = renodx::tonemap::ReinhardScalable(outputColor, ReinhardPeak);
 
-    float3 lutColor = min(1, renodx::lut::Sample(lutTexture, lut_config, outputColor));
+    float3 lutColor = renodx::lut::Sample(lutTexture, lut_config, outputColor);
+    // Normalize the SDR colors to 0-1 range, without clipping them
+    float lutColorPeak = max(max(max(lutColor.x, lutColor.y), lutColor.z), 1.f);
+    lutColor /= lutColorPeak;
+    sdrColor /= lutColorPeak;
+
     outputColor = renodx::tonemap::UpgradeToneMap(outputColor, sdrColor, lutColor, 1.f);
+    outputColor *= lutColorPeak;
+
+    outputColor = renodx::tonemap::ReinhardScalable(outputColor, ReinhardPeak);
 
   } else if (injectedData.toneMapType == 4.f) {  // Frostbite
     float frostbitePeak = injectedData.toneMapPeakNits / injectedData.toneMapGameNits;
-    if (any(outputColor != 0.f)) {  // Avoid dividing by zero with frostbite, still artifacts; frostbite is a WIP
-      float3 sdrColor = renodx::tonemap::frostbite::BT709(outputColor, 1.f);
-      outputColor = renodx::tonemap::frostbite::BT709(outputColor, frostbitePeak);
 
-      float3 lutColor = min(1, renodx::lut::Sample(lutTexture, lut_config, outputColor));   // Sample our LUT
-      outputColor = renodx::tonemap::UpgradeToneMap(outputColor, sdrColor, lutColor, 1.f);  // Combine our untonemapped image with the LUT
-    }
+    float3 sdrColor = renodx::tonemap::frostbite::BT709(outputColor, 1.f);
+
+    float3 lutColor = renodx::lut::Sample(lutTexture, lut_config, outputColor);  // Sample our LUT
+    // Normalize the SDR colors to 0-1 range, without clipping them
+    float lutColorPeak = max(max(max(lutColor.x, lutColor.y), lutColor.z), 1.f);
+    lutColor /= lutColorPeak;
+    sdrColor /= lutColorPeak;
+
+    outputColor = renodx::tonemap::UpgradeToneMap(outputColor, sdrColor, lutColor, 1.f);
+    outputColor *= lutColorPeak;
+
+    outputColor = renodx::tonemap::frostbite::BT709(outputColor, frostbitePeak);
 
   } else if (injectedData.toneMapType == 5.f) {  // RenoDRT
     float RenoDRTPeak = (injectedData.toneMapPeakNits / injectedData.toneMapGameNits) * 100.f;
@@ -88,7 +108,7 @@ float3 applyUserTonemap(float3 untonemapped, Texture2D lutTexture, SamplerState 
     float3 sdrColor = renodx::tonemap::renodrt::BT709(outputColor, 100.f, 0.18f, 18.f, 1.f, 1.f, 1.f, 1.f, 1.f, 0.5f, 0.f, 0.f);
     outputColor = renodx::tonemap::renodrt::BT709(outputColor, RenoDRTPeak, 0.18f, 18.f, 1.f, 1.f, 1.f, 1.f, 1.f, 0.5f, 0.f, 0.f);
 
-    float3 lutColor = min(1, renodx::lut::Sample(lutTexture, lut_config, outputColor));
+    float3 lutColor = renodx::lut::Sample(lutTexture, lut_config, outputColor);
     outputColor = renodx::tonemap::UpgradeToneMap(outputColor, sdrColor, lutColor, 1.f);
   }
 
@@ -97,12 +117,17 @@ float3 applyUserTonemap(float3 untonemapped, Texture2D lutTexture, SamplerState 
 
   //   // Color, Peak, midgray, midgraynits, exposure, highlights, shadows, contrast, saturation, dechroma, flare, hueCorrectionStrength
   //   float3 sdrColor = renodx::tonemap::renodrt::BT709(outputColor, 100.f, 0.18f, 18.f, 1.f, 1.f, 1.f, 1.f, 1.f, 0.5f, 0.f, 0.f);
-  //   outputColor = renodx::tonemap::renodrt::BT709(outputColor, RenoDRTPeak, 0.18f, 18.f, 1.f, 1.f, 1.f, 1.f, 1.f, 0.5f, 0.f, 0.f);
 
-  //   // float3 lutColor = min(1.f, renodx::lut::Sample(lutTexture, lut_config, outputColor));
   //   float3 lutColor = renodx::lut::Sample(lutTexture, lut_config, outputColor);
+
+  //   // Normalize the SDR colors to 0-1 range, without clipping them
+  //   float lutColorPeak = max(max(max(lutColor.x, lutColor.y), lutColor.z), 1.f);
+  //   lutColor /= lutColorPeak;
+  //   sdrColor /= lutColorPeak;
+
   //   outputColor = renodx::tonemap::UpgradeToneMap(outputColor, sdrColor, lutColor, 1.f);
-  //   // outputColor = lutColor;
+  //   outputColor *= lutColorPeak;
+  //   outputColor = renodx::tonemap::renodrt::BT709(outputColor, RenoDRTPeak, 0.18f, 18.f, 1.f, 1.f, 1.f, 1.f, 1.f, 0.5f, 0.f, 0.f);
   // }
 
   if (injectedData.toneMapType != 0) {  // UserColorGrading, post-tonemap

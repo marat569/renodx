@@ -251,8 +251,8 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       if (!reshade::register_addon(h_module)) return FALSE;
       renodx::mods::shader::force_pipeline_cloning = true;  // So the mod works with the toolkit/stability
 
-      renodx::mods::swapchain::force_borderless = true;      // needed for stability -- also borderless minimizes the game
-      renodx::mods::swapchain::prevent_full_screen = false;  // needed for stability
+      renodx::mods::swapchain::force_borderless = true;      // needed for stability -- also borderless minimizes the game; so this forces borderless when the game is in window mode
+      renodx::mods::swapchain::prevent_full_screen = false;  // stability
 
       // RGBA8_TYPELESS
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({

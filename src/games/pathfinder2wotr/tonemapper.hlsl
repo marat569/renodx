@@ -106,10 +106,17 @@ float3 applyUserTonemap(float3 untonemapped, Texture2D lutTexture, SamplerState 
 
     // Color, Peak, midgray, midgraynits, exposure, highlights, shadows, contrast, saturation, dechroma, flare, hueCorrectionStrength
     float3 sdrColor = renodx::tonemap::renodrt::BT709(outputColor, 100.f, 0.18f, 18.f, 1.f, 1.f, 1.f, 1.f, 1.f, 0.5f, 0.f, 0.f);
-    outputColor = renodx::tonemap::renodrt::BT709(outputColor, RenoDRTPeak, 0.18f, 18.f, 1.f, 1.f, 1.f, 1.f, 1.f, 0.5f, 0.f, 0.f);
 
     float3 lutColor = renodx::lut::Sample(lutTexture, lut_config, outputColor);
+    // Normalize the SDR colors to 0-1 range, without clipping them
+    float lutColorPeak = max(max(max(lutColor.x, lutColor.y), lutColor.z), 1.f);
+    lutColor /= lutColorPeak;
+    sdrColor /= lutColorPeak;
+
     outputColor = renodx::tonemap::UpgradeToneMap(outputColor, sdrColor, lutColor, 1.f);
+    outputColor *= lutColorPeak;
+
+    outputColor = renodx::tonemap::renodrt::BT709(outputColor, RenoDRTPeak, 0.18f, 18.f, 1.f, 1.f, 1.f, 1.f, 1.f, 0.5f, 0.f, 0.f);
   }
 
   // } else if (injectedData.toneMapType == 6.f) {  // test

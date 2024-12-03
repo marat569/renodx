@@ -3,27 +3,25 @@
 
 #include "./shared.h"
 
-float3 applyUserTonemap(float3 untonemapped){
-    float3 outputColor;
-    
-    outputColor = untonemapped;
-    
-    if (injectedData.toneMapType == 0.f) //vanilla
-    {
-        saturate(untonemapped);
-    }
-    
-    
-    
-    float vanillaMidGray = 0.18f;
-    float renoDRTContrast = 1.f;
-    float renoDRTFlare = 0.f;
-    float renoDRTShadows = 1.f;
-    //float renoDRTDechroma = 0.8f;
-    float renoDRTSaturation = 1.f; //
-    float renoDRTHighlights = 1.f;
+float3 applyUserTonemap(float3 untonemapped) {
+  float3 outputColor;
 
-    renodx::tonemap::Config config = renodx::tonemap::config::Create(
+  outputColor = untonemapped;
+
+  if (injectedData.toneMapType == 0.f)  // vanilla
+  {
+    saturate(untonemapped);
+  }
+
+  float vanillaMidGray = 0.18f;
+  float renoDRTContrast = 1.f;
+  float renoDRTFlare = 0.f;
+  float renoDRTShadows = 1.f;
+  // float renoDRTDechroma = 0.8f;
+  float renoDRTSaturation = 1.f;  //
+  float renoDRTHighlights = 1.f;
+
+  renodx::tonemap::Config config = renodx::tonemap::config::Create(
       injectedData.toneMapType,
       injectedData.toneMapPeakNits,
       injectedData.toneMapGameNits,
@@ -41,9 +39,7 @@ float3 applyUserTonemap(float3 untonemapped){
       renoDRTSaturation,
       renoDRTFlare);
 
-    outputColor = renodx::tonemap::config::Apply(outputColor, config);
-    
+  outputColor = renodx::tonemap::config::Apply(outputColor, config);
 
-    
-    return outputColor;
+  return outputColor;
 }

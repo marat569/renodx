@@ -4,7 +4,7 @@
 // With just BGR8_TYPELESS upgraded, the game runs bright, so we'll just add a slider, and hdr done!
 
 #include "./shared.h"
-#include "./tonemapper.hlsl" //our custom tonemapper
+#include "./tonemapper.hlsl"  //our custom tonemapper
 
 SamplerState smplScene_s : register(s0);
 SamplerState smplBlurFront_s : register(s1);
@@ -13,17 +13,14 @@ Texture2D<float4> smplScene_Tex : register(t0);
 Texture2D<float4> smplBlurFront_Tex : register(t1);
 Texture2D<float4> smplBlurBack_Tex : register(t2);
 
-
 // 3Dmigoto declarations
 #define cmp -
 
-
 void main(
-  float4 v0 : SV_Position0,
-  float2 v1 : TEXCOORD0,
-  out float4 o0 : SV_Target0)
-{
-  float4 r0,r1,r2;
+    float4 v0 : SV_Position0,
+    float2 v1 : TEXCOORD0,
+    out float4 o0 : SV_Target0) {
+  float4 r0, r1, r2;
   uint4 bitmask, uiDest;
   float4 fDest;
 
@@ -49,17 +46,17 @@ void main(
   r1.x = 1 / r1.x;
   r1.x = -1 + r1.x;
   r1.x = saturate(0.25 * r1.x);
-  o0.xyzw = r1.xxxx * r2.xyzw + r0.xyzw; //vanilla output
-    
-    float3 untonemapped = o0.rgb;
-    untonemapped = max(0, renodx::color::bt709::from::SRGB(untonemapped)); //linearize untonemapped
-    
-    float3 outputColor;
-    outputColor = applyUserTonemap(untonemapped);
-    
-    outputColor = renodx::math::SafePow(outputColor, 1 / 2.2);
-    
-    o0.rgb = outputColor;
+  o0.xyzw = r1.xxxx * r2.xyzw + r0.xyzw;  // vanilla output
+
+  float3 untonemapped = o0.rgb;
+  untonemapped = max(0, renodx::color::bt709::from::SRGB(untonemapped));  // linearize untonemapped
+
+  float3 outputColor;
+  outputColor = applyUserTonemap(untonemapped);
+
+  outputColor = renodx::math::SafePow(outputColor, 1 / 2.2);
+
+  o0.rgb = outputColor;
 
   return;
 }

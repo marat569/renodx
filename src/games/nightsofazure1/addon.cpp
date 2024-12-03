@@ -23,19 +23,26 @@
 #include "../../utils/settings.hpp"
 #include "./shared.h"
 
+ShaderInjectData shader_injection;
+
+// Part of the check to see if the tonemap shader is drawn or not
+bool check(reshade::api::command_list* cmd_list) {
+  shader_injection.tonemapExist = 1.f;
+  return true;
+}
+
 namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
 
-    CustomShaderEntry(0xE53D74F1),  // UI -- Main
-    CustomShaderEntry(0x5D15CFEE),  // videos -- pre-rendered movies
-    CustomShaderEntry(0xA531D673),  // Tonemap
-    CustomShaderEntry(0x7894FC68),  // Cursed effect
-    CustomShaderEntry(0xBB055A34),  // Final
+    CustomShaderEntry(0xE53D74F1),                  // UI -- Main
+    CustomShaderEntry(0x5D15CFEE),                  // videos -- pre-rendered movies
+                                                    // CustomShaderEntry(0xA531D673),  // Tonemap
+    CustomShaderEntryCallback(0xA531D673, &check),  // Tonemap + Check
+    CustomShaderEntry(0x7894FC68),                  // Cursed effect
+    CustomShaderEntry(0xBB055A34),                  // Final
 
 };
-
-ShaderInjectData shader_injection;
 
 renodx::utils::settings::Settings settings = {
     new renodx::utils::settings::Setting{
@@ -47,7 +54,7 @@ renodx::utils::settings::Settings settings = {
         .label = "Tone Mapper",
         .section = "Tone Mapping",
         .tooltip = "Sets the tone mapper type",
-        .labels = {"Vanilla", "None", "ACES", "RenoDX"},
+        .labels = {"Vanilla", "None", "ACES", "RenoDRT"},
     },
     new renodx::utils::settings::Setting{
         .key = "toneMapPeakNits",
@@ -179,6 +186,18 @@ extern "C" __declspec(dllexport) const char* DESCRIPTION = "RenoDX for Nights of
 
 // NOLINTEND(readability-identifier-naming)
 
+// Part of the check to see if the tonemap shader is drawn or not
+void OnPresent(
+
+    reshade::api::command_queue* queue,
+    reshade::api::swapchain* swapchain,
+    const reshade::api::rect* source_rect,
+    const reshade::api::rect* dest_rect,
+    uint32_t dirty_rect_count,
+    const reshade::api::rect* dirty_rects) {
+  shader_injection.tonemapExist = 0;
+}
+
 BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   switch (fdw_reason) {
     case DLL_PROCESS_ATTACH:
@@ -194,17 +213,8 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::b8g8r8a8_typeless,
           .new_format = reshade::api::format::r16g16b16a16_float,
-          //   .index = 39, //Maybe find the specific render target that uncaps the game one day, but not right now
-          //   .ignore_size = true, //Ignoring size allows you to uncap when the game runs in a sub-native resolution, but tons of artifacts are created
-      });
 
-      // BGRA8_unorm
-      //  renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
-      //    .old_format = reshade::api::format::b8g8r8a8_unorm,
-      //    .new_format = reshade::api::format::r16g16b16a16_float,
-      //  .index = 39,
-      //.ignore_size = true,
-      //  });
+      });
 
       break;
     case DLL_PROCESS_DETACH:
@@ -217,6 +227,11 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   renodx::mods::swapchain::Use(fdw_reason);
 
   renodx::mods::shader::Use(fdw_reason, custom_shaders, &shader_injection);
+
+  // Part of the check to see if the tonemap shader is drawn or not
+  if (fdw_reason == DLL_PROCESS_ATTACH) {
+    reshade::register_event<reshade::addon_event::present>(OnPresent);
+  }
 
   return TRUE;
 }

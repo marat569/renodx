@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-// Empty addon just for running the game in HDR
+// Fantasian Neo Dimension
 
 #define ImTextureID ImU64
 
@@ -26,9 +26,16 @@ namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
 
-    CustomShaderEntry(0x25335449),  // "Complex Color", where the game clamps
-    CustomShaderEntry(0x8674BE1F),  // "Post Copy"
-    CustomShaderEntry(0x49E25D6C),  // Blit
+    CustomShaderEntry(0x25335449),  // "Complex Color 1", where the game clamps (start of game) -- Also where we tonemap
+    CustomShaderEntry(0x9AEC4527),  // "Complex Color 2"
+    CustomShaderEntry(0xDFA43EDA),  // "Complex Color 3"
+    CustomShaderEntry(0x07363728),  // "Complex Color 4"
+    CustomShaderEntry(0x7D4765A0),  // "Complex Color 5"
+    CustomShaderEntry(0x9A0F18F5),  // "Complex Color 6"
+    CustomShaderEntry(0xBBDD4760),  // "Complex Color 7"
+    CustomShaderEntry(0xC384ED8D),  // "Complex Color 8"
+    // CustomShaderEntry(0x8674BE1F),  // "Post Copy" (unused)
+    // CustomShaderEntry(0x49E25D6C),  // Blit (unused)
     CustomShaderEntry(0x20133A8B),  // Final Shader
 
 };

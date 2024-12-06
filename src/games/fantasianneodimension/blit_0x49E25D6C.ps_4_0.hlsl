@@ -1,8 +1,8 @@
 // ---- Created with 3Dmigoto v1.3.16 on Thu Dec  5 19:31:25 2024
 // Only spawns during battles
+// Last shader that's the game render only during battles
 
 #include "./shared.h"
-
 
 Texture2D<float4> t0 : register(t0);
 

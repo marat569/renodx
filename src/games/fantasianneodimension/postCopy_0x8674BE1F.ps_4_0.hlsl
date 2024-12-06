@@ -1,4 +1,6 @@
 // ---- Created with 3Dmigoto v1.3.16 on Thu Dec  5 19:31:25 2024
+// Last shader that's the game render during the open world
+// Spawns in battles along side the blit shader
 
 #include "./shared.h"
 

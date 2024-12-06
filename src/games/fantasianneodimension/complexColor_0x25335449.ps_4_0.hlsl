@@ -1,7 +1,6 @@
 // ---- Created with 3Dmigoto v1.3.16 on Thu Dec  5 19:31:25 2024
 // The game clamps here
 // There seems to be color correction going on here
-// We'll stick our tonemapper in here
 
 #include "./shared.h"
 #include "./tonemapper.hlsl"
@@ -20,7 +19,7 @@ cbuffer cb0 : register(b0) { float4 cb0[23]; }
 #define cmp -
 
 void main(float4 v0 : SV_POSITION0, float2 v1 : TEXCOORD0,
-          out float3 o0 : SV_Target0) {  // Changed o0 from float4 -> float3
+          out float4 o0 : SV_Target0) {  // Changed o0 from float4 -> float3
   float4 r0, r1, r2, r3;
   uint4 bitmask, uiDest;
   float4 fDest;
@@ -93,11 +92,12 @@ void main(float4 v0 : SV_POSITION0, float2 v1 : TEXCOORD0,
   r2.xyz = r2.xyz * r1.www;
   o0.xyz = r0.xyz * r1.xyz + r2.xyz;
 
+  o0.rgb = renodx::math::PowSafe(o0.rgb, 2.2f);  // Linearize
   o0.rgb = applyUserTonemap(o0.rgb);
-
-  o0.rgb = renodx::math::PowSafe(o0.rgb, 2.2f);                         // Linearize
   o0.rgb *= injectedData.toneMapGameNits / injectedData.toneMapUINits;  // Scale luminance
   o0.rgb = renodx::math::PowSafe(o0.rgb, 1.f / 2.2f);                   // Return to gamma space
+
+  o0.w = 1.f;
 
   return;
 }

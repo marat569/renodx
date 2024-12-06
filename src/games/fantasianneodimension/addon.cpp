@@ -20,16 +20,18 @@
 
 #include <embed/shaders.h>
 
+ShaderInjectData shader_injection;
+
 namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
 
-    CustomShaderEntry(0x25335449),  // Tonemapper, "Complex Color"
+    CustomShaderEntry(0x25335449),  // "Complex Color", where the game clamps
+    CustomShaderEntry(0x8674BE1F),  // "Post Copy"
+    CustomShaderEntry(0x49E25D6C),  // Blit
     CustomShaderEntry(0x20133A8B),  // Final Shader
 
 };
-
-ShaderInjectData shader_injection;
 
 renodx::utils::settings::Settings settings = {
     new renodx::utils::settings::Setting{

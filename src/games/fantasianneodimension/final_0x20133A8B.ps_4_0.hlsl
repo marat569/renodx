@@ -19,7 +19,6 @@ void main(
 
   o0.rgb *= injectedData.toneMapUINits / 80.f;  // Scale luminance -- The tonemapper has a ratio of injectedData.toneMapGameNits / injectedData.toneMapUINits
 
-  // o0.rgb = renodx::color::bt709::clamp::AP1(o0.rgb);  // Clamp to AP1 to avoid negative colors
   o0.rgb = renodx::color::bt709::clamp::BT2020(o0.rgb);  // Clamp to BT2020 to avoid negative colors
 
   return;

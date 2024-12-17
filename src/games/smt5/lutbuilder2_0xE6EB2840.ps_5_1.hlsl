@@ -15,28 +15,27 @@ cbuffer cb0 : register(b0) {
 #define cmp -
 
 void main(
-    linear noperspective float2 v0: TEXCOORD0,
-    float4 v1: SV_POSITION0,
-    uint v2: SV_RenderTargetArrayIndex0,
-    out float4 o0: SV_Target0) {
+    linear noperspective float2 v0 : TEXCOORD0,
+    float4 v1 : SV_POSITION0,
+    uint v2 : SV_RenderTargetArrayIndex0,
+    out float4 o0 : SV_Target0) {
   const float4 icb[] = {
-    { -4.000000, -0.718548, -4.970622, 0.808913 },
-    { -4.000000, 2.081031, -3.029378, 1.191087 },
-    { -3.157377, 3.668124, -2.126200, 1.568300 },
-    { -0.485250, 4.000000, -1.510500, 1.948300 },
-    { 1.847732, 4.000000, -1.057800, 2.308300 },
-    { 1.847732, 4.000000, -0.466800, 2.638400 },
-    { -2.301030, 0.801995, 0.119380, 2.859500 },
-    { -2.301030, 1.198005, 0.708813, 2.987261 },
-    { -1.931200, 1.594300, 1.291187, 3.012739 },
-    { -1.520500, 1.997300, 1.291187, 3.012739 },
-    { -1.057800, 2.378300, 0, 0 },
-    { -0.466800, 2.768400, 0, 0 },
-    { 0.119380, 3.051500, 0, 0 },
-    { 0.708813, 3.274629, 0, 0 },
-    { 1.291187, 3.327431, 0, 0 },
-    { 1.291187, 3.327431, 0, 0 }
-  };
+      {-4.000000, -0.718548, -4.970622, 0.808913},
+      {-4.000000, 2.081031, -3.029378, 1.191087},
+      {-3.157377, 3.668124, -2.126200, 1.568300},
+      {-0.485250, 4.000000, -1.510500, 1.948300},
+      {1.847732, 4.000000, -1.057800, 2.308300},
+      {1.847732, 4.000000, -0.466800, 2.638400},
+      {-2.301030, 0.801995, 0.119380, 2.859500},
+      {-2.301030, 1.198005, 0.708813, 2.987261},
+      {-1.931200, 1.594300, 1.291187, 3.012739},
+      {-1.520500, 1.997300, 1.291187, 3.012739},
+      {-1.057800, 2.378300, 0, 0},
+      {-0.466800, 2.768400, 0, 0},
+      {0.119380, 3.051500, 0, 0},
+      {0.708813, 3.274629, 0, 0},
+      {1.291187, 3.327431, 0, 0},
+      {1.291187, 3.327431, 0, 0}};
   float4 r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12;
   uint4 bitmask, uiDest;
   float4 fDest;
@@ -336,7 +335,7 @@ void main(
 
     if (injectedData.toneMapType != 0.f && is_hdr) {
       renodx::tonemap::Config config = renodx::tonemap::config::Create();
-      config.type = injectedData.toneMapType;
+      config.type = 2.f;  // 2.f to force ACES
       config.peak_nits = injectedData.toneMapPeakNits;
       // config.peak_nits = 10000.f;
       config.game_nits = injectedData.toneMapGameNits;
@@ -361,15 +360,15 @@ void main(
 
       float3 config_color = renodx::color::bt709::from::AP1(ap1_graded_color);
 
-      if (injectedData.toneMapType == 3.f) {  // Only apply hue correction if RenoDRT is selected
-        config_color = renodx::color::correct::Hue(config_color, renodx::tonemap::ACESFittedAP1(config_color));
-      }
+      // if (injectedData.toneMapType == 3.f) {  // Only apply hue correction if RenoDRT is selected
+      //   config_color = renodx::color::correct::Hue(config_color, renodx::tonemap::ACESFittedAP1(config_color));
+      // }
 
       renodx::tonemap::config::DualToneMap dual_tone_map = renodx::tonemap::config::ApplyToneMaps(config_color, config);
       hdr_color = dual_tone_map.color_hdr;
       sdr_color = dual_tone_map.color_sdr;
       sdr_ap1_color = renodx::color::ap1::from::BT709(sdr_color);
-    } else {
+    } else {  // Added brace
       r4.xy = float2(1, 0.180000007) + cb0[36].ww;
       r0.w = -cb0[36].y + r4.x;
       r1.w = 1 + cb0[37].x;
@@ -443,8 +442,8 @@ void main(
       r3.y = dot(float3(-0.130257145, 1.14080286, -0.0105485283), r0.xyz);
       r3.z = dot(float3(-0.0240032747, -0.128968775, 1.15297174), r0.xyz);
       r2.xyz = max(float3(0, 0, 0), r3.xyz);
-      // sdr_ap1_color = r2.xyz;
-    }
+      sdr_ap1_color = r2.xyz;
+    }  // Added else
     r2.xyz = sdr_ap1_color;
 
     r2.xyz = saturate(r2.xyz);

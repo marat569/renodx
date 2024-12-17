@@ -31,13 +31,13 @@ cbuffer cb0 : register(b0) {
 #define cmp -
 
 void main(
-    linear noperspective float2 v0: TEXCOORD0,
-    linear noperspective float2 w0: TEXCOORD3,
-    linear noperspective float3 v1: TEXCOORD1,
-    linear noperspective float4 v2: TEXCOORD2,
-    float2 v3: TEXCOORD4,
-    float4 v4: SV_POSITION0,
-    out float4 o0: SV_Target0) {
+    linear noperspective float2 v0 : TEXCOORD0,
+    linear noperspective float2 w0 : TEXCOORD3,
+    linear noperspective float3 v1 : TEXCOORD1,
+    linear noperspective float4 v2 : TEXCOORD2,
+    float2 v3 : TEXCOORD4,
+    float4 v4 : SV_POSITION0,
+    out float4 o0 : SV_Target0) {
   float4 r0, r1, r2;
   uint4 bitmask, uiDest;
   float4 fDest;
@@ -116,6 +116,7 @@ void main(
   // o0.rgb = renodx::color::pq::from::BT2020(o0.rgb);
 
   o0.rgb = post_lut.rgb;
+  o0.rgb = renodx::color::bt709::from::BT2020(o0.rgb);  // Convert color back to 709
 
   o0.w = 1.f;
 

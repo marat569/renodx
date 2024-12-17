@@ -9,42 +9,7 @@
 
 // #define DEBUG_LEVEL_1 //added
 
-#include <embed/0x099B9006.h>  //ui -- Party's faces
-#include <embed/0x12E3927E.h>  //ui -- dialog box
-#include <embed/0x23729AED.h>  //ui -- main menu
-#include <embed/0x27A2F211.h>  //ui -- The background in the pause/load menus
-#include <embed/0x29A889E6.h>  //ui
-#include <embed/0x2FA199F2.h>  //ui
-#include <embed/0x2FB8A3BC.h>  //ui
-#include <embed/0x3884890C.h>  //ui -- Pause menu skills/items/essence/etc text
-#include <embed/0x4ADD8064.h>  //UI
-#include <embed/0x6D432834.h>  //ui
-#include <embed/0x76B068AD.h>  //ui
-#include <embed/0x8EC8EF33.h>  //ui
-#include <embed/0x94614EA1.h>  //ui
-#include <embed/0xA42D4BBE.h>  //ui
-#include <embed/0xB86F8772.h>  //UI -- Speach bubbles above npc's heads
-#include <embed/0xC3126A03.h>  //ui
-#include <embed/0xC3979EE8.h>  //ui
-#include <embed/0xC6FA129B.h>  //ui
-#include <embed/0xC90A6F07.h>  //ui
-#include <embed/0xEAADB3AA.h>  //ui
-#include <embed/0xA6BF5D3C.h> // ui -- World map
-#include <embed/0x039B084D.h> // ui -- "take her hand"
-////
-#include <embed/0x82F9B4AC.h>  // Movies, Intro
-////
-#include <embed/0x3CFCA6D5.h>  // Final2 [Tokyo]
-#include <embed/0x4D541E80.h>  // Final3 [Map, Shops, Etc.]
-#include <embed/0x60E37F45.h>  // Sample 2 [Cutscenes?]
-#include <embed/0xBBA0606A.h>  // Sample1
-#include <embed/0xC1BCC6B5.h>  // Lutbuilder1 [Game world]
-#include <embed/0xD019CA1A.h>  // Final1 [Game world]
-#include <embed/0xE6EB2840.h>  // Lutbuilder 2 [Tokyo]
-#include <embed/0x6BC6B830.h> // Sample 3 [Stats UI]
-#include <embed/0xD2F5778E.h> // Final4 Stats [Stats UI]
-#include <embed/0xD0AE0A40.h> // Final 5 [Final 5, Tenzou // Shinigawa]
-#include <embed/0x84676A8E.h> //Final 6 [ Shinjuku]
+#include <embed/shaders.h>
 
 #include <deps/imgui/imgui.h>
 #include <include/reshade.hpp>
@@ -78,8 +43,8 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0xA42D4BBE),  // UI
     CustomShaderEntry(0x4ADD8064),  // UI
     CustomShaderEntry(0x23729AED),  // UI -- Main Menu
-    CustomShaderEntry(0xA6BF5D3C), // UI -- World Map
-    CustomShaderEntry(0x039B084D), // UI -- "Take Her Hand"
+    CustomShaderEntry(0xA6BF5D3C),  // UI -- World Map
+    CustomShaderEntry(0x039B084D),  // UI -- "Take Her Hand"
     ////
     CustomShaderEntry(0x82F9B4AC),  // Movies, Intro
     ////
@@ -90,10 +55,10 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0x3CFCA6D5),  // Final2 [Tokyo]
     CustomShaderEntry(0x4D541E80),  // Final3 [Map, shops, etc]
     CustomShaderEntry(0x60E37F45),  // Sample 2 [Cutscenes?]
-    CustomShaderEntry(0x6BC6B830), // Sample 3 [ Stats UI ]
-    CustomShaderEntry(0xD2F5778E), // Final4 [ Stats UI ]
-    CustomShaderEntry(0xD0AE0A40), // Final 5 [Final 5, Tenzou // Shinigawa]
-    CustomShaderEntry(0x84676A8E), // Final 6 [ Shinjuku ]
+    CustomShaderEntry(0x6BC6B830),  // Sample 3 [ Stats UI ]
+    CustomShaderEntry(0xD2F5778E),  // Final4 [ Stats UI ]
+    CustomShaderEntry(0xD0AE0A40),  // Final 5 [Final 5, Tenzou // Shinigawa]
+    CustomShaderEntry(0x84676A8E),  // Final 6 [ Shinjuku ]
 
 };
 
@@ -190,27 +155,27 @@ renodx::utils::settings::Settings settings = {
         .parse = [](float value) { return value * 0.02f; },
     },
 
-    //new renodx::utils::settings::Setting{
-    //    .key = "colorGradeBlowout",
-    //    .binding = &shader_injection.colorGradeBlowout,
-    //    .default_value = 50.f,
-    //    .label = "Blowout",
-    //    .section = "Color Grading",
-    //    .tooltip = "Controls highlight desaturation due to overexposure.",
-    //    .max = 100.f,
-    //    .parse = [](float value) { return value * 0.01f; },
-    //},
+    // new renodx::utils::settings::Setting{
+    //     .key = "colorGradeBlowout",
+    //     .binding = &shader_injection.colorGradeBlowout,
+    //     .default_value = 50.f,
+    //     .label = "Blowout",
+    //     .section = "Color Grading",
+    //     .tooltip = "Controls highlight desaturation due to overexposure.",
+    //     .max = 100.f,
+    //     .parse = [](float value) { return value * 0.01f; },
+    // },
 
-    //new renodx::utils::settings::Setting{
-    //    .key = "toneMapHueCorrection",
-    //    .binding = &shader_injection.toneMapHueCorrection,
-    //    .default_value = 50.f,
-    //    .label = "Hue Correction",
-    //    .section = "Color Grading",
-    //    .tooltip = "Emulates hue shifting from the vanilla tonemapper",
-    //    .max = 100.f,
-    //    .parse = [](float value) { return value * 0.01f; },
-    //},
+    // new renodx::utils::settings::Setting{
+    //     .key = "toneMapHueCorrection",
+    //     .binding = &shader_injection.toneMapHueCorrection,
+    //     .default_value = 50.f,
+    //     .label = "Hue Correction",
+    //     .section = "Color Grading",
+    //     .tooltip = "Emulates hue shifting from the vanilla tonemapper",
+    //     .max = 100.f,
+    //     .parse = [](float value) { return value * 0.01f; },
+    // },
 
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
@@ -253,8 +218,8 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("colorGradeShadows", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeContrast", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeSaturation", 50.f);
-  //renodx::utils::settings::UpdateSetting("colorGradeBlowout", 50.f);
-  //renodx::utils::settings::UpdateSetting("toneMapHueCorrection", 50.f);
+  // renodx::utils::settings::UpdateSetting("colorGradeBlowout", 50.f);
+  // renodx::utils::settings::UpdateSetting("toneMapHueCorrection", 50.f);
 }
 
 }  // namespace
@@ -275,7 +240,7 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       };
       renodx::mods::shader::expected_constant_buffer_space = 50;  // Cbuffer slot 50
 
-      renodx::mods::shader::force_pipeline_cloning = true; //So the mod works with the toolkit
+      renodx::mods::shader::force_pipeline_cloning = true;   // So the mod works with the toolkit
       renodx::mods::swapchain::force_borderless = false;     // needed for stability
       renodx::mods::swapchain::prevent_full_screen = false;  // needed for stability
 
@@ -294,9 +259,9 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       });
 
       //// RGB10A2_UNORM
-      //renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
-      //    .old_format = reshade::api::format::b10g10r10a2_unorm,
-      //    .new_format = reshade::api::format::r16g16b16a16_float,
+      // renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      //     .old_format = reshade::api::format::b10g10r10a2_unorm,
+      //     .new_format = reshade::api::format::r16g16b16a16_float,
 
       //});
 

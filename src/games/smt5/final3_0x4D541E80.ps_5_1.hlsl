@@ -13,38 +13,29 @@ SamplerState s1_s : register(s1);
 
 SamplerState s0_s : register(s0);
 
-cbuffer cb3 : register(b3)
-{
+cbuffer cb3 : register(b3) {
   float4 cb3[13];
 }
 
-cbuffer cb2 : register(b2)
-{
+cbuffer cb2 : register(b2) {
   float4 cb2[3];
 }
 
-cbuffer cb1 : register(b1)
-{
+cbuffer cb1 : register(b1) {
   float4 cb1[133];
 }
 
-cbuffer cb0 : register(b0)
-{
+cbuffer cb0 : register(b0) {
   float4 cb0[39];
 }
-
-
-
 
 // 3Dmigoto declarations
 #define cmp -
 
-
 void main(
-  float4 v0 : SV_POSITION0,
-  out float4 o0 : SV_Target0)
-{
-  float4 r0,r1,r2,r3,r4;
+    float4 v0 : SV_POSITION0,
+    out float4 o0 : SV_Target0) {
+  float4 r0, r1, r2, r3, r4;
   uint4 bitmask, uiDest;
   float4 fDest;
 
@@ -76,10 +67,10 @@ void main(
   r0.zw = r0.zw * cb1[130].xy + cb1[129].xy;
   r0.zw = cb1[132].zw * r0.zw;
   r1.yzw = t2.Sample(s1_s, r1.yz).xyz;
-    float3 untonemapped = r1.yzw;
-  r2.xyz = float3(-0.5,-0.5,-0.5) + r1.yzw;
+  float3 untonemapped = r1.yzw;
+  r2.xyz = float3(-0.5, -0.5, -0.5) + r1.yzw;
   r2.xyz = cb3[8].xxx * r2.xyz;
-  r2.xyz = r1.xxx * r2.xyz + float3(0.5,0.5,0.5);
+  r2.xyz = r1.xxx * r2.xyz + float3(0.5, 0.5, 0.5);
   r3.xyz = cb3[2].xyz + -r2.xyz;
   r2.xyz = r0.yyy * r3.xyz + r2.xyz;
   r0.y = t0.SampleLevel(s0_s, r0.zw, 0).x;
@@ -101,48 +92,58 @@ void main(
   r0.w = -1 + cb3[11].w;
   r0.w = r0.y * r0.w;
   r0.w = r0.x * r0.w + 1;
-  r3.xyz = -r2.xyz * r0.www + float3(0.5,0.5,0.5);
+  r3.xyz = -r2.xyz * r0.www + float3(0.5, 0.5, 0.5);
   r2.xyz = r2.xyz * r0.www;
   r3.xyz = cb3[12].zzz * r3.xyz;
   r0.w = (int)r0.z & 192;
-  if (1 == 0) r0.z = 0; else if (1+7 < 32) {   r0.z = (uint)r0.z << (32-(1 + 7)); r0.z = (uint)r0.z >> (32-1);  } else r0.z = (uint)r0.z >> 7;
-  if (1 == 0) r0.w = 0; else if (1+6 < 32) {   r0.w = (uint)r0.w << (32-(1 + 6)); r0.w = (uint)r0.w >> (32-1);  } else r0.w = (uint)r0.w >> 6;
+  if (1 == 0)
+    r0.z = 0;
+  else if (1 + 7 < 32) {
+    r0.z = (uint)r0.z << (32 - (1 + 7));
+    r0.z = (uint)r0.z >> (32 - 1);
+  } else
+    r0.z = (uint)r0.z >> 7;
+  if (1 == 0)
+    r0.w = 0;
+  else if (1 + 6 < 32) {
+    r0.w = (uint)r0.w << (32 - (1 + 6));
+    r0.w = (uint)r0.w >> (32 - 1);
+  } else
+    r0.w = (uint)r0.w >> 6;
   r0.zw = (uint2)r0.zw;
   r0.z = max(r0.z, r0.w);
   r2.xyz = r0.zzz * r3.xyz + r2.xyz;
-  r3.xyz = float3(1,1,1) + -r2.xyz;
+  r3.xyz = float3(1, 1, 1) + -r2.xyz;
   r2.xyz = r2.xyz * r1.yzw;
   r2.xyz = r2.xyz + r2.xyz;
-  r4.xyz = float3(1,1,1) + -r1.yzw;
-  r1.xyz = cmp(r1.yzw >= float3(0.5,0.5,0.5));
+  r4.xyz = float3(1, 1, 1) + -r1.yzw;
+  r1.xyz = cmp(r1.yzw >= float3(0.5, 0.5, 0.5));
   r4.xyz = r4.xyz + r4.xyz;
-  r3.xyz = -r4.xyz * r3.xyz + float3(1,1,1);
-    if (injectedData.toneMapType == 0){
-  r1.xyz = r1.xyz ? r3.xyz : r2.xyz;
-    }
+  r3.xyz = -r4.xyz * r3.xyz + float3(1, 1, 1);
+  if (injectedData.toneMapType == 0) {
+    r1.xyz = r1.xyz ? r3.xyz : r2.xyz;
+  }
 
-    
-  r1.xyz = float3(1,1,1) + -r1.xyz;
+  r1.xyz = float3(1, 1, 1) + -r1.xyz;
   r2.xyz = -cb3[6].xyz + cb3[5].xyz;
   r0.yzw = r0.yyy * r2.xyz + cb3[6].xyz;
-  r0.xyz = -r0.xxx * r0.yzw + float3(1,1,1);
-  r0.xyz = -r1.xyz * r0.xyz + float3(1,1,1);
+  r0.xyz = -r0.xxx * r0.yzw + float3(1, 1, 1);
+  r0.xyz = -r1.xyz * r0.xyz + float3(1, 1, 1);
   r1.xyz = cb3[7].xyz + -r0.xyz;
   r0.xyz = cb3[12].www * r1.xyz + r0.xyz;
-    
-    if (injectedData.toneMapType == 0){
-  o0.xyz = max(float3(0,0,0), r0.xyz);
-    }
-    else{
-        o0.rgb = r0.rgb;
-    }
-    
-    o0.rgb = untonemapped.rgb;
-    
-       //hdr color, sdr color, post process color, strength
-    //o0.rgb = renodx::tonemap::UpgradeToneMap(saturate(untonemapped.rgb), untonemapped.rgb, o0.rgb, 1.f);
-    o0.rgb = renodx::tonemap::dice::BT709(o0.rgb, injectedData.toneMapPeakNits / 80.f);
-    
+
+  if (injectedData.toneMapType == 0) {
+    o0.xyz = max(float3(0, 0, 0), r0.xyz);
+  } else {
+    o0.rgb = r0.rgb;
+  }
+
+  o0.rgb = untonemapped.rgb;
+
+  // hdr color, sdr color, post process color, strength
+  // o0.rgb = renodx::tonemap::UpgradeToneMap(saturate(untonemapped.rgb), untonemapped.rgb, o0.rgb, 1.f);
+  o0.rgb = renodx::tonemap::dice::BT709(o0.rgb, injectedData.toneMapPeakNits / 80.f);
+
   o0.w = 1;
   return;
 }

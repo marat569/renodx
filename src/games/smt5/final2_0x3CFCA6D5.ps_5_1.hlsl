@@ -13,38 +13,29 @@ SamplerState s1_s : register(s1);
 
 SamplerState s0_s : register(s0);
 
-cbuffer cb3 : register(b3)
-{
+cbuffer cb3 : register(b3) {
   float4 cb3[15];
 }
 
-cbuffer cb2 : register(b2)
-{
+cbuffer cb2 : register(b2) {
   float4 cb2[3];
 }
 
-cbuffer cb1 : register(b1)
-{
+cbuffer cb1 : register(b1) {
   float4 cb1[133];
 }
 
-cbuffer cb0 : register(b0)
-{
+cbuffer cb0 : register(b0) {
   float4 cb0[39];
 }
-
-
-
 
 // 3Dmigoto declarations
 #define cmp -
 
-
 void main(
-  float4 v0 : SV_POSITION0,
-  out float4 o0 : SV_Target0)
-{
-  float4 r0,r1,r2,r3,r4;
+    float4 v0 : SV_POSITION0,
+    out float4 o0 : SV_Target0) {
+  float4 r0, r1, r2, r3, r4;
   uint4 bitmask, uiDest;
   float4 fDest;
 
@@ -73,7 +64,7 @@ void main(
   r3.xy = r1.xz * cb1[130].xy + cb1[129].xy;
   r1.xz = r1.xz * cb0[5].xy + cb0[4].xy;
   r1.xzw = t2.Sample(s1_s, r1.xz).xyz;
-    float3 untonemapped = r1.xzw;
+  float3 untonemapped = r1.xzw;
   r3.xy = cb1[132].zw * r3.xy;
   r0.w = t0.SampleLevel(s0_s, r3.xy, 0).x;
   r3.x = t1.SampleLevel(s0_s, r3.xy, 0).x;
@@ -94,8 +85,8 @@ void main(
   r2.w = r0.w * -2 + 3;
   r0.w = r0.w * r0.w;
   r0.w = r2.w * r0.w;
-  r3.yzw = r1.xzw * cb3[9].yyy + float3(-0.5,-0.5,-0.5);
-  r3.yzw = r0.www * r3.yzw + float3(0.5,0.5,0.5);
+  r3.yzw = r1.xzw * cb3[9].yyy + float3(-0.5, -0.5, -0.5);
+  r3.yzw = r0.www * r3.yzw + float3(0.5, 0.5, 0.5);
   r0.w = saturate(r1.x / cb3[10].w);
   r4.xyz = r0.www * r0.yyy + -r3.yzw;
   r0.xyw = r0.xxx * r4.xyz + r3.yzw;
@@ -113,54 +104,63 @@ void main(
   r2.w = 1 + r2.w;
   r0.z = saturate(r2.w + -r0.z);
   r0.xyz = r0.zzz * r2.xyz + r0.xyw;
-  r2.xyz = float3(0.5,0.5,0.5) + -r0.xyz;
+  r2.xyz = float3(0.5, 0.5, 0.5) + -r0.xyz;
   r2.xyz = cb3[14].yyy * r2.xyz;
   r0.w = (int)r3.x & 192;
-  if (1 == 0) r2.w = 0; else if (1+7 < 32) {   r2.w = (uint)r3.x << (32-(1 + 7)); r2.w = (uint)r2.w >> (32-1);  } else r2.w = (uint)r3.x >> 7;
+  if (1 == 0)
+    r2.w = 0;
+  else if (1 + 7 < 32) {
+    r2.w = (uint)r3.x << (32 - (1 + 7));
+    r2.w = (uint)r2.w >> (32 - 1);
+  } else
+    r2.w = (uint)r3.x >> 7;
   r2.w = (uint)r2.w;
-  if (1 == 0) r0.w = 0; else if (1+6 < 32) {   r0.w = (uint)r0.w << (32-(1 + 6)); r0.w = (uint)r0.w >> (32-1);  } else r0.w = (uint)r0.w >> 6;
+  if (1 == 0)
+    r0.w = 0;
+  else if (1 + 6 < 32) {
+    r0.w = (uint)r0.w << (32 - (1 + 6));
+    r0.w = (uint)r0.w >> (32 - 1);
+  } else
+    r0.w = (uint)r0.w >> 6;
   r0.w = (uint)r0.w;
-  r0.w = max(r2.w, r0.w); //removed artifacts with gamut clamp?
+  r0.w = max(r2.w, r0.w);  // removed artifacts with gamut clamp?
   r0.xyz = r0.www * r2.xyz + r0.xyz;
-  r2.xyz = float3(1,1,1) + -r0.xyz;
+  r2.xyz = float3(1, 1, 1) + -r0.xyz;
   r0.xyz = r1.xzw * r0.xyz;
   r0.xyz = r0.xyz + r0.xyz;
-  r3.xyz = float3(1,1,1) + -r1.xzw;
-  r1.xzw = cmp(r1.xzw >= float3(0.5,0.5,0.5));
+  r3.xyz = float3(1, 1, 1) + -r1.xzw;
+  r1.xzw = cmp(r1.xzw >= float3(0.5, 0.5, 0.5));
   r3.xyz = r3.xyz + r3.xyz;
-  r2.xyz = -r3.xyz * r2.xyz + float3(1,1,1);
-    
-    if (injectedData.toneMapType == 0.f){
-  r0.xyz = r1.xzw ? r2.xyz : r0.xyz;
-    }
-    
-  r1.xzw = float3(-1,-1,-1) + cb3[7].xyz;
-  r1.xyz = r1.yyy * r1.xzw + float3(1,1,1);
+  r2.xyz = -r3.xyz * r2.xyz + float3(1, 1, 1);
+
+  if (injectedData.toneMapType == 0.f) {
+    r0.xyz = r1.xzw ? r2.xyz : r0.xyz;
+  }
+
+  r1.xzw = float3(-1, -1, -1) + cb3[7].xyz;
+  r1.xyz = r1.yyy * r1.xzw + float3(1, 1, 1);
   r2.xyz = r1.xyz * r0.xyz;
   r0.xyz = -r0.xyz * r1.xyz + cb3[8].xyz;
   r0.xyz = cb3[14].zzz * r0.xyz + r2.xyz;
-    
-    
-    if (injectedData.toneMapType == 0){
-        o0.xyz = max(float3(0, 0, 0), r0.xyz);
-    }
-    else{
-        o0.rgb = r0.xyz; //unclamp rec709
-    }
-    
-    
+
+  if (injectedData.toneMapType == 0) {
+    o0.xyz = max(float3(0, 0, 0), r0.xyz);
+  } else {
+    o0.rgb = r0.xyz;  // unclamp rec709
+  }
+
   o0.w = 1;
-    
-    //o0.rgb = untonemapped;
-    //hdr color, sdr color, post process color, strength
-    //o0.rgb = renodx::tonemap::UpgradeToneMap(saturate(untonemapped.rgb), untonemapped.rgb, o0.rgb, 1.f);
-    
-    //if (renodx::color::y::from::BT709(o0.rgb) > injectedData.toneMapPeakNits / 80.f) { // If the MaxCll is over peaknits   
-    //    o0.rgb = min(o0.rgb, injectedData.toneMapPeakNits / 80.f); //clamp output to peak nits slider, bandaid for a few effects
-    //}
-    
-    o0.rgb = renodx::tonemap::dice::BT709(o0.rgb, injectedData.toneMapPeakNits / 80.f);
-    
-    o0.w = 1.f;
+
+  // o0.rgb = untonemapped;
+  // hdr color, sdr color, post process color, strength
+  // o0.rgb = renodx::tonemap::UpgradeToneMap(saturate(untonemapped.rgb), untonemapped.rgb, o0.rgb, 1.f);
+
+  // if (renodx::color::y::from::BT709(o0.rgb) > injectedData.toneMapPeakNits / 80.f) { // If the MaxCll is over peaknits
+  //     o0.rgb = min(o0.rgb, injectedData.toneMapPeakNits / 80.f); //clamp output to peak nits slider, bandaid for a few effects
+  // }
+
+  o0.rgb = renodx::tonemap::dice::BT709(o0.rgb, injectedData.toneMapPeakNits / 80.f);
+
+  o0.w = 1.f;
   return;
 }

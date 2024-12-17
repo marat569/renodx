@@ -27,9 +27,9 @@ struct ShaderInjectData {
 cbuffer injectedBuffer : register(b0, space50) {
   ShaderInjectData injectedData : packoffset(c0);
 }
-//cbuffer cb1 : register(b1) {
-//  ShaderInjectData injectedData : packoffset(c0);  //
-//}
+// cbuffer cb1 : register(b1) {
+//   ShaderInjectData injectedData : packoffset(c0);  //
+// }
 #endif
 
 #endif  // SRC_SMT5V_SHARED_H_

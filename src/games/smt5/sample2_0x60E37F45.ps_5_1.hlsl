@@ -120,7 +120,7 @@ void main(
   }
 
   o0.rgb = post_lut.rgb;
-  o0.rgb = renodx::color::bt709::from::BT2020(o0.rgb);  // Convert color back to 709
+  // o0.rgb = renodx::color::bt709::from::BT2020(o0.rgb);  // Convert color back to 709
 
   o0.w = 1.f;
 

@@ -23,17 +23,14 @@ namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
 
-    // CustomShaderEntry(0x82F9B4AC),  // Movies, Intro
     ////
-    CustomShaderEntry(0xC1BCC6B5),  // Lutbuilder1 [Game world]
-    CustomShaderEntry(0xBBA0606A),  // Sample1
-    CustomShaderEntry(0xE6EB2840),  // Lutbuilder 2 [Tokyo]
-    CustomShaderEntry(0x60E37F45),  // Sample 2 [Cutscenes?]
-    CustomShaderEntry(0x6BC6B830),  // Sample 3 [ Stats UI ]
-    CustomShaderEntry(0x61C2EA30),  // Lutbuilder3 [Menu]
-    CustomShaderEntry(0xB7F426D8),  // Sample 4
-    CustomShaderEntry(0xD102F1EB),  // Sample 5
-    CustomShaderEntry(0x3FA88630),  // Sandland Sample 1
+
+    // Sample shaders [Depricated]
+    // CustomShaderEntry(0xBBA0606A),  // Sample1
+    // Lutbuilders
+    CustomShaderEntry(0xC1BCC6B5),  // Lutbuilder1
+    CustomShaderEntry(0xE6EB2840),  // Lutbuilder2
+    CustomShaderEntry(0x61C2EA30),  // Lutbuilder3
 
 };
 
@@ -225,17 +222,18 @@ renodx::utils::settings::Settings settings = {
 };
 
 void OnPresetOff() {
-  renodx::utils::settings::UpdateSetting("toneMapType", 2.f);
+  renodx::utils::settings::UpdateSetting("toneMapType", 0.f);
   renodx::utils::settings::UpdateSetting("toneMapPeakNits", 203.f);
   renodx::utils::settings::UpdateSetting("toneMapGameNits", 203.f);
   renodx::utils::settings::UpdateSetting("toneMapUINits", 203.f);
+  renodx::utils::settings::UpdateSetting("toneMapHueCorrection", 0.f);
   renodx::utils::settings::UpdateSetting("colorGradeExposure", 1.f);
   renodx::utils::settings::UpdateSetting("colorGradeHighlights", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeShadows", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeContrast", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeSaturation", 50.f);
-  // renodx::utils::settings::UpdateSetting("colorGradeBlowout", 50.f);
-  // renodx::utils::settings::UpdateSetting("toneMapHueCorrection", 50.f);
+  renodx::utils::settings::UpdateSetting("colorGradeBlowout", 0.f);
+  renodx::utils::settings::UpdateSetting("colorGradeColorSpace", 0.f);
 }
 
 }  // namespace
@@ -255,7 +253,7 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
         return device->get_api() == reshade::api::device_api::d3d12;  // So overlays dont kill the game
       };
       renodx::mods::shader::expected_constant_buffer_space = 50;  // cbuffer slot 50
-      //renodx::mods::shader::allow_multiple_push_constants = true;
+      // renodx::mods::shader::allow_multiple_push_constants = true;
       renodx::mods::swapchain::expected_constant_buffer_space = 50;
 
       renodx::mods::shader::force_pipeline_cloning = true;   // So the mod works with the toolkit

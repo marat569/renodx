@@ -12,9 +12,9 @@ void tonemap(in float3 ap1_graded_color, in float3 ap1_aces_colored, out float3 
   config.exposure = injectedData.colorGradeExposure;
   config.highlights = injectedData.colorGradeHighlights;
   config.shadows = injectedData.colorGradeShadows;
-  if (injectedData.toneMapType == 3.f) {
-    config.contrast = injectedData.colorGradeContrast;
-  }
+  //  if (injectedData.toneMapType == 3.f) {
+  config.contrast = injectedData.colorGradeContrast;
+  //  }
   config.saturation = injectedData.colorGradeSaturation;
 
   config.reno_drt_highlights = 1.0f;

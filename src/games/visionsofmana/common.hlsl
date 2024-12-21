@@ -58,9 +58,9 @@ void tonemap(in float3 ap1_graded_color, in float3 ap1_aces_colored, out float3 
 
 float3 scalePaperWhite(float3 color) {
   color = renodx::color::srgb::EncodeSafe(color);
-  color = renodx::math::PowSafe(color, 1.f / 2.2f);  //
-  color *= injectedData.toneMapGameNits / injectedData.toneMapUINits;
   color = renodx::math::PowSafe(color, 2.2f);  //
+  color *= injectedData.toneMapGameNits / injectedData.toneMapUINits;
+  color = renodx::math::PowSafe(color, 1.f / 2.2f);  //
 
-  return color.rgb;
+  return color;
 }

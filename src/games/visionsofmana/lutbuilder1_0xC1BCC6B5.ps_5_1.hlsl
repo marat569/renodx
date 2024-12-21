@@ -65,7 +65,7 @@ void main(
   float3 log_input_color = r1.rgb;
 
   r0.xyz = r0.zzz ? r0.xyw : r1.xyz;
-  r0.rgb = pq_input_color;
+  // r0.rgb = pq_input_color;
 
   float3 lut_input_color = r0.rgb;
 
@@ -357,7 +357,7 @@ void main(
 
     ap1_aces_colored = r3.xyz;
 
-    if (is_hdr) {
+    if (injectedData.toneMapType != 0.f) {
       tonemap(ap1_graded_color, ap1_aces_colored, hdr_color, sdr_color, sdr_ap1_color);
 
     } else {  // Added else
@@ -463,10 +463,17 @@ void main(
 
   float3 film_graded_color = r3.rgb;
 
-  if (is_hdr) {
+  if (injectedData.toneMapType != 0.f) {
     float3 final_color = saturate(film_graded_color);
     final_color = renodx::tonemap::UpgradeToneMap(hdr_color, sdr_color, final_color, 1.f);
+
+    final_color.rgb = scalePaperWhite(final_color.rgb);
+
+    // Scale for UE decoding
+    final_color *= 1.f / 1.05f;
+
     o0.rgba = float4(final_color.rgb, 0);
+
     return;
   }
 

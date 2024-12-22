@@ -10,5 +10,8 @@ float4 main(float4 vpos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
   color.rgb *= injectedData.toneMapUINits / 80.f;
 
   color.a = 1.f;
+
+  color.rgb = renodx::color::bt709::clamp::BT2020(color.rgb);  // Clamp to BT2020 to avoid negative colors
+
   return color;
 }

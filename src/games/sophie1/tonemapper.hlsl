@@ -17,7 +17,6 @@ float3 applyUserTonemap(float3 untonemapped) {
   float3 outputColor;
 
   if (injectedData.toneMapType == 0.f) {
-    outputColor = max(0, untonemapped);  // clamps to 709/no negative colors for the vanilla tonemapper
     outputColor = saturate(untonemapped);
   } else {
     outputColor = untonemapped;

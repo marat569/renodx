@@ -4,9 +4,9 @@ SamplerState sourceSampler_s : register(s0);
 Texture2D<float4> sourceTexture : register(t0);
 
 void main(
-    float4 vpos: SV_Position,
-    float2 texcoord: TEXCOORD,
-    out float4 output: SV_Target0) {
+    float4 vpos : SV_Position,
+    float2 texcoord : TEXCOORD,
+    out float4 output : SV_Target0) {
   float4 color = sourceTexture.Sample(sourceSampler_s, texcoord.xy);
 
   // Marat's final code -- we use color.rgb instead of o0
@@ -20,7 +20,8 @@ void main(
     }
   }
 
-  color.rgb = renodx::color::bt709::clamp::AP1(color.rgb);  // Clamp to AP1 to avoid invalid colors
+  // color.rgb = renodx::color::bt709::clamp::AP1(color.rgb);  // Clamp to AP1 to avoid invalid colors
+  color.rgb = renodx::color::bt709::clamp::BT2020(color.rgb);  // Clamp to BT2020 to avoid negative colors
 
   output.rgba = color;
 }

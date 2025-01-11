@@ -63,15 +63,51 @@ float3 BT2020(float3 bt2020_color, float scaling = 10000.f) {
 }  // namespace from
 }  // namespace pq
 
+namespace bt2020 {
+namespace from {
+/// @deprecated - Use pq::Decode
+float3 PQ(float3 pq_color, float scaling = 10000.f) {
+  return pq::Decode(pq_color, scaling);
+}
+}  // namespace from
+}  // namespace bt2020
+
 }  // namespace color
 
 namespace math {
+
+#define POWSAFE_FUNCTION_GENERATOR(struct)           \
+  /* @deprecated */                                  \
+  /* Does opiniated SignPow instead of proper pow */ \
+  struct PowSafe(struct x, float exponent) {         \
+    return SignPow(x, exponent);                     \
+  }
+
+POWSAFE_FUNCTION_GENERATOR(float);
+POWSAFE_FUNCTION_GENERATOR(float2);
+POWSAFE_FUNCTION_GENERATOR(float3);
+POWSAFE_FUNCTION_GENERATOR(float4);
+#undef POWSAFE_FUNCTION_GENERATOR
+
+#define SQRTSAFE_FUNCTION_GENERATOR(struct) \
+  struct SqrtSafe(struct x) {               \
+    return SignSqrt(x);                     \
+  }
+
+SQRTSAFE_FUNCTION_GENERATOR(float);
+SQRTSAFE_FUNCTION_GENERATOR(float2);
+SQRTSAFE_FUNCTION_GENERATOR(float3);
+SQRTSAFE_FUNCTION_GENERATOR(float4);
+#undef SQRTSAFE_FUNCTION_GENERATOR
+
 /// @deprecated
+/// Does opiniated SignPow instead of proper pow
 float3 SafePow(float3 color, float exponent) {
   return PowSafe(color, exponent);
 }
 
 /// @deprecated
+/// Does opiniated SignPow instead of proper pow
 float SafePow(float color, float exponent) {
   return PowSafe(color, exponent);
 }

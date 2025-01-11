@@ -179,7 +179,7 @@ float4 main(
   float _105 = GlowColor.x;
   float _106 = GlowColor.y;
   float _107 = GlowColor.z;
-  float _108 = renodx::color::y::from::BT601(float3(_73, _74, _75));  // float _108 = dot( { _73, _74, _75 }, { 0.299000, 0.587000, 0.114000 });
+  float _108 = renodx::color::luma::from::BT601(float3(_73, _74, _75));  // float _108 = dot( { _73, _74, _75 }, { 0.299000, 0.587000, 0.114000 });
   float _109 = 1.00000 - _108;
 
   float _111 = AdditiveReducer;
@@ -247,15 +247,7 @@ float4 main(
   float midGrayScale = RDR1ReinhardMidgrayScale(White);
   float3 untonemapped_scaled = color_scaled * midGrayScale;
 
-  float3 untonemappedBlendWeight;
-  if (injectedData.toneMapType == 0) {  // Vanilla
-    untonemappedBlendWeight = 0;
-  } else if (injectedData.toneMapType == 1) {
-    untonemappedBlendWeight = 0.5;
-  } else {
-    untonemappedBlendWeight = 1;  // Vanilla+ Boosted
-  }
-  float3 blendedColor = lerp(vanillaColor, lerp(vanillaColor, untonemapped_scaled, untonemappedBlendWeight), saturate(vanillaColor));
+  float3 blendedColor = injectedData.toneMapType ? lerp(vanillaColor, untonemapped_scaled, saturate(vanillaColor)) : vanillaColor;
 
   _164 = blendedColor.r;
   _165 = blendedColor.g;
@@ -295,21 +287,20 @@ float4 main(
   if (injectedData.toneMapType == 0) {
     desaturatedColorSDR = saturate(desaturatedColorHDR);
   } else {
-    desaturatedColorSDR = saturate(renodx::tonemap::dice::BT709(desaturatedColorHDR, 1.0));
+    desaturatedColorSDR = renoDRTSmoothClamp(desaturatedColorHDR);
   }
   float3 contrastedColor = desaturatedColorSDR - (((desaturatedColorSDR * Contrast) * (desaturatedColorSDR - 1.0)) * (desaturatedColorSDR - 0.5));
 
   float3 outputColor = contrastedColor;
 
-#if 1  // use upgradetonemap() to apply SDR contrast to HDR
-  float3 upgradedColor = renodx::tonemap::UpgradeToneMap(desaturatedColorHDR, desaturatedColorSDR, outputColor, 1.f);
+  if (injectedData.toneMapType) {
+    float3 upgradedColor = renodx::tonemap::UpgradeToneMap(desaturatedColorHDR, desaturatedColorSDR, outputColor, 1.f);
 
-  // blend vanillaColor back in to fix differences in contrast
-  float3 vanillaDesaturatedColor = saturate(desaturatedColorHDR);
-  float3 vanillaContrastedColor = vanillaDesaturatedColor - (((vanillaDesaturatedColor * Contrast) * (vanillaDesaturatedColor - 1.0)) * (vanillaDesaturatedColor - 0.5));
-  outputColor = lerp(saturate(vanillaContrastedColor), upgradedColor, saturate(vanillaContrastedColor));
-#endif
-
+    // blend vanillaColor back in to fix differences in contrast
+    float3 vanillaDesaturatedColor = saturate(desaturatedColorHDR);
+    float3 vanillaContrastedColor = vanillaDesaturatedColor - (((vanillaDesaturatedColor * Contrast) * (vanillaDesaturatedColor - 1.0)) * (vanillaDesaturatedColor - 0.5));
+    outputColor = lerp((vanillaContrastedColor), upgradedColor, saturate(vanillaContrastedColor));
+  }
   float3 gammaEncodedColor = renodx::color::gamma::Encode(max(0, outputColor), 2.2f);
   return float4(gammaEncodedColor, 1.0);
 }

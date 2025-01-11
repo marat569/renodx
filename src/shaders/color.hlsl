@@ -76,17 +76,55 @@ static const float3x3 XYZ_TO_DISPLAYP3_MAT = float3x3(
     -0.8294889696f, 1.7626640603f, 0.0236246858f,
     0.0358458302f, -0.0761723893f, 0.9568845240);
 
-// With Bradford
-static const float3x3 D65_TO_D60_CAT = float3x3(
-    1.01303, 0.00610531, -0.014971,
-    0.00769823, 0.998165, -0.00503203,
-    -0.00284131, 0.00468516, 0.924507);
+static const float3x3 BT470_PAL_TO_BT709_MAT = float3x3(
+    1.04404318f, -0.0440432094f, 0.f,
+    0.f, 1.f, 0.f,
+    0.f, 0.0117933787f, 0.988206624f);
 
-// With Bradford
+static const float3x3 BT601_NTSC_U_TO_BT709_MAT = float3x3(
+    0.939542055f, 0.0501813553f, 0.0102765792f,
+    0.0177722238f, 0.965792834f, 0.0164349135f,
+    -0.00162159989f, -0.00436974968f, 1.00599133f);
+
+static const float3x3 NTSC_U_1953_TO_XYZ_MAT = float3x3(
+    0.6068638093f, 0.1735072810f, 0.2003348814f,
+    0.2989030703f, 0.5866198547f, 0.1144770751f,
+    -0.0000000000f, 0.0660980118f, 1.1161514821f);
+
+// chromatic adaptation method: vK20
+// chromatic adaptation transform: CAT02
+static const float3x3 ARIB_TR_B9_D93_TO_BT709_D65_MAT = float3x3(
+    0.897676467f, -0.129552796f, 0.00210331683f,
+    0.0400346256f, 0.970825016f, 0.00575808621f,
+    0.00136304146f, 0.0323694758f, 1.48031127f);
+
+// chromatic adaptation method: vK20
+// chromatic adaptation transform: CAT02
+static const float3x3 ARIB_TR_B9_9300K_27_MPCD_TO_BT709_D65_MAT = float3x3(
+    0.783664464f, -0.178418442f, 0.00223907502f,
+    0.0380520112f, 1.03919935f, 0.00543892197f,
+    0.000365949701f, 0.0269012674f, 1.31387364f);
+
+// chromatic adaptation method: vK20
+// chromatic adaptation transform: CAT02
+static const float3x3 BT709_D93_TO_BT709_D65_MAT = float3x3(
+    0.968665063f, -0.0445920750f, -0.00335013796f,
+    0.00231231073f, 1.00339293f, 0.0000867190974f,
+    0.00326244067f, 0.0161521788f, 1.11353743f);
+
+// chromatic adaptation method: von Kries
+// chromatic adaptation transform: Bradford
+static const float3x3 D65_TO_D60_CAT = float3x3(
+    1.01303493f, 0.00610525766f, -0.0149709433f,
+    0.00769822997f, 0.998163342f, -0.00503203831f,
+    -0.00284131732f, 0.00468515651f, 0.924506127f);
+
+// chromatic adaptation method: von Kries
+// chromatic adaptation transform: Bradford
 static const float3x3 D60_TO_D65_MAT = float3x3(
-    0.98722400, -0.00611327, 0.0159533,
-    -0.00759836, 1.00186000, 0.0053302,
-    0.00307257, -0.00509595, 1.0816800);
+    0.987223982f, -0.00611322838f, 0.0159532874f,
+    -0.00759837171f, 1.00186145f, 0.00533003592f,
+    0.00307257706f, -0.00509596150f, 1.08168065f);
 
 static const float3x3 IDENTITY_MAT = float3x3(
     1.0f, 0.0f, 0.0f,
@@ -100,6 +138,12 @@ static const float3x3 BT709_TO_AP1_MAT = float3x3(
     0.6130974024, 0.3395231462, 0.0473794514,
     0.0701937225, 0.9163538791, 0.0134523985,
     0.0206155929, 0.1095697729, 0.8698146342);
+
+// With Bradford
+static const float3x3 BT2020_TO_AP1_MAT = float3x3(
+    0.9748949779f, 0.0195991086f, 0.0055059134f,
+    0.0021795628f, 0.9955354689f, 0.0022849683f,
+    0.0047972397f, 0.0245320166f, 0.9706707437f);
 
 static const float3x3 BT709_TO_BT2020_MAT = mul(XYZ_TO_BT2020_MAT, BT709_TO_XYZ_MAT);
 static const float3x3 BT709_TO_BT709D60_MAT = mul(XYZ_TO_BT709_MAT, mul(D65_TO_D60_CAT, BT709_TO_XYZ_MAT));
@@ -123,13 +167,15 @@ static const float3x3 AP1_TO_BT709_MAT = float3x3(
     -0.1302564175, 1.1408047366, -0.0105483191,
     -0.0240033568, -0.1289689761, 1.1529723329);
 
-static const float3x3 AP1_TO_BT2020_MAT = mul(XYZ_TO_BT2020_MAT, mul(D60_TO_D65_MAT, AP1_TO_XYZ_MAT));
+// With Bradford
+static const float3x3 AP1_TO_BT2020_MAT = float3x3(
+    1.0258247477f, -0.0200531908f, -0.0057715568f,
+    -0.0022343695f, 1.0045865019f, -0.0023521324f,
+    -0.0050133515f, -0.0252900718f, 1.0303034233f);
 
 static const float3x3 AP1_TO_BT709D60_MAT = mul(XYZ_TO_BT709_MAT, AP1_TO_XYZ_MAT);
 static const float3x3 AP1_TO_BT2020D60_MAT = mul(XYZ_TO_BT2020_MAT, AP1_TO_XYZ_MAT);
 static const float3x3 AP1_TO_AP1D65_MAT = mul(XYZ_TO_AP1_MAT, mul(D60_TO_D65_MAT, AP1_TO_XYZ_MAT));
-
-static const float3 BT601_Y = float3(0.299, 0.587, 0.114);
 
 // https://www.ilkeratalay.com/colorspacesfaq.php
 static const float3 BOURGIN_D65_Y = float3(0.222015, 0.706655, 0.071330);
@@ -175,6 +221,8 @@ float3 BT709(float3 bt709) {
 }  // namespace xyY
 
 namespace bt709 {
+static const float REFERENCE_WHITE = 100.f;
+
 namespace from {
 float3 XYZ(float3 XYZ) {
   return mul(XYZ_TO_BT709_MAT, XYZ);
@@ -185,18 +233,29 @@ float3 xyY(float3 xyY) {
 
   return bt709::from::XYZ(XYZ);
 }
-}  // namespace from
-}  // namespace bt709
 
-namespace bt709 {
-static const float REFERENCE_WHITE = 100.f;
-namespace from {
 float3 AP1(float3 ap1) {
   return mul(AP1_TO_BT709_MAT, ap1);
 }
 
 float3 BT2020(float3 bt2020) {
   return mul(BT2020_TO_BT709_MAT, bt2020);
+}
+
+float3 BT601NTSCU(float3 bt601) {
+  return mul(BT601_NTSC_U_TO_BT709_MAT, bt601);
+}
+
+float3 ARIBTRB9(float3 aribtrb9) {
+  return mul(ARIB_TR_B9_D93_TO_BT709_D65_MAT, aribtrb9);
+}
+
+float3 ARIBTRB927MPCD(float3 aribtrb9) {
+  return mul(ARIB_TR_B9_9300K_27_MPCD_TO_BT709_D65_MAT, aribtrb9);
+}
+
+float3 BT709D93(float3 bt709d93) {
+  return mul(BT709_D93_TO_BT709_D65_MAT, bt709d93);
 }
 
 float3 OkLab(float3 oklab) {
@@ -226,6 +285,11 @@ namespace from {
 float3 BT709(float3 bt709) {
   return mul(BT709_TO_BT2020_MAT, bt709);
 }
+
+float3 AP1(float3 ap1) {
+  return mul(AP1_TO_BT2020_MAT, ap1);
+}
+
 }  // namespace from
 }  // namespace bt2020
 
@@ -234,14 +298,19 @@ namespace from {
 float3 BT709(float3 bt709) {
   return mul(BT709_TO_AP1_MAT, bt709);
 }
+
+float3 BT2020(float3 bt2020) {
+  return mul(BT2020_TO_AP1_MAT, bt2020);
+}
 }  // namespace from
 }  // namespace ap1
 
 namespace y {
 namespace from {
-float BT601(float3 bt601) {
-  return dot(bt601, BT601_Y);
+float NTSC1953(float3 ntsc) {
+  return dot(ntsc, NTSC_U_1953_TO_XYZ_MAT[1].rgb);
 }
+
 float BT709(float3 bt709) {
   return dot(bt709, BT709_TO_XYZ_MAT[1].rgb);
 }
@@ -253,6 +322,14 @@ float AP1(float3 ap1) {
 }
 }  // namespace from
 }  // namespace y
+
+namespace luma {
+namespace from {
+float BT601(float3 bt601) {
+  return y::from::NTSC1953(bt601);
+}
+}  // namespace from
+}  // namespace luma
 
 namespace pq {
 static const float M1 = 2610.f / 16384.f;           // 0.1593017578125f;
@@ -267,10 +344,18 @@ float3 Encode(float3 color, float scaling = 10000.f) {
   return pow((C1 + C2 * y_m1) / (1.f + C3 * y_m1), M2);
 }
 
-float3 Decode(float3 in_color, float scaling = 10000.f) {
-  float3 e_m12 = pow(in_color, 1.f / M2);
-  float3 out_color = pow(max(e_m12 - C1, 0) / (C2 - C3 * e_m12), 1.f / M1);
+float3 Decode(float3 color, float scaling = 10000.f) {
+  float3 e_m12 = pow(color, 1.f / M2);
+  float3 out_color = pow(max(0, e_m12 - C1) / (C2 - C3 * e_m12), 1.f / M1);
   return out_color * (10000.f / scaling);
+}
+
+float3 EncodeSafe(float3 color, float scaling = 10000.f) {
+  return Encode(max(0, color), scaling);
+}
+
+float3 DecodeSafe(float3 color, float scaling = 10000.f) {
+  return Decode(max(0, color), scaling);
 }
 
 }  // namespace pq
@@ -295,7 +380,7 @@ float3 BT709(float3 bt709_color) {
 namespace srgb {
 static const float REFERENCE_WHITE = 80.f;
 
-#if __SHADER_TARGET_MAJOR <= 5
+#if (!defined(__SHADER_TARGET_MAJOR) || __SHADER_TARGET_MAJOR <= 5)
 #define ENCODE(T)                                        \
   T Encode(T c) {                                        \
     return (c <= 0.0031308f)                             \
@@ -317,22 +402,10 @@ float4 Encode(float4 color) {
   return float4(Encode(color.rgb), color.a);
 }
 
-#if __SHADER_TARGET_MAJOR <= 5
-#define ENCODE_SAFE(T)                                                     \
-  T EncodeSafe(T c) {                                                      \
-    return (c <= 0.0031308f)                                               \
-               ? (c * 12.92f)                                              \
-               : (1.055f * renodx::math::PowSafe(c, 1.f / 2.4f) - 0.055f); \
+#define ENCODE_SAFE(T)                             \
+  T EncodeSafe(T c) {                              \
+    return renodx::math::Sign(c) * Encode(abs(c)); \
   }
-#else
-#define ENCODE_SAFE(T)                                           \
-  T EncodeSafe(T c) {                                            \
-    return select(                                               \
-        c <= 0.0031308f,                                         \
-        c * 12.92f,                                              \
-        1.055f * renodx::math::PowSafe(c, 1.f / 2.4f) - 0.055f); \
-  }
-#endif
 
 ENCODE_SAFE(float)
 ENCODE_SAFE(float2)
@@ -342,12 +415,12 @@ float4 EncodeSafe(float4 color) {
   return float4(EncodeSafe(color.rgb), color.a);
 }
 
-#if __SHADER_TARGET_MAJOR <= 5
-#define DECODE(T)                                  \
-  T Decode(T c) {                                  \
-    return (c <= 0.04045f)                         \
-               ? (c / 12.92f)                      \
-               : pow((c + 0.055f) / 1.055f, 2.4f); \
+#if (!defined(__SHADER_TARGET_MAJOR) || __SHADER_TARGET_MAJOR <= 5)
+#define DECODE(T)                                    \
+  T Decode(T c) {                                    \
+    return (c <= 0.04045f)                           \
+               ? (c / 12.92f)                        \
+               : (pow((c + 0.055f) / 1.055f, 2.4f)); \
   }
 #else
 #define DECODE(T)                                                               \
@@ -364,19 +437,10 @@ float4 Decode(float4 color) {
   return float4(Decode(color.rgb), color.a);
 }
 
-#if __SHADER_TARGET_MAJOR <= 5
-#define DECODE_SAFE(T)                                               \
-  T DecodeSafe(T c) {                                                \
-    return (c <= 0.04045f)                                           \
-               ? (c / 12.92f)                                        \
-               : renodx::math::PowSafe((c + 0.055f) / 1.055f, 2.4f); \
+#define DECODE_SAFE(T)                             \
+  T DecodeSafe(T c) {                              \
+    return renodx::math::Sign(c) * Decode(abs(c)); \
   }
-#else
-#define DECODE_SAFE(T)                                                                            \
-  T DecodeSafe(T c) {                                                                             \
-    return select(c <= 0.04045f, c / 12.92f, renodx::math::PowSafe((c + 0.055f) / 1.055f, 2.4f)); \
-  }
-#endif
 
 DECODE_SAFE(float)
 DECODE_SAFE(float2)
@@ -396,7 +460,7 @@ float4 DecodeSafe(float4 color) {
 namespace srgba {
 
 float4 Encode(float4 color) {
-#if __SHADER_TARGET_MAJOR <= 5
+#if (!defined(__SHADER_TARGET_MAJOR) || __SHADER_TARGET_MAJOR <= 5)
   return (color <= 0.0031308f)
              ? (color * 12.92f)
              : (1.055f * pow(color, 1.f / 2.4f) - 0.055f);
@@ -410,7 +474,7 @@ float4 EncodeSafe(float4 color) {
 }
 
 float4 Decode(float4 color) {
-#if __SHADER_TARGET_MAJOR <= 5
+#if (!defined(__SHADER_TARGET_MAJOR) || __SHADER_TARGET_MAJOR <= 5)
   return (color <= 0.04045f)
              ? (color / 12.92f)
              : pow((color + 0.055f) / 1.055f, 2.4f);
@@ -438,7 +502,7 @@ ENCODE(float3)
 
 #define ENCODE_SAFE(T)                            \
   T EncodeSafe(T c, float gamma = 2.2f) {         \
-    return renodx::math::PowSafe(c, 1.f / gamma); \
+    return renodx::math::SignPow(c, 1.f / gamma); \
   }
 
 ENCODE_SAFE(float)
@@ -456,7 +520,7 @@ DECODE(float3)
 
 #define DECODE_SAFE(T)                      \
   T DecodeSafe(T c, float gamma = 2.2f) {   \
-    return renodx::math::PowSafe(c, gamma); \
+    return renodx::math::SignPow(c, gamma); \
   }
 
 DECODE_SAFE(float)
@@ -487,7 +551,7 @@ struct EncodingParams {
 #define ENCODE_COND_TRUE  (params.c * log10((params.a * c) + params.b) + params.d)
 #define ENCODE_COND_FALSE (params.e * c + params.f)
 
-#if __SHADER_TARGET_MAJOR <= 5
+#if (!defined(__SHADER_TARGET_MAJOR) || __SHADER_TARGET_MAJOR <= 5)
 #define ENCODE(T)                                             \
   T Encode(T c, EncodingParams params, bool use_cut = true) { \
     if (!use_cut) {                                           \
@@ -517,7 +581,7 @@ ENCODE(float3)
 #define DECODE_COND_TRUE    ((pow(10.f, (c - params.d) / params.c) - params.b) / params.a)
 #define DECODE_COND_FALSE   ((c - params.f) / params.e)
 
-#if __SHADER_TARGET_MAJOR <= 5
+#if (!defined(__SHADER_TARGET_MAJOR) || __SHADER_TARGET_MAJOR <= 5)
 #define DECODE(T)                                             \
   T Decode(T c, EncodingParams params, bool use_cut = true) { \
     if (use_cut) {                                            \
@@ -601,15 +665,6 @@ GENERATE_ARRI_LOGC_FUNCTIONS(float3)
 }  // namespace logc
 }  // namespace arri
 
-namespace bt2020 {
-namespace from {
-/// @deprecated - Use pq::Decode
-float3 PQ(float3 pq_color, float scaling = 10000.f) {
-  return pq::Decode(pq_color, scaling);
-}
-}  // namespace from
-}  // namespace bt2020
-
 namespace oklab {
 namespace from {
 float3 BT709(float3 bt709) {
@@ -626,7 +681,7 @@ float3 BT709(float3 bt709) {
 
   float3 lms = mul(BT709_2_OKLABLMS, bt709);
 
-  lms = renodx::math::PowSafe(lms, 1.f / 3.f);
+  lms = renodx::math::Cbrt(lms);
 
   return mul(OKLABLMS_2_OKLAB, lms);
 }
@@ -802,6 +857,7 @@ float3 HSB(float3 hsb, float cz = 1.f) {
 
 namespace bt2408 {
 static const float REFERENCE_WHITE = 203.f;
+static const float GRAPHICS_WHITE = 203.f;
 }  // namespace bt2408
 
 namespace oklch {
@@ -836,7 +892,7 @@ float3 ICtCp(float3 col) {
   col = mul(ictcp_to_lms, col);
 
   // 1.0f = 100 nits, 100.0f = 10k nits
-  col = pq::Decode(max(0, col), 100.f);
+  col = pq::DecodeSafe(col, 100.f);
   return mul(ICTCP_LMS_TO_BT709_MAT, col);
 }
 

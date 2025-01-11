@@ -9,6 +9,7 @@
 #include <exception>
 #include <filesystem>
 #include <initializer_list>
+#include <memory>
 #include <mutex>
 #include <optional>
 #include <variant>
@@ -104,8 +105,8 @@ struct ResourceViewDetails {
   reshade::api::resource_view_desc resource_view_desc;
   reshade::api::resource resource = {0};
   reshade::api::resource_desc resource_desc;
-  std::string resource_tag;
-  std::string resource_view_tag;
+  std::string resource_reflection;
+  std::string resource_view_reflection;
   bool is_swapchain = false;
   bool is_rtv_upgraded = false;
   bool is_res_upgraded = false;
@@ -175,6 +176,7 @@ struct __declspec(uuid("0190ec1a-2e19-74a6-ad41-4df0d4d8caed")) DeviceData {
   std::unordered_set<uint64_t> live_pipelines;
   std::shared_mutex mutex;
   std::unordered_map<uint64_t, reshade::api::resource> resource_view_resources;
+  std::unordered_set<uint64_t> empty_resource_views;
   std::unordered_map<uint64_t, std::unordered_set<uint64_t>> resource_resource_views;
 
   reshade::api::effect_runtime* runtime = nullptr;
@@ -203,26 +205,26 @@ struct __declspec(uuid("0190ec1a-2e19-74a6-ad41-4df0d4d8caed")) DeviceData {
     ResourceViewDetails details = {
         .resource_view = resource_view,
         .resource_view_desc = device->get_resource_view_desc(resource_view),
-        .resource = device->get_resource_from_view(resource_view),
+        // .resource = device->get_resource_from_view(resource_view),
     };
 
     auto device_api = device->get_api();
 
-    auto resource_view_tag = renodx::utils::trace::GetDebugName(device_api, resource_view);
-    if (resource_view_tag.has_value()) {
-      details.resource_view_tag = resource_view_tag.value();
+    auto resource_view_reflection = renodx::utils::trace::GetDebugName(device_api, resource_view);
+    if (resource_view_reflection.has_value()) {
+      details.resource_view_reflection = resource_view_reflection.value();
     }
 
     if (auto pair = resource_view_resources.find(resource_view.handle);
         pair != resource_view_resources.end()) {
-      details.resource = device->get_resource_from_view(resource_view);
+      details.resource = pair->second;  // device->get_resource_from_view(resource_view);
 
       if (details.resource.handle != 0u) {
         details.resource_desc = device->get_resource_desc(details.resource);
 
-        auto resource_tag = renodx::utils::trace::GetDebugName(device_api, details.resource);
-        if (resource_tag.has_value()) {
-          details.resource_tag = resource_tag.value();
+        auto resource_reflection = renodx::utils::trace::GetDebugName(device_api, details.resource);
+        if (resource_reflection.has_value()) {
+          details.resource_reflection = resource_reflection.value();
         }
       }
     }
@@ -569,10 +571,15 @@ void OnInitResourceView(
   if (view.handle == 0u) return;
   auto& data = device->get_private_data<DeviceData>();
   const std::unique_lock lock(data.mutex);
+
   auto& tracked_resource = data.resource_view_resources[view.handle];
   // bool reused_handle = tracked_resource.handle != 0u && tracked_resource.handle != resource.handle;
 
-  if (resource.handle == 0u) return;
+  if (resource.handle == 0u) {
+    data.empty_resource_views.emplace(view.handle);
+    return;
+  }
+  data.empty_resource_views.erase(view.handle);
   tracked_resource.handle = resource.handle;
 
   auto& view_set = data.resource_resource_views[resource.handle];
@@ -765,7 +772,10 @@ bool OnDraw(reshade::api::command_list* cmd_list, DrawDetails::DrawMethods draw_
 
           for (uint32_t k = 0; k < range.count; ++k) {
             auto heap_pair = descriptor_data.heaps.find(heap.handle);
-            assert(heap_pair != descriptor_data.heaps.end());
+            if (heap_pair == descriptor_data.heaps.end()) {
+              // Unknown heap?
+              continue;
+            }
             const auto& heap_data = heap_pair->second;
             auto offset = base_offset + k;
             if (offset >= heap_data.size()) {
@@ -810,15 +820,22 @@ bool OnDraw(reshade::api::command_list* cmd_list, DrawDetails::DrawMethods draw_
                 draw_details.uav_binds.erase(slot);
               } else {
                 auto detail_item = (device_data.GetResourceViewDetails(resource_view, device));
-                draw_details.uav_binds[slot] = detail_item;
+                if (detail_item.resource.handle == 0u && device_data.empty_resource_views.contains(resource_view.handle)) {
+                  draw_details.uav_binds.erase(slot);
+                } else {
+                  draw_details.uav_binds[slot] = detail_item;
+                }
               }
             } else {
               if (resource_view.handle == 0u) {
                 draw_details.srv_binds.erase(slot);
               } else {
                 auto detail_item = (device_data.GetResourceViewDetails(resource_view, device));
-
-                draw_details.srv_binds[slot] = detail_item;
+                if (detail_item.resource.handle == 0u && device_data.empty_resource_views.contains(resource_view.handle)) {
+                  draw_details.srv_binds.erase(slot);
+                } else {
+                  draw_details.srv_binds[slot] = detail_item;
+                }
               }
             }
           }
@@ -1048,7 +1065,11 @@ void RenderCapturePane(reshade::api::device* device, DeviceData& data) {
         ImGui::PushID(row_index);
         bool draw_node_open = false;
         if ((ImGui::TableSetColumnIndex(CAPTURE_PANE_COLUMN_TYPE))) {
-          draw_node_open = ImGui::TreeNodeEx("", tree_node_flags | ImGuiTreeNodeFlags_DefaultOpen, "%s", draw_details.DrawMethodString().c_str());
+          auto flags = tree_node_flags;
+          if (device->get_api() != reshade::api::device_api::d3d12) {
+            flags |= ImGuiTreeNodeFlags_DefaultOpen;
+          }
+          draw_node_open = ImGui::TreeNodeEx("", flags, "%s", draw_details.DrawMethodString().c_str());
         }
         // Ref
         // Info
@@ -1179,8 +1200,8 @@ void RenderCapturePane(reshade::api::device* device, DeviceData& data) {
             }
 
             if ((ImGui::TableSetColumnIndex(CAPTURE_PANE_COLUMN_REFLECTION))) {
-              if (!resource_view_details.resource_view_tag.empty()) {
-                ImGui::TextUnformatted(resource_view_details.resource_view_tag.c_str());
+              if (!resource_view_details.resource_view_reflection.empty()) {
+                ImGui::TextUnformatted(resource_view_details.resource_view_reflection.c_str());
               }
             }
 
@@ -1232,8 +1253,8 @@ void RenderCapturePane(reshade::api::device* device, DeviceData& data) {
             }
 
             if ((ImGui::TableSetColumnIndex(CAPTURE_PANE_COLUMN_REFLECTION))) {
-              if (!resource_view_details.resource_tag.empty()) {
-                ImGui::TextUnformatted(resource_view_details.resource_tag.c_str());
+              if (!resource_view_details.resource_reflection.empty()) {
+                ImGui::TextUnformatted(resource_view_details.resource_reflection.c_str());
               }
             }
 
@@ -1307,8 +1328,8 @@ void RenderCapturePane(reshade::api::device* device, DeviceData& data) {
             }
 
             ImGui::TableNextColumn();
-            if (!resource_view_details.resource_view_tag.empty()) {
-              ImGui::TextUnformatted(resource_view_details.resource_view_tag.c_str());
+            if (!resource_view_details.resource_view_reflection.empty()) {
+              ImGui::TextUnformatted(resource_view_details.resource_view_reflection.c_str());
             }
 
             ImGui::TableNextColumn();  // Index
@@ -1350,8 +1371,8 @@ void RenderCapturePane(reshade::api::device* device, DeviceData& data) {
             }
 
             ImGui::TableNextColumn();
-            if (!resource_view_details.resource_tag.empty()) {
-              ImGui::TextUnformatted(resource_view_details.resource_tag.c_str());
+            if (!resource_view_details.resource_reflection.empty()) {
+              ImGui::TextUnformatted(resource_view_details.resource_reflection.c_str());
             }
 
             ImGui::TableNextColumn();  // Index
@@ -1388,8 +1409,8 @@ void RenderCapturePane(reshade::api::device* device, DeviceData& data) {
             }
 
             ImGui::TableNextColumn();
-            if (!render_target.resource_view_tag.empty()) {
-              ImGui::TextUnformatted(render_target.resource_view_tag.c_str());
+            if (!render_target.resource_view_reflection.empty()) {
+              ImGui::TextUnformatted(render_target.resource_view_reflection.c_str());
             }
 
             ImGui::TableNextColumn();  // Index
@@ -1431,8 +1452,8 @@ void RenderCapturePane(reshade::api::device* device, DeviceData& data) {
             }
 
             ImGui::TableNextColumn();
-            if (!render_target.resource_tag.empty()) {
-              ImGui::TextUnformatted(render_target.resource_tag.c_str());
+            if (!render_target.resource_reflection.empty()) {
+              ImGui::TextUnformatted(render_target.resource_reflection.c_str());
             }
 
             ImGui::TableNextColumn();  // Index
@@ -1835,7 +1856,7 @@ void RenderShaderViewDisassembly(reshade::api::device* device, DeviceData& data,
   if (std::holds_alternative<std::exception>(shader_details.disassembly)) {
     disassembly_string.assign(std::get<std::exception>(shader_details.disassembly).what());
     failed = true;
-  } else {
+  } else if (std::holds_alternative<std::string>(shader_details.disassembly)) {
     disassembly_string.assign(std::get<std::string>(shader_details.disassembly));
   }
 
@@ -1921,7 +1942,7 @@ void RenderShaderViewDecompilation(reshade::api::device* device, DeviceData& dat
   if (std::holds_alternative<std::exception>(shader_details.decompilation)) {
     decompilation_string.assign(std::get<std::exception>(shader_details.decompilation).what());
     failed = true;
-  } else {
+  } else if (std::holds_alternative<std::string>(shader_details.decompilation)) {
     decompilation_string.assign(std::get<std::string>(shader_details.decompilation));
   }
 
@@ -2078,6 +2099,10 @@ void InitializeUserSettings(reshade::api::effect_runtime* runtime) {
 void OnRegisterOverlay(reshade::api::effect_runtime* runtime) {
   auto* device = runtime->get_device();
   auto& data = device->get_private_data<DeviceData>();
+
+  // Runtime may be on a separate device
+  if (std::addressof(data) == nullptr) return;
+
   std::unique_lock lock(data.mutex);  // Probably not needed
   if (data.runtime == nullptr) {
     data.runtime = runtime;
@@ -2200,6 +2225,10 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   switch (fdw_reason) {
     case DLL_PROCESS_ATTACH:
       if (!reshade::register_addon(h_module)) return FALSE;
+
+      // while (IsDebuggerPresent() == 0) {
+      //   Sleep(100);
+      // }
 
       renodx::utils::descriptor::Use(fdw_reason);
       renodx::utils::shader::Use(fdw_reason);

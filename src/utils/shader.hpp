@@ -16,6 +16,7 @@
 #include <mutex>
 #include <optional>
 #include <shared_mutex>
+#include <span>
 #include <sstream>
 #include <unordered_map>
 #include <unordered_set>
@@ -26,6 +27,7 @@
 
 #include "./format.hpp"
 #include "./pipeline.hpp"
+#include "./pipeline_layout.hpp"
 
 namespace renodx::utils::shader {
 
@@ -163,6 +165,7 @@ struct __declspec(uuid("8707f724-c7e5-420e-89d6-cc032c732d2d")) CommandListData 
   reshade::api::pipeline_layout pipeline_layout = {0};
   std::unordered_map<reshade::api::pipeline_stage, reshade::api::pipeline> pending_replacements;
   std::unordered_map<reshade::api::pipeline_stage, uint32_t> current_shaders_hashes;
+  std::unordered_map<reshade::api::pipeline_stage, reshade::api::pipeline> current_shader_pipelines;
 
   [[nodiscard]] uint32_t GetCurrentShaderHash(reshade::api::pipeline_stage stage) const {
     auto pair = current_shaders_hashes.find(stage);
@@ -210,6 +213,10 @@ namespace internal {
 static std::shared_mutex mutex;
 static std::unordered_map<uint32_t, std::vector<uint8_t>> compile_time_replacements;
 static std::unordered_map<uint32_t, std::vector<uint8_t>> initial_runtime_replacements;
+static std::unordered_map<reshade::api::device_api, std::unordered_map<uint32_t, std::vector<uint8_t>>>
+    device_based_compile_time_replacements;
+static std::unordered_map<reshade::api::device_api, std::unordered_map<uint32_t, std::vector<uint8_t>>>
+    device_based_initial_runtime_replacements;
 }  // namespace internal
 
 static bool BuildReplacementPipeline(reshade::api::device* device, DeviceData& data, PipelineShaderDetails& details) {
@@ -277,8 +284,13 @@ static bool BuildReplacementPipeline(reshade::api::device* device, DeviceData& d
   }
 
   reshade::api::pipeline new_pipeline;
+  auto layout = renodx::utils::pipeline_layout::GetPipelineLayoutClone(device, details.layout);
+  if (layout.handle == 0u) {
+    layout = details.layout;
+  }
+
   const bool built_pipeline_ok = device->create_pipeline(
-      details.layout,
+      layout,
       subobject_count,
       replacement_subobjects,
       &new_pipeline);
@@ -296,6 +308,35 @@ static void QueueCompileTimeReplacement(
     const std::vector<uint8_t>& shader_data) {
   const std::unique_lock lock(internal::mutex);
   internal::compile_time_replacements[shader_hash] = shader_data;
+}
+
+static void UpdateReplacements(
+    const std::unordered_map<uint32_t, std::vector<uint8_t>>& replacements,
+    bool compile_time = true,
+    bool initial_runtime = true,
+    const std::unordered_set<reshade::api::device_api>& devices = {}) {
+  if (!compile_time && !initial_runtime) return;
+  const std::unique_lock lock(internal::mutex);
+
+  auto update = [&](auto& compile_list, auto& runtime_list) {
+    for (const auto& [shader_hash, shader_data] : replacements) {
+      if (compile_time) {
+        compile_list[shader_hash] = shader_data;
+      }
+      if (initial_runtime) {
+        runtime_list[shader_hash] = shader_data;
+      }
+    }
+  };
+  if (devices.empty()) {
+    update(internal::compile_time_replacements, internal::initial_runtime_replacements);
+  } else {
+    for (const auto& device : devices) {
+      auto& compile = internal::device_based_compile_time_replacements[device];
+      auto& runtime = internal::device_based_initial_runtime_replacements[device];
+      update(compile, runtime);
+    }
+  }
 }
 
 static void UnqueueCompileTimeReplacement(
@@ -382,6 +423,7 @@ static void OnInitDevice(reshade::api::device* device) {
     std::stringstream s;
     s << "utils::shader::OnInitDevice(Hooking device: ";
     s << reinterpret_cast<void*>(device);
+    s << ", api: " << device->get_api();
     s << ")";
     reshade::log::message(reshade::log::level::debug, s.str().c_str());
 
@@ -391,6 +433,7 @@ static void OnInitDevice(reshade::api::device* device) {
     std::stringstream s;
     s << "utils::shader::OnInitDevice(Attaching to hook: ";
     s << reinterpret_cast<void*>(device);
+    s << ", api: " << device->get_api();
     s << ")";
     reshade::log::message(reshade::log::level::debug, s.str().c_str());
   }
@@ -402,40 +445,38 @@ static void OnInitDevice(reshade::api::device* device) {
     data->use_replace_async = true;
   }
 
-  std::unique_lock internal_lock(internal::mutex);
-  for (auto& [shader_hash, replacement] : internal::compile_time_replacements) {
-    auto [iterator, is_new] = data->compile_time_replacements.emplace(shader_hash, replacement);
-    if (!is_new) {
+  auto insert_shaders = [](
+                            const std::unordered_map<uint32_t, std::vector<uint8_t>>& source,
+                            std::unordered_map<uint32_t, std::vector<uint8_t>>& dest,
+                            const std::string& type = "") {
+    for (const auto& [shader_hash, replacement] : source) {
+      auto [iterator, is_new] = dest.emplace(shader_hash, replacement);
       std::stringstream s;
-      s << "utils::shader::OnInitDevice(Overwriting compile-time replacement:";
+      s << "utils::shader::OnInitDevice(";
+      if (is_new) {
+        s << "Registered ";
+      } else {
+        s << "Ovewriting ";
+      }
+      s << type;
+      s << " replacement: ";
       s << PRINT_CRC32(shader_hash);
       s << ")";
-      reshade::log::message(reshade::log::level::warning, s.str().c_str());
-    } else {
-      std::stringstream s;
-      s << "utils::shader::OnInitDevice(Registered compile-time replacement: ";
-      s << PRINT_CRC32(shader_hash);
-      s << ")";
-      reshade::log::message(reshade::log::level::debug, s.str().c_str());
+      if (is_new) {
+        reshade::log::message(reshade::log::level::debug, s.str().c_str());
+      } else {
+        reshade::log::message(reshade::log::level::warning, s.str().c_str());
+      }
     }
-  }
+  };
 
-  for (auto& [shader_hash, replacement] : internal::initial_runtime_replacements) {
-    auto [iterator, is_new] = data->runtime_replacements.emplace(shader_hash, replacement);
-    if (!is_new) {
-      std::stringstream s;
-      s << "utils::shader::OnInitDevice(Overwriting runtime replacement: ";
-      s << PRINT_CRC32(shader_hash);
-      s << ")";
-      reshade::log::message(reshade::log::level::warning, s.str().c_str());
-    } else {
-      std::stringstream s;
-      s << "utils::shader::OnInitDevice(Registered runtime replacement: ";
-      s << PRINT_CRC32(shader_hash);
-      s << ")";
-      reshade::log::message(reshade::log::level::debug, s.str().c_str());
-    }
-  }
+  std::shared_lock lock(internal::mutex);
+  insert_shaders(internal::compile_time_replacements, data->compile_time_replacements, "compile-time");
+  insert_shaders(internal::initial_runtime_replacements, data->runtime_replacements, "runtime");
+
+  insert_shaders(internal::device_based_compile_time_replacements[device->get_api()], data->compile_time_replacements, "API-based compile-time");
+  insert_shaders(internal::device_based_initial_runtime_replacements[device->get_api()], data->runtime_replacements, "API-based runtime");
+
   runtime_replacement_count = data->runtime_replacements.size();
 };
 
@@ -487,10 +528,8 @@ static bool OnCreatePipeline(
         static_cast<const uint8_t*>(desc->code),
         desc->code_size);
 
-    const std::shared_lock lock(internal::mutex);
-
-    if (auto pair = internal::compile_time_replacements.find(shader_hash);
-        pair != internal::compile_time_replacements.end()) {
+    if (auto pair = data.compile_time_replacements.find(shader_hash);
+        pair != data.compile_time_replacements.end()) {
       changed = true;
       const auto& replacement = pair->second;
       auto new_size = replacement.size();
@@ -602,6 +641,7 @@ static void OnBindPipeline(
       found_compatible = true;
       if (pipeline.handle == 0u) {
         cmd_list_data.current_shaders_hashes.erase(compatible_stage);
+        cmd_list_data.current_shader_pipelines.erase(compatible_stage);
         cmd_list_data.pending_replacements.erase(compatible_stage);
       } else {
         break;
@@ -651,6 +691,7 @@ static void OnBindPipeline(
     if (auto pair = details.shader_hashes_by_stage.find(compatible_stage);
         pair != details.shader_hashes_by_stage.end()) {
       cmd_list_data.current_shaders_hashes[compatible_stage] = pair->second;
+      cmd_list_data.current_shader_pipelines[compatible_stage] = pipeline;
     }
     if (details.HasReplacementPipeline() && ((details.replacement_stages & compatible_stage) == compatible_stage)) {
       auto& replacement_pipeline = details.replacement_pipeline.value();
@@ -709,6 +750,7 @@ inline DeviceData& GetShaderDeviceData(reshade::api::device* device) {
 static bool attached = false;
 
 static void Use(DWORD fdw_reason) {
+  renodx::utils::pipeline_layout::Use(fdw_reason);
   switch (fdw_reason) {
     case DLL_PROCESS_ATTACH:
       if (attached) return;

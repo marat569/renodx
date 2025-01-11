@@ -5,8 +5,10 @@
 
 #pragma once
 
+#include <cassert>
 #include <include/reshade.hpp>
 #include <include/reshade_api_pipeline.hpp>
+#include <memory>
 #include <shared_mutex>
 #include <unordered_map>
 #include <vector>
@@ -19,8 +21,9 @@ struct PipelineLayoutData {
   std::vector<reshade::api::pipeline_layout_param> params;
   std::vector<std::vector<reshade::api::descriptor_range>> ranges;
   std::vector<reshade::api::descriptor_table> tables;
-
+  reshade::api::pipeline_layout replacement_layout;
 };
+
 struct __declspec(uuid("96f1f53b-90cb-4929-92d7-9a7a1a5c2493")) DeviceData {
   std::unordered_map<uint64_t, PipelineLayoutData> pipeline_layout_data;
 
@@ -57,15 +60,33 @@ static void OnInitPipelineLayout(
 
   for (uint32_t i = 0; i < param_count; ++i) {
     const auto& param = params[i];
-    if (param.type == reshade::api::pipeline_layout_param_type::descriptor_table) {
-      auto& ranges = layout_data.ranges[i];
-      if (param.descriptor_table.ranges->count != UINT32_MAX) {
-        ranges.assign(
-            param.descriptor_table.ranges,
-            param.descriptor_table.ranges + param.descriptor_table.count);
-      }
-      layout_data.params[i] = param;
-      layout_data.params[i].descriptor_table.ranges = ranges.data();
+    switch (param.type) {
+      case reshade::api::pipeline_layout_param_type::descriptor_table:
+        if (param.descriptor_table.count == 0u) continue;
+        {
+          auto& ranges = layout_data.ranges[i];
+          if (param.descriptor_table.ranges->count != UINT32_MAX) {
+            ranges.assign(
+                param.descriptor_table.ranges,
+                param.descriptor_table.ranges + param.descriptor_table.count);
+          } else {
+            ranges.assign(
+                param.descriptor_table.ranges,
+                param.descriptor_table.ranges + 1);
+          }
+          layout_data.params[i] = param;
+          layout_data.params[i].descriptor_table.ranges = ranges.data();
+        }
+        break;
+      case reshade::api::pipeline_layout_param_type::push_constants:
+      case reshade::api::pipeline_layout_param_type::descriptor_table_with_static_samplers:
+      case reshade::api::pipeline_layout_param_type::push_descriptors:
+      case reshade::api::pipeline_layout_param_type::push_descriptors_with_ranges:
+      case reshade::api::pipeline_layout_param_type::push_descriptors_with_static_samplers:
+        break;
+      default:
+        // No other known types
+        assert(false);
     }
   }
 }
@@ -77,6 +98,28 @@ static void OnDestroyPipelineLayout(
   auto& data = device->get_private_data<DeviceData>();
   const std::unique_lock lock(data.mutex);
   data.pipeline_layout_data.erase(layout.handle);
+}
+
+static void RegisterPipelineLayoutClone(
+    reshade::api::device* device,
+    reshade::api::pipeline_layout layout_original,
+    reshade::api::pipeline_layout layout_clone) {
+  auto& data = device->get_private_data<DeviceData>();
+  if (std::addressof(data) == nullptr) return;
+  const std::unique_lock lock(data.mutex);
+  auto& entry = data.pipeline_layout_data[layout_original.handle];
+  entry.replacement_layout = layout_clone;
+}
+
+static reshade::api::pipeline_layout GetPipelineLayoutClone(
+    reshade::api::device* device,
+    reshade::api::pipeline_layout layout_original) {
+  auto& data = device->get_private_data<DeviceData>();
+  if (std::addressof(data) == nullptr) return {0};
+  const std::shared_lock lock(data.mutex);
+  auto pair = data.pipeline_layout_data.find(layout_original.handle);
+  if (pair == data.pipeline_layout_data.end()) return {0};
+  return pair->second.replacement_layout;
 }
 
 static bool attached = false;

@@ -1,5 +1,5 @@
-#ifndef SRC_STALKER2_SHARED_H_
-#define SRC_STALKER2_SHARED_H_
+#ifndef SRC_TACTICAL_BREACH_WIZARDS_SHARED_H_
+#define SRC_TACTICAL_BREACH_WIZARDS_SHARED_H_
 
 #ifndef __cplusplus
 #include "../../shaders/renodx.hlsl"
@@ -12,20 +12,24 @@ struct ShaderInjectData {
   float toneMapPeakNits;
   float toneMapGameNits;
   float toneMapUINits;
-  float toneMapPerChannel;
-  float radiationOverlayStrength;
-  float vignetteStrength;
   float colorGradeExposure;
   float colorGradeHighlights;
   float colorGradeShadows;
   float colorGradeContrast;
   float colorGradeSaturation;
   float colorGradeBlowout;
+  float colorGradeFlare;
+  float colorGradeLUTStrength;
+  float fxBloom;
+  float fxVignette;
+  float fxFilmGrain;
+  float elapsedTime;
 };
+
 #ifndef __cplusplus
-cbuffer injectedBuffer : register(b13, space50) {
+cbuffer cb13 : register(b13) {
   ShaderInjectData injectedData : packoffset(c0);
 }
 #endif
 
-#endif  // SRC_STALKER2_SHARED_H_
+#endif  // SRC_TACTICAL_BREACH_WIZARDS_SHARED_H_

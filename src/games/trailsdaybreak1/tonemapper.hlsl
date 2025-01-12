@@ -14,8 +14,8 @@ float3 applyUserTonemap(float3 untonemapped) {
   }
 
   if (injectedData.toneMapType != 0) {  // UserColorGrading, pre-tonemap
-    outputColor.rgb = renodx::color::grade::UserColorGrading(
-        outputColor.rgb,
+    outputColor = renodx::color::grade::UserColorGrading(
+        outputColor,
         injectedData.colorGradeExposure,    // exposure
         injectedData.colorGradeHighlights,  // highlights
         injectedData.colorGradeShadows,     // shadows
@@ -38,7 +38,7 @@ float3 applyUserTonemap(float3 untonemapped) {
 
   } else if (injectedData.toneMapType == 3.f) {  // baby reinhard
     float ReinhardPeak = injectedData.toneMapPeakNits / injectedData.toneMapGameNits;
-    outputColor.rgb = renodx::tonemap::ReinhardScalable(outputColor.rgb, ReinhardPeak);
+    outputColor = renodx::tonemap::ReinhardScalable(outputColor, ReinhardPeak);
 
   } else if (injectedData.toneMapType == 4.f) {  // Frostbite
     float frostbitePeak = injectedData.toneMapPeakNits / injectedData.toneMapGameNits;
@@ -46,19 +46,19 @@ float3 applyUserTonemap(float3 untonemapped) {
   }
 
   if (injectedData.toneMapType != 0) {  // UserColorGrading, post-tonemap
-    outputColor.rgb = renodx::color::grade::UserColorGrading(
-        outputColor.rgb,
-        1.f,                                // exposure
-        1.f,                                // highlights
-        1.f,                                // shadows
-        1.f,                                // contrast
-        injectedData.colorGradeSaturation,  // saturation
-        0.f,                                // dechroma, we don't need it
-        injectedData.toneMapHueCorrection,  // Hue Correction
-        renodx::tonemap::Reinhard(untonemapped));
+    outputColor = renodx::color::grade::UserColorGrading(
+        outputColor,
+        1.f,                                       // exposure
+        1.f,                                       // highlights
+        1.f,                                       // shadows
+        1.f,                                       // contrast
+        injectedData.colorGradeSaturation,         // saturation
+        0.f,                                       // dechroma, we don't need it
+        injectedData.toneMapHueCorrection,         // Hue Correction Strength
+        renodx::tonemap::Reinhard(untonemapped));  // Hue Correction Type
   }
 
-  outputColor = renodx::color::bt709::clamp::BT2020(outputColor);  // Clamp to BT2020 to avoid negative colorsF
+  outputColor = renodx::color::bt709::clamp::BT2020(outputColor);  // Clamp to BT2020 to avoid negative colors
 
   return outputColor;
 }

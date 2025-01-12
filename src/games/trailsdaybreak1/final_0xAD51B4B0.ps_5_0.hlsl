@@ -18,9 +18,9 @@ Texture2D<float4> tex : register(t0);
 #define cmp -
 
 void main(
-    float4 v0: SV_Position0,
-    float2 v1: TEXCOORD0,
-    out float4 o0: SV_Target0) {
+    float4 v0 : SV_Position0,
+    float2 v1 : TEXCOORD0,
+    out float4 o0 : SV_Target0) {
   float4 r0;
   uint4 bitmask, uiDest;
   float4 fDest;
@@ -29,7 +29,12 @@ void main(
 
   r0.rgb = injectedData.gamma ? renodx::math::PowSafe(r0.rgb, 2.3f) : renodx::math::PowSafe(r0.rgb, 2.2f);  // The game does 2.3 gamma default
 
-  r0.rgb = applyUserTonemap(r0.rgb);              // Send our color to tonemapper.hlsl to get processed!
+  r0.rgb = applyUserTonemap(r0.rgb);  // Send our color to tonemapper.hlsl to get processed!
+
+  if (injectedData.ColorGradeColorSpace == 1.f) {
+    r0.rgb = renodx::color::bt709::from::BT709D93(r0.rgb);
+  }
+
   r0.rgb *= injectedData.toneMapGameNits / 80.f;  // paper white
 
   o0.rgb = r0.rgb;

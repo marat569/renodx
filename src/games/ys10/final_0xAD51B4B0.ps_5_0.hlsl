@@ -32,6 +32,10 @@ void main(
   r0.rgb = applyUserTonemap(r0.rgb);              // Send our color to tonemapper.hlsl to get processed!
   r0.rgb *= injectedData.toneMapGameNits / 80.f;  // paper white
 
+  if (injectedData.ColorGradeColorSpace == 1.f) {
+    r0.rgb = renodx::color::bt709::from::BT709D93(r0.rgb);
+  }
+
   o0.rgb = r0.rgb;
   o0.w = 1;
   return;

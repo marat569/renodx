@@ -7,7 +7,7 @@
 
 #define DEBUG_LEVEL_0
 
-// #define DEBUG_LEVEL_1 //added
+// #define DEBUG_LEVEL_1  // added
 
 #include <embed/0xAD51B4B0.h>  //ui -- overworld hud
 
@@ -135,8 +135,24 @@ renodx::utils::settings::Settings settings = {
     },
 
     new renodx::utils::settings::Setting{
+        .key = "ColorGradeColorSpace",
+        .binding = &shader_injection.ColorGradeColorSpace,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .label = "Color Space",
+        .section = "Color Grading",
+        .tooltip = "Selects output color space"
+                   "\nUS Modern for BT.709 D65."
+                   "\nJPN Modern for BT.709 D93.",
+        .labels = {
+            "US Modern",
+            "JPN Modern",
+        },
+    },
+
+    new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
-        .label = " - Please enable Native HDR in game! \r\n - Use the game's UI slider to control the UI! \r\n - This mod is still in beta, please report issues on Discord!",
+        .label = " - Please enable Native HDR in game! \r\n - Use the game's UI slider to control the UI! \r\n - FXAA/Anti-Aliasing High does not work, use anything else \r\n - MSAA/SGSSAA has very high VRAM usage \r\n - This mod is still in beta, please report issues on Discord!",
         .section = "Instructions",
     },
 
@@ -182,6 +198,8 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("colorGradeShadows", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeContrast", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeSaturation", 50.f);
+  renodx::utils::settings::UpdateSetting("ColorGradeColorSpace", 0.f);
+
   // Start PostProcess effects on/off
 }
 
@@ -190,7 +208,7 @@ void OnPresetOff() {
 // NOLINTBEGIN(readability-identifier-naming)
 
 extern "C" __declspec(dllexport) const char* NAME = "RenoDX";
-extern "C" __declspec(dllexport) const char* DESCRIPTION = "RenoDX for The Legend of Heroes Trails through Daybreak";
+extern "C" __declspec(dllexport) const char* DESCRIPTION = "RenoDX for The Legend of Heroes Trails through Daybreak 1";
 
 // NOLINTEND(readability-identifier-naming)
 
@@ -207,45 +225,26 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       renodx::mods::swapchain::force_borderless = false;     // needed for stability
       renodx::mods::swapchain::prevent_full_screen = false;  // needed for stability
 
-      // RGBA8_UNORM
+      // We don't really need to upgrade
+      // Upgrades cause artifacts; might be a to-do in the future
+      // Upgrades would fix FXAA
+
+      // //   RGBA8_UNORM
       //   renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
       //       .old_format = reshade::api::format::r8g8b8a8_unorm,
       //       .new_format = reshade::api::format::r16g16b16a16_float,
       //   });
 
-      // RGBA8_UNORM 512x512
+      //   // r8g8b8a8_unorm -- new usage_include -- looks good, but game hangs
       //   renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
       //       .old_format = reshade::api::format::r8g8b8a8_unorm,
       //       .new_format = reshade::api::format::r16g16b16a16_float,
-      //       .dimensions = {512, 512},
+      //       .ignore_size = true,
+      //       .use_resource_view_cloning = true,
+      //       .use_resource_view_hot_swap = true,
+      //       .usage_include = reshade::api::resource_usage::render_target | reshade::api::resource_usage::unordered_access,
+
       //   });
-
-      // r8g8b8a8_unorm -- view upgrades
-      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
-          .old_format = reshade::api::format::r8g8b8a8_unorm,
-          .new_format = reshade::api::format::r16g16b16a16_float,
-          .ignore_size = true,
-          .use_resource_view_cloning = true,
-          .use_resource_view_hot_swap = true,
-          .usage_include = reshade::api::resource_usage::render_target | reshade::api::resource_usage::unordered_access,
-      });
-
-      // // r8g8b8a8_unorm -- view upgrades
-      // renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({.old_format = reshade::api::format::r8g8b8a8_unorm,
-      //                                                                .new_format = reshade::api::format::r16g16b16a16_float,
-      //                                                                .ignore_size = true,
-      //                                                                .usage_include = reshade::api::resource_usage::render_target | reshade::api::resource_usage::unordered_access,
-      //                                                                .view_upgrades = {
-      //                                                                    {{reshade::api::resource_usage::shader_resource,
-      //                                                                      reshade::api::format::r8g8b8a8_unorm},
-      //                                                                     reshade::api::format::r16g16b16a16_float},
-      //                                                                    {{reshade::api::resource_usage::unordered_access,
-      //                                                                      reshade::api::format::r8g8b8a8_unorm},
-      //                                                                     reshade::api::format::r16g16b16a16_float},
-      //                                                                    {{reshade::api::resource_usage::render_target,
-      //                                                                      reshade::api::format::r8g8b8a8_unorm},
-      //                                                                     reshade::api::format::r16g16b16a16_float},
-      //                                                                }});
 
       // R11G11B10
       //   renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({.old_format = reshade::api::format::r11g11b10_float,

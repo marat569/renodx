@@ -20,7 +20,6 @@
 #include "../../utils/settings.hpp"
 #include "./shared.h"
 
-
 namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
@@ -122,6 +121,22 @@ renodx::utils::settings::Settings settings = {
         .section = "Color Grading",
         .max = 100.f,
         .parse = [](float value) { return value * 0.02f; },
+    },
+
+    new renodx::utils::settings::Setting{
+        .key = "ColorGradeColorSpace",
+        .binding = &shader_injection.ColorGradeColorSpace,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .label = "Color Space",
+        .section = "Color Grading",
+        .tooltip = "Selects output color space"
+                   "\nUS Modern for BT.709 D65."
+                   "\nJPN Modern for BT.709 D93.",
+        .labels = {
+            "US Modern",
+            "JPN Modern",
+        },
     },
 
     new renodx::utils::settings::Setting{

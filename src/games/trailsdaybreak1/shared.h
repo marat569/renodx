@@ -19,6 +19,7 @@ struct ShaderInjectData {
   float colorGradeSaturation;
   float gamma;
   float toneMapHueCorrection;
+  float ColorGradeColorSpace;
 };
 
 #ifndef __cplusplus

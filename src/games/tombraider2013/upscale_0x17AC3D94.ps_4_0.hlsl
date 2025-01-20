@@ -1,7 +1,6 @@
 #include "./shared.h"
 
-cbuffer SceneBuffer : register(b2)
-{
+cbuffer SceneBuffer : register(b2) {
   row_major float4x4 View : packoffset(c0);
   row_major float4x4 ScreenMatrix : packoffset(c4);
   float2 DepthExportScale : packoffset(c8);
@@ -47,23 +46,18 @@ cbuffer SceneBuffer : register(b2)
 SamplerState Sampler0_s : register(s0);
 Texture2D<float4> InstanceTexture0 : register(t0);
 
-
 // 3Dmigoto declarations
 #define cmp -
 
-
 void main(
-  float4 v0 : SV_POSITION0,
-  out float4 o0 : SV_Target0)
-{
+    float4 v0: SV_POSITION0,
+    out float4 o0: SV_Target0) {
   float4 r0;
   uint4 bitmask, uiDest;
   float4 fDest;
 
   r0.xy = v0.xy * ScreenExtents.zw + ScreenExtents.xy;
   o0.xyzw = InstanceTexture0.Sample(Sampler0_s, r0.xy).xyzw;
-  o0.rgb = renodx::draw::ToneMapPass(o0.rgb);
-  // Copies to r8g8b8au
-  // o0.rgb = 10.f;
+
   return;
 }

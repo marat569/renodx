@@ -4,6 +4,7 @@
 #include "./color.hlsl"
 #include "./color_convert.hlsl"
 #include "./colorcorrect.hlsl"
+#include "./inverse_tonemap.hlsl"
 #include "./math.hlsl"
 #include "./tonemap.hlsl"
 
@@ -37,6 +38,7 @@ struct Config {
   float intermediate_color_space;         // 0 = d65, 1 = bt2020, 2 = ap1
   float swap_chain_decoding;              // 0 = linear, 1 = srgb, 2 = 2.2, 3 = 2.4, 4 = pq
   float swap_chain_decoding_color_space;  // 0 = d65, 1 = bt2020, 2 = ap1
+  float swap_chain_gamma_correction;      // 0 = srgb/none, 1 = 2.2, 2 = 2.4
   float swap_chain_custom_color_space;    // 0 = d65, 1 = d93, 2 = ntsc-u, 3 = ntsc-j
   float swap_chain_scaling_nits;          // generally ui nits
   float swap_chain_clamp_nits;            // generally peak nits
@@ -211,6 +213,11 @@ Config BuildConfig() {
 #endif
   config.swap_chain_decoding_color_space = RENODX_SWAP_CHAIN_DECODING_COLOR_SPACE;
 
+#if !defined(RENODX_SWAP_CHAIN_GAMMA_CORRECTION)
+#define RENODX_SWAP_CHAIN_GAMMA_CORRECTION GAMMA_CORRECTION_NONE
+#endif
+  config.swap_chain_gamma_correction = RENODX_SWAP_CHAIN_GAMMA_CORRECTION;
+
 #if !defined(RENODX_SWAP_CHAIN_CUSTOM_COLOR_SPACE)
 #define RENODX_SWAP_CHAIN_CUSTOM_COLOR_SPACE COLOR_SPACE_CUSTOM_BT709D65
 #endif
@@ -356,6 +363,16 @@ float3 InvertIntermediatePass(float3 color, Config config) {
 float3 SwapChainPass(float3 color, Config config) {
   color = DecodeColor(color, config.swap_chain_decoding);
 
+  if (config.swap_chain_gamma_correction == GAMMA_CORRECTION_GAMMA_2_2) {
+    color = color::convert::ColorSpaces(color, config.swap_chain_decoding_color_space, color::convert::COLOR_SPACE_BT709);
+    config.swap_chain_decoding_color_space = renodx::color::convert::COLOR_SPACE_BT709;
+    color = renodx::color::correct::GammaSafe(color, false, 2.2f);
+  } else if (config.swap_chain_gamma_correction == GAMMA_CORRECTION_GAMMA_2_4) {
+    color = color::convert::ColorSpaces(color, config.swap_chain_decoding_color_space, color::convert::COLOR_SPACE_BT709);
+    config.swap_chain_decoding_color_space = renodx::color::convert::COLOR_SPACE_BT709;
+    color = renodx::color::correct::GammaSafe(color, false, 2.4f);
+  }
+
   [branch]
   if (config.swap_chain_custom_color_space == COLOR_SPACE_CUSTOM_BT709D93) {
     color = color::convert::ColorSpaces(color, config.swap_chain_decoding_color_space, color::convert::COLOR_SPACE_BT709);
@@ -396,6 +413,35 @@ float3 SwapChainPass(float3 color, Config config) {
   return color;
 }
 
+/* Input should be in Gamma */
+float3 UpscaleVideoPass(float3 color, Config config) {
+  color = renodx::color::gamma::Decode(color, 2.4f);  // 2.4 for BT2446a
+
+  float scaling = config.peak_white_nits / config.diffuse_white_nits;
+  float videoPeak = config.peak_white_nits / (config.diffuse_white_nits / renodx::color::bt2408::REFERENCE_WHITE);
+  videoPeak = renodx::color::correct::Gamma(videoPeak, false, 2.4f);
+  scaling = renodx::color::correct::Gamma(scaling, false, 2.4f);
+
+  [branch]
+  if (config.gamma_correction == ENCODING_GAMMA_2_2) {
+    videoPeak = renodx::color::correct::Gamma(videoPeak, true, 2.2f);
+    scaling = renodx::color::correct::Gamma(scaling, true, 2.2f);
+  } else if (config.gamma_correction == ENCODING_GAMMA_2_4) {
+    videoPeak = renodx::color::correct::Gamma(videoPeak, true, 2.4f);
+    scaling = renodx::color::correct::Gamma(scaling, true, 2.4f);
+  }
+
+  color = renodx::tonemap::inverse::bt2446a::BT709(
+      color,
+      renodx::color::bt709::REFERENCE_WHITE,
+      videoPeak);
+  color /= videoPeak;  // Normalize to 1.0f = peak;
+  color *= scaling;
+
+  color = renodx::color::gamma::EncodeSafe(color, 2.4f);
+  return color;
+}
+
 float3 ToneMapPass(float3 color, Config draw_config) {
   renodx::tonemap::Config tone_map_config = renodx::tonemap::config::Create();
   tone_map_config.peak_nits = draw_config.peak_white_nits;
@@ -423,14 +469,16 @@ float3 ToneMapPass(float3 color, Config draw_config) {
 
   tone_map_config.hue_correction_strength = draw_config.tone_map_hue_correction;
 
-  float3 output_color = renodx::tonemap::config::Apply(color, tone_map_config);
-
   if (draw_config.tone_map_hue_shift != 0) {
-    output_color = renodx::color::correct::Hue(
-        output_color,
-        renodx::tonemap::renodrt::NeutralSDR(output_color, true),
+    tone_map_config.hue_correction_type = renodx::tonemap::config::hue_correction_type::CUSTOM;
+
+    tone_map_config.hue_correction_color = lerp(
+        color,
+        saturate(color),
         draw_config.tone_map_hue_shift);
   }
+
+  float3 output_color = renodx::tonemap::config::Apply(color, tone_map_config);
 
   return output_color;
 }
@@ -495,6 +543,10 @@ float4 ToneMapPass(float4 untonemapped, float4 graded_sdr_color) {
 
 float4 ToneMapPass(float4 untonemapped) {
   return ToneMapPass(untonemapped, BuildConfig());
+}
+
+float3 UpscaleVideoPass(float3 untonemapped) {
+  return UpscaleVideoPass(untonemapped, BuildConfig());
 }
 
 }  // draw

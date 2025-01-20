@@ -57,7 +57,7 @@ struct SwapChainUpgradeTarget {
   bool ignore_reset = false;
 
 #define SwapChainViewUpgrade(usage, source, destination) \
-  { {reshade::api::resource_usage::usage, reshade::api::format::source}, reshade::api::format::destination }
+  {{reshade::api::resource_usage::usage, reshade::api::format::source}, reshade::api::format::destination}
 #define SwapChainViewUpgradeAll(source, destination)               \
   SwapChainViewUpgrade(shader_resource, source, destination),      \
       SwapChainViewUpgrade(unordered_access, source, destination), \
@@ -71,6 +71,8 @@ struct SwapChainUpgradeTarget {
           SwapChainViewUpgradeAll(r10g10b10a2_typeless, r16g16b16a16_typeless),
           SwapChainViewUpgradeAll(r8g8b8a8_typeless, r16g16b16a16_typeless),
           SwapChainViewUpgradeAll(r16g16b16a16_float, r16g16b16a16_float),
+          SwapChainViewUpgradeAll(r16g16b16a16_unorm, r16g16b16a16_float),
+          SwapChainViewUpgradeAll(r16g16b16a16_snorm, r16g16b16a16_float),
           SwapChainViewUpgradeAll(r10g10b10a2_unorm, r16g16b16a16_float),
           SwapChainViewUpgradeAll(b10g10r10a2_unorm, r16g16b16a16_float),
           SwapChainViewUpgradeAll(r8g8b8a8_unorm, r16g16b16a16_float),
@@ -154,7 +156,7 @@ struct SwapChainUpgradeTarget {
         float target_ratio;
         if (this->aspect_ratio == BACK_BUFFER) {
           if (back_buffer_desc.type == reshade::api::resource_type::unknown) return false;
-          target_ratio = back_buffer_desc.texture.width / back_buffer_desc.texture.height;
+          target_ratio = static_cast<float>(back_buffer_desc.texture.width) / static_cast<float>(back_buffer_desc.texture.height);
         } else {
           target_ratio = this->aspect_ratio;
         }
@@ -245,6 +247,7 @@ struct __declspec(uuid("809df2f6-e1c7-4d93-9c6e-fa88dd960b7c")) DeviceData {
   std::vector<std::uint8_t> swap_chain_proxy_pixel_shader;
   int32_t expected_constant_buffer_index = -1;
   uint32_t expected_constant_buffer_space = 0;
+  bool swapchain_proxy_revert_state;
 };
 
 struct __declspec(uuid("0a2b51ad-ef13-4010-81a4-37a4a0f857a6")) CommandListData {
@@ -272,6 +275,7 @@ static bool prevent_full_screen = true;
 static bool force_borderless = true;
 static bool is_vulkan = false;
 static bool swapchain_proxy_compatibility_mode = true;
+static bool swapchain_proxy_revert_state = false;
 static reshade::api::format swap_chain_proxy_format = reshade::api::format::r16g16b16a16_float;
 static std::vector<std::uint8_t> swap_chain_proxy_vertex_shader = {};
 static std::vector<std::uint8_t> swap_chain_proxy_pixel_shader = {};
@@ -749,15 +753,6 @@ static void ReleaseResourceView(
     data.resource_view_clones.erase(pair);
   }
   data.resource_view_clone_targets.erase(view.handle);
-  data.swap_chain_rtvs.erase(view.handle);
-  
-  // Iterate to see if was a swap_chain_proxy_rtvs
-  for (auto pair : data.swap_chain_proxy_rtvs) {
-    if (pair.second.handle == view.handle) {
-      data.swap_chain_proxy_rtvs.erase(pair.first);
-      break;
-    }
-  }
 }
 
 static void RewriteRenderTargets(
@@ -1009,7 +1004,7 @@ static void DrawSwapChainProxy(reshade::api::swapchain* swapchain, reshade::api:
   cmd_list->end_render_pass();
   queue->flush_immediate_command_list();
 
-  if (previous_state.has_value()) {
+  if (data.swapchain_proxy_revert_state && previous_state.has_value()) {
     previous_state->Apply(cmd_list);
   }
 
@@ -1044,6 +1039,7 @@ static void OnInitDevice(reshade::api::device* device) {
   data.prevent_full_screen = prevent_full_screen;
   data.swap_chain_proxy_vertex_shader = swap_chain_proxy_vertex_shader;
   data.swap_chain_proxy_pixel_shader = swap_chain_proxy_pixel_shader;
+  data.swapchain_proxy_revert_state = swapchain_proxy_revert_state;
   data.expected_constant_buffer_index = expected_constant_buffer_index;
   data.expected_constant_buffer_space = expected_constant_buffer_space;
 

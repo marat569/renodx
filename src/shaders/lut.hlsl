@@ -12,8 +12,9 @@ struct Config {
   float scaling;
   uint type_input;
   uint type_output;
-  float size;
+  uint size;
   float3 precompute;
+  bool tetrahedral;
 };
 
 namespace config {
@@ -30,13 +31,41 @@ static const uint ARRI_C1000_NO_CUT = 8u;
 static const uint PQ = 9u;
 }  // namespace type
 
-Config Create(SamplerState lut_sampler, float strength, float scaling, uint type_input, uint type_output, float size = 0) {
-  Config lut_config = { lut_sampler, strength, scaling, type_input, type_output, size, float3(0, 0, 0) };
+Config Create(SamplerState lut_sampler, float strength, float scaling, uint type_input, uint type_output, uint size = 0) {
+  Config lut_config = { lut_sampler, strength, scaling, type_input, type_output, size, float3(0, 0, 0), false };
+  return lut_config;
+}
+
+Config Create(SamplerState lut_sampler, float strength, float scaling, uint type_input, uint type_output, float size) {
+  Config lut_config = { lut_sampler, strength, scaling, type_input, type_output, (uint)size, float3(0, 0, 0), false };
   return lut_config;
 }
 
 Config Create(SamplerState lut_sampler, float strength, float scaling, uint type_input, uint type_output, float3 precompute) {
-  Config lut_config = { lut_sampler, strength, scaling, type_input, type_output, 0, precompute };
+  Config lut_config = { lut_sampler, strength, scaling, type_input, type_output, 0, precompute, false };
+  return lut_config;
+}
+
+#if defined(__SHADER_TARGET_MAJOR) && (__SHADER_TARGET_MAJOR >= 6)
+#pragma dxc diagnostic push
+#pragma dxc diagnostic ignored "-Weffects-syntax"
+#endif
+sampler NULL_SAMPLER = sampler_state {};
+#if defined(__SHADER_TARGET_MAJOR) && (__SHADER_TARGET_MAJOR >= 6)
+#pragma dxc diagnostic pop
+#endif
+
+Config Create() {
+  Config lut_config = {
+    NULL_SAMPLER,
+    1.f,
+    1.f,
+    config::type::SRGB,
+    config::type::SRGB,
+    0,
+    float3(0, 0, 0),
+    true
+  };
   return lut_config;
 }
 }  // namespace config
@@ -44,8 +73,114 @@ Config Create(SamplerState lut_sampler, float strength, float scaling, uint type
 float3 CenterTexel(float3 color, float size) {
   float scale = (size - 1.f) / size;
   float offset = 1.f / (2.f * size);
-  return scale * color + offset;
+  return mad(color, scale, offset);
 }
+
+#define LOAD_TEXEL_3D_FUNCTION_GENERATOR(TextureType)           \
+  float3 LoadTexel(TextureType lut, int3 position, uint size) { \
+    return lut.Load(uint4(position.rgb, 0)).rgb;                \
+  }
+
+#define LOAD_TEXEL_2D_FUNCTION_GENERATOR(TextureType)       \
+  float3 LoadTexel(TextureType lut, uint2 uv) {             \
+    return lut.Load(uint3(uv, 0)).rgb;                      \
+  }                                                         \
+                                                            \
+  float3 LoadTexel(TextureType lut, uint3 uvw, uint size) { \
+    uint2 uv = uint2(size * uvw.z + uvw.x, uvw.y);          \
+    return LoadTexel(lut, uv);                              \
+  }
+
+#define GET_LUT_SIZE_3D_FUNCTION_GENERATOR(TextureType) \
+  float GetLutSize(TextureType lut) {                   \
+    float width, height, depth;                         \
+    lut.GetDimensions(width, height, depth);            \
+    return height;                                      \
+  }
+
+#define GET_LUT_SIZE_2D_FUNCTION_GENERATOR(TextureType) \
+  float GetLutSize(TextureType lut) {                   \
+    float width, height;                                \
+    lut.GetDimensions(width, height);                   \
+    return height;                                      \
+  }
+
+#define SAMPLE_TEXTURE_TETRAHEDRAL_FUNCTION_GENERATOR(TextureType)          \
+  float3 SampleTetrahedral(TextureType lut, float3 color, float size = 0) { \
+    /* Removed by compiler if specified */                                  \
+    if (size == 0) {                                                        \
+      size = GetLutSize(lut);                                               \
+    }                                                                       \
+                                                                            \
+    /* Convert color to coordinates */                                      \
+    float3 coordinates = saturate(color.rgb) * (size - 1);                  \
+                                                                            \
+    /* Truncate to texel closest to origin */                               \
+    int3 point0 = (int3)(coordinates);                                      \
+                                                                            \
+    /* Fractional number */                                                 \
+    float3 fraction = frac(coordinates);                                    \
+                                                                            \
+    int3 offset0 = int3(0, 0, 0);                                           \
+    /* Will correct to closest point */                                     \
+    int3 offset1 = int3(0, 0, 0);                                           \
+    /* Will correct to next closest point */                                \
+    int3 offset2 = int3(1, 1, 1);                                           \
+    /* Opposite from origin */                                              \
+    int3 offset3 = int3(1, 1, 1);                                           \
+                                                                            \
+    /* Sort channels by distance from point (desc) */                       \
+    float3 sorted;                                                          \
+                                                                            \
+    if (fraction.r > fraction.g) {                                          \
+      if (fraction.g > fraction.b) {                                        \
+        offset1.r = 1;                                                      \
+        offset2.b = 0;                                                      \
+        sorted = fraction.rgb;                                              \
+      } else if (fraction.r > fraction.b) {                                 \
+        offset1.r = 1;                                                      \
+        offset2.g = 0;                                                      \
+        sorted = fraction.rbg;                                              \
+      } else {                                                              \
+        offset1.b = 1;                                                      \
+        offset2.g = 0;                                                      \
+        sorted = fraction.brg;                                              \
+      }                                                                     \
+    } else {                                                                \
+      if (fraction.g <= fraction.b) {                                       \
+        offset1.b = 1;                                                      \
+        offset2.r = 0;                                                      \
+        sorted = fraction.bgr;                                              \
+      } else if (fraction.r >= fraction.b) {                                \
+        offset1.g = 1;                                                      \
+        offset2.b = 0;                                                      \
+        sorted = fraction.grb;                                              \
+      } else {                                                              \
+        offset1.g = 1;                                                      \
+        offset2.r = 0;                                                      \
+        sorted = fraction.gbr;                                              \
+      }                                                                     \
+    }                                                                       \
+                                                                            \
+    /* Sample 4 points */                                                   \
+    float3 texel0 = LoadTexel(lut, point0 + offset0, size);                 \
+    float3 texel1 = LoadTexel(lut, point0 + offset1, size);                 \
+    float3 texel2 = LoadTexel(lut, point0 + offset2, size);                 \
+    float3 texel3 = LoadTexel(lut, point0 + offset3, size);                 \
+                                                                            \
+    /* Compute weights */                                                   \
+    float weight0 = 1.f - sorted[0];                                        \
+    float weight1 = sorted[0] - sorted[1];                                  \
+    float weight2 = sorted[1] - sorted[2];                                  \
+    float weight3 = sorted[2];                                              \
+                                                                            \
+    float3 value0 = texel0 * weight0;                                       \
+    float3 value1 = texel1 * weight1;                                       \
+    float3 value2 = texel2 * weight2;                                       \
+    float3 value3 = texel3 * weight3;                                       \
+                                                                            \
+    return value0 + value1 + value2 + value3;                               \
+  }
 
 #define SAMPLE_TEXTURE_3D_FUNCTION_GENERATOR(TextureType)                            \
   float3 Sample(TextureType lut, SamplerState state, float3 color, float size = 0) { \
@@ -104,20 +239,44 @@ float3 CenterTexel(float3 color, float size) {
     return Sample(lut, state, color, float3(texel_size, slice, max_index));          \
   }
 
-#define SAMPLE_COLOR_3D_FUNCTION_GENERATOR(TextureType)                             \
-  float3 SampleColor(float3 color, Config lut_config, TextureType lut_texture) {    \
-    return Sample(lut_texture, lut_config.lut_sampler, color.rgb, lut_config.size); \
+#define SAMPLE_COLOR_3D_FUNCTION_GENERATOR(TextureType)                               \
+  float3 SampleColor(float3 color, Config lut_config, TextureType lut_texture) {      \
+    if (lut_config.tetrahedral) {                                                     \
+      return SampleTetrahedral(lut_texture, color, lut_config.size);                  \
+    } else {                                                                          \
+      return Sample(lut_texture, lut_config.lut_sampler, color.rgb, lut_config.size); \
+    }                                                                                 \
   }
 
-#define SAMPLE_COLOR_2D_FUNCTION_GENERATOR(TextureType)                                         \
-  float3 SampleColor(float3 color, Config lut_config, TextureType lut_texture) {                \
-    if (lut_config.precompute.x == 0) {                                                         \
-      return Sample(lut_texture, lut_config.lut_sampler, color.rgb, lut_config.size);           \
-    } else {                                                                                    \
-      return Sample(lut_texture, lut_config.lut_sampler, color.rgb, lut_config.precompute.xyz); \
-    }                                                                                           \
+#define SAMPLE_COLOR_2D_FUNCTION_GENERATOR(TextureType)                                           \
+  float3 SampleColor(float3 color, Config lut_config, TextureType lut_texture) {                  \
+    if (lut_config.precompute.x == 0) {                                                           \
+      if (lut_config.tetrahedral) {                                                               \
+        return SampleTetrahedral(lut_texture, color, lut_config.size);                            \
+      } else {                                                                                    \
+        return Sample(lut_texture, lut_config.lut_sampler, color.rgb, lut_config.size);           \
+      }                                                                                           \
+    } else {                                                                                      \
+      if (lut_config.tetrahedral) {                                                               \
+        return SampleTetrahedral(lut_texture, color, lut_config.precompute.z + 1u);               \
+      } else {                                                                                    \
+        return Sample(lut_texture, lut_config.lut_sampler, color.rgb, lut_config.precompute.xyz); \
+      }                                                                                           \
+    }                                                                                             \
   }
 
+LOAD_TEXEL_3D_FUNCTION_GENERATOR(Texture3D<float4>);
+LOAD_TEXEL_3D_FUNCTION_GENERATOR(Texture3D<float3>);
+LOAD_TEXEL_2D_FUNCTION_GENERATOR(Texture2D<float4>);
+LOAD_TEXEL_2D_FUNCTION_GENERATOR(Texture2D<float3>);
+GET_LUT_SIZE_3D_FUNCTION_GENERATOR(Texture3D<float4>);
+GET_LUT_SIZE_3D_FUNCTION_GENERATOR(Texture3D<float3>);
+GET_LUT_SIZE_2D_FUNCTION_GENERATOR(Texture2D<float4>);
+GET_LUT_SIZE_2D_FUNCTION_GENERATOR(Texture2D<float3>);
+SAMPLE_TEXTURE_TETRAHEDRAL_FUNCTION_GENERATOR(Texture3D<float4>);
+SAMPLE_TEXTURE_TETRAHEDRAL_FUNCTION_GENERATOR(Texture3D<float3>);
+SAMPLE_TEXTURE_TETRAHEDRAL_FUNCTION_GENERATOR(Texture2D<float4>);
+SAMPLE_TEXTURE_TETRAHEDRAL_FUNCTION_GENERATOR(Texture2D<float3>);
 SAMPLE_TEXTURE_3D_FUNCTION_GENERATOR(Texture3D<float4>);
 SAMPLE_TEXTURE_3D_FUNCTION_GENERATOR(Texture3D<float3>);
 SAMPLE_TEXTURE_2D_PRECOMPUTED_FUNCTION_GENERATOR(Texture2D<float4>);
@@ -129,6 +288,11 @@ SAMPLE_COLOR_3D_FUNCTION_GENERATOR(Texture3D<float3>);
 SAMPLE_COLOR_2D_FUNCTION_GENERATOR(Texture2D<float4>);
 SAMPLE_COLOR_2D_FUNCTION_GENERATOR(Texture2D<float3>);
 
+#undef GET_LUT_SIZE_2D_FUNCTION_GENERATOR
+#undef GET_LUT_SIZE_3D_FUNCTION_GENERATOR
+#undef LOAD_TEXEL_2D_FUNCTION_GENERATOR
+#undef LOAD_TEXEL_3D_FUNCTION_GENERATOR
+#undef SAMPLE_TEXTURE_TETRAHEDRAL_FUNCTION_GENERATOR
 #undef SAMPLE_TEXTURE_3D_FUNCTION_GENERATOR
 #undef SAMPLE_TEXTURE_2D_PRECOMPUTED_FUNCTION_GENERATOR
 #undef SAMPLE_TEXTURE_2D_FUNCTION_GENERATOR
@@ -339,9 +503,9 @@ float3 RestoreSaturationLoss(float3 color_input, float3 color_output, Config lut
     float3 color_output = LinearOutput(lutOutputColor, lut_config);                            \
     [branch]                                                                                   \
     if (lut_config.scaling != 0) {                                                             \
-      float3 lutBlack = SampleColor(ConvertInput(0, lut_config), lut_config, lut_texture);     \
+      float3 lutBlack = LoadTexel(lut_texture, 0, lut_config.size);                            \
       float3 lutMid = SampleColor(ConvertInput(0.18f, lut_config), lut_config, lut_texture);   \
-      float3 lutWhite = SampleColor(ConvertInput(1.f, lut_config), lut_config, lut_texture);   \
+      float3 lutWhite = LoadTexel(lut_texture, 1, lut_config.size);                            \
       float3 unclamped_gamma = Unclamp(                                                        \
           GammaOutput(lutOutputColor, lut_config),                                             \
           GammaOutput(lutBlack, lut_config),                                                   \

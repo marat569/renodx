@@ -1,5 +1,12 @@
 #include "./shared.h"
 
+cbuffer DrawableBuffer : register(b1) {
+  float4 FogColor : packoffset(c0);
+  float4 DebugColor : packoffset(c1);
+  float AlphaThreshold : packoffset(c2);
+  float4 __InstancedMaterialOpacity[12] : packoffset(c3);
+}
+
 cbuffer SceneBuffer : register(b2) {
   row_major float4x4 View : packoffset(c0);
   row_major float4x4 ScreenMatrix : packoffset(c4);
@@ -43,6 +50,10 @@ cbuffer SceneBuffer : register(b2) {
   float4 StereoOffset : packoffset(c84);
 }
 
+cbuffer MaterialBuffer : register(b3) {
+  float4 MaterialParams[32] : packoffset(c0);
+}
+
 cbuffer InstanceBuffer : register(b5) {
   struct
   {
@@ -52,10 +63,8 @@ cbuffer InstanceBuffer : register(b5) {
   InstanceParameters[12] : packoffset(c0);
 }
 
-SamplerState p_default_Material_2E2B083C22834586_cp1_BackBufferTexture_sampler_s : register(s0);
-SamplerState p_default_Material_2E2AB03422834586_cp3_Param_sampler_s : register(s1);
-Texture2D<float4> p_default_Material_2E2B083C22834586_cp1_BackBufferTexture_texture : register(t0);
-Texture2D<float4> p_default_Material_2E2AB03422834586_cp3_Param_texture : register(t1);
+SamplerState p_default_Material_1376C724912777_0BF50A1C106154_Texture_sampler_s : register(s0);
+Texture2D<float4> p_default_Material_1376C724912777_0BF50A1C106154_Texture_texture : register(t0);
 
 // 3Dmigoto declarations
 #define cmp -
@@ -63,22 +72,29 @@ Texture2D<float4> p_default_Material_2E2AB03422834586_cp3_Param_texture : regist
 void main(
     nointerpolation uint4 v0: PSIZE0,
     float4 v1: SV_POSITION0,
+    float v2: SV_ClipDistance0,
+    float4 v3: COLOR0,
+    float4 v4: TEXCOORD0,
     out float4 o0: SV_Target0) {
-  float4 r0, r1, r2;
+  float4 r0, r1;
   uint4 bitmask, uiDest;
   float4 fDest;
 
-  r0.xyzw = p_default_Material_2E2AB03422834586_cp3_Param_texture.Sample(p_default_Material_2E2AB03422834586_cp3_Param_sampler_s, float2(0.5, 0.5)).xyzw;
-  r0.x = 0.00100000005 + r0.x;
-  r0.y = (int)v0.x * 24;
-  r0.zw = v1.xy * ScreenExtents.zw + ScreenExtents.xy;
-  r1.xyzw = p_default_Material_2E2B083C22834586_cp1_BackBufferTexture_texture.Sample(p_default_Material_2E2B083C22834586_cp1_BackBufferTexture_sampler_s, r0.zw).xyzw;
-  r0.yzw = InstanceParameters[r0.y].InstanceParams[0].xxx * r1.xyz;
-  // r0.xyz = r0.yzw / r0.xxx;
-  // r2.xyz = float3(1,1,1) + r0.xyz;
-  // r0.xyz = r0.xyz / r2.xyz;
-  // o0.xyz = r1.xyz + r0.xyz;
-  o0.rgb = max(0, r1.rgb);
-  o0.w = r1.w;
+  r0.x = (int)v0.x * 24;
+  r0.xyz = InstanceParameters[r0.x].InstanceParams[0].xxx * v3.xyz;
+  r0.xyz = MaterialParams[0].yyy * r0.xyz;
+  r0.w = max(1, r0.z);
+  r1.x = max(r0.x, r0.y);
+  r0.w = max(r1.x, r0.w);
+  r0.w = 1 / r0.w;
+  r0.xyz = r0.xyz * r0.www;
+  o0.xyz = GlobalParams[1].www * r0.xyz;
+  r0.xyz = p_default_Material_1376C724912777_0BF50A1C106154_Texture_texture.Sample(p_default_Material_1376C724912777_0BF50A1C106154_Texture_sampler_s, v4.xy).xyz;
+  // r0.x = dot(r0.xyz, float3(0.298999995, 0.587000012, 0.114));
+  r0.x = renodx::color::y::from::BT709(abs(r0.xyz));
+  r0.x = v3.w * r0.x;
+  r0.y = v0.x;
+  o0.w = __InstancedMaterialOpacity[r0.y].x * r0.x;
+  o0.w *= CUSTOM_LENS_FLARE;
   return;
 }

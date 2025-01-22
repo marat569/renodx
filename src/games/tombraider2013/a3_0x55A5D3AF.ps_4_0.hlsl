@@ -1,4 +1,4 @@
-#include "./shared.h"
+// ---- Created with 3Dmigoto v1.4.1 on Mon Jan 20 18:02:49 2025
 
 cbuffer SceneBuffer : register(b2) {
   row_major float4x4 View : packoffset(c0);
@@ -43,42 +43,54 @@ cbuffer SceneBuffer : register(b2) {
   float4 StereoOffset : packoffset(c84);
 }
 
-cbuffer InstanceBuffer : register(b5) {
-  struct
-  {
-    float4 InstanceParams[8];
-    float4 ExtendedInstanceParams[16];
-  }
-  InstanceParameters[12] : packoffset(c0);
-}
-
-SamplerState p_default_Material_2E2B083C22834586_cp1_BackBufferTexture_sampler_s : register(s0);
-SamplerState p_default_Material_2E2AB03422834586_cp3_Param_sampler_s : register(s1);
-Texture2D<float4> p_default_Material_2E2B083C22834586_cp1_BackBufferTexture_texture : register(t0);
-Texture2D<float4> p_default_Material_2E2AB03422834586_cp3_Param_texture : register(t1);
+SamplerState p_default_Material_2A1E440C8286025_cp0_BackBufferTexture_sampler_s : register(s0);
+Texture2D<float4> p_default_Material_2A1E440C8286025_cp0_BackBufferTexture_texture : register(t0);
 
 // 3Dmigoto declarations
 #define cmp -
 
 void main(
-    nointerpolation uint4 v0: PSIZE0,
+    uint4 v0: PSIZE0,
     float4 v1: SV_POSITION0,
     out float4 o0: SV_Target0) {
-  float4 r0, r1, r2;
+  const float4 icb[] = { { -1.500000, -1.500000, 0, 0 },
+                         { -1.500000, -0.500000, 0, 0 },
+                         { -1.500000, 0.500000, 0, 0 },
+                         { -1.500000, 1.500000, 0, 0 },
+                         { -0.500000, -1.500000, 0, 0 },
+                         { -0.500000, -0.500000, 0, 0 },
+                         { -0.500000, 0.500000, 0, 0 },
+                         { -0.500000, 1.500000, 0, 0 },
+                         { 0.500000, -1.500000, 0, 0 },
+                         { 0.500000, -0.500000, 0, 0 },
+                         { 0.500000, 0.500000, 0, 0 },
+                         { 0.500000, 1.500000, 0, 0 },
+                         { 1.500000, -1.500000, 0, 0 },
+                         { 1.500000, -0.500000, 0, 0 },
+                         { 1.500000, 0.500000, 0, 0 },
+                         { 1.500000, 1.500000, 0, 0 } };
+  float4 r0, r1;
   uint4 bitmask, uiDest;
   float4 fDest;
 
-  r0.xyzw = p_default_Material_2E2AB03422834586_cp3_Param_texture.Sample(p_default_Material_2E2AB03422834586_cp3_Param_sampler_s, float2(0.5, 0.5)).xyzw;
-  r0.x = 0.00100000005 + r0.x;
-  r0.y = (int)v0.x * 24;
-  r0.zw = v1.xy * ScreenExtents.zw + ScreenExtents.xy;
-  r1.xyzw = p_default_Material_2E2B083C22834586_cp1_BackBufferTexture_texture.Sample(p_default_Material_2E2B083C22834586_cp1_BackBufferTexture_sampler_s, r0.zw).xyzw;
-  r0.yzw = InstanceParameters[r0.y].InstanceParams[0].xxx * r1.xyz;
-  // r0.xyz = r0.yzw / r0.xxx;
-  // r2.xyz = float3(1,1,1) + r0.xyz;
-  // r0.xyz = r0.xyz / r2.xyz;
-  // o0.xyz = r1.xyz + r0.xyz;
-  o0.rgb = max(0, r1.rgb);
-  o0.w = r1.w;
+  r0.xy = v1.xy * ScreenExtents.zw + ScreenExtents.xy;
+  r0.xy = r0.xy * float2(0.400000006, 0.711111128) + float2(0.300000012, 0.144444451);
+  r0.zw = float2(0, 0);
+  while (true) {
+    r1.x = cmp((int)r0.w >= 16);
+    if (r1.x != 0) break;
+    r1.xy = icb[r0.w + 0].xy * float2(0.00468750019, 0.00225694454) + r0.xy;
+    r1.xyzw = p_default_Material_2A1E440C8286025_cp0_BackBufferTexture_texture.Sample(p_default_Material_2A1E440C8286025_cp0_BackBufferTexture_sampler_s, r1.xy).xyzw;
+    
+    r1 = max(0, r1);
+
+    r1.x = dot(r1.xyz, float3(0.212500006, 0.715399981, 0.0720999986));
+    r1.x = 9.99999975e-05 + r1.x;
+    r1.x = log2(r1.x);
+    r0.z = r1.x * 0.693147182 + r0.z;
+    r0.w = (int)r0.w + 1;
+  }
+  o0.xyz = float3(0.0625, 0.0625, 0.0625) * r0.zzz;
+  o0.w = 1;
   return;
 }

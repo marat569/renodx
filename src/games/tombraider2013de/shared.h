@@ -20,6 +20,7 @@
 #define RENODX_TONE_MAP_PER_CHANNEL            shader_injection.tone_map_per_channel
 #define RENODX_GAMMA_CORRECTION                shader_injection.gamma_correction
 #define CUSTOM_SCAN_LINES                      shader_injection.custom_scan_lines
+#define CUSTOM_LUT_STRENGTH                    shader_injection.custom_lut_strength
 #define CUSTOM_DOF                             shader_injection.custom_dof
 #define CUSTOM_FILM_GRAIN_STRENGTH             shader_injection.custom_film_grain_strength
 #define CUSTOM_FILM_GRAIN_TYPE                 shader_injection.custom_film_grain_type
@@ -55,6 +56,7 @@ struct ShaderInjectData {
   float tone_map_per_channel;
   float gamma_correction;
   float custom_scan_lines;
+  float custom_lut_strength;
   float custom_dof;
   float custom_vignette;
   float custom_film_grain_type;

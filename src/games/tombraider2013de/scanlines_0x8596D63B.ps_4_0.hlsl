@@ -38,13 +38,12 @@ void main(
   r0.xy = (uint2)v0.xy;
   r0.y = (uint)r0.y << 2;
   r0.xy = (int2)r0.xy & int2(3, 12);
-  r0.x = (int)r0.x | (int)r0.y;
+  r0.x = (int)r0.x + (int)r0.y;
   r0.x = icb[r0.x + 0].x + 0.5;
   r0.x = r0.x * 0.0625 + -0.5;
   r1.xyzw = InstanceTexture0.Sample(Sampler0_s, v2.xy).xyzw;
   float3 original = r1.rgb;
   o0.rgb = original;
-
   o0.w = r1.w;
 
   if (CUSTOM_SCAN_LINES != 0) {

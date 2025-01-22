@@ -65,55 +65,38 @@ ShaderInjectData shader_injection;
 
 renodx::mods::shader::CustomShaders custom_shaders = {
     {
-        0x72F0AA7C,
+        0x8596D63B,
         {
-            .crc32 = 0x72F0AA7C,
-            .code = __0x72F0AA7C,
+            .crc32 = 0x8596D63B,
+            .code = __0x8596D63B,
             .on_replace = [](auto cmdlist) {
               CUSTOM_IS_SWAPCHAIN_WRITE = renodx::utils::swapchain::HasBackBufferRenderTarget(cmdlist);
               return true;
             },
         },
     },
-    {
-        0x0D982391,
-        {
-            .crc32 = 0x0D982391,
-            .code = __0x0D982391,
-            .on_replace = [](auto cmdlist) {
-              CUSTOM_IS_SWAPCHAIN_WRITE = renodx::utils::swapchain::HasBackBufferRenderTarget(cmdlist);
-              return true;
-            },
-        },
-    },
-    CustomShaderEntry(0x36211827),        // bloom
-    CustomShaderEntry(0xD598975C),        // fmv
-    CustomShaderEntry(0x3F2C7CB9),        // lens flare
-    CustomShaderEntry(0xC8BBED05),        // object dof
-    CustomShaderEntry(0xB5841644),        // reinhard
-    CustomShaderEntry(0xBB85386D),        // survival instinct
-    CustomShaderEntry(0x8B7F1649),        // upscaler
-    CustomShaderEntry(0x48648857),        // vignette/noise
-    CustomShaderEntry(0x19369325),        // surface reflections
-    UpgradeRTVReplaceShader(0x100EC9DC),  // a0
-    CustomShaderEntry(0xEA376B10),        // a10
-    CustomShaderEntry(0x36C11C54),        // a1
-    CustomShaderEntry(0x4B8C2D9F),        // a2
-    CustomShaderEntry(0x55A5D3AF),        // a3
-    CustomShaderEntry(0xA5E5BCB4),        // a4
-    CustomShaderEntry(0xB4B7BCEB),        // a5
-    CustomShaderEntry(0xB6DD6E36),        // a6
-    UpgradeRTVReplaceShader(0xCDD02564),  // a7
-    CustomShaderEntry(0xDA1F0E89),        // a8
-    CustomShaderEntry(0xE3C8625C),        // a9
-    // CustomShaderEntry(0x88472F82),
-    UpgradeRTVReplaceShader(0xA8D8F5E7),  // downsample1
-    UpgradeRTVReplaceShader(0x3B23A71A),  // downsample2
-    UpgradeRTVReplaceShader(0x48180F61),  // downsample3
-    // CustomShaderEntry(0x4E5704D4),
-    UpgradeRTVReplaceShader(0xF31E4052),  // sampling
-    UpgradeRTVReplaceShader(0x17AC3D94),  // upscale
-                                          // CustomShaderEntry(0x32CB17F7),
+    CustomShaderEntry(0x52EFC25A),  // bloom
+    CustomShaderEntry(0x60597EF5),  // fmv
+    CustomShaderEntry(0x80816448),  // lens flare
+    CustomShaderEntry(0xBB7DAA23),  // object dof
+    CustomShaderEntry(0xC7A14DDD),  // reinhard
+    CustomShaderEntry(0x73B32980),  // survival instinct
+    CustomShaderEntry(0x9D59861E),  // upscale2
+    CustomShaderEntry(0x3132F3CF),  // vignette2
+    CustomShaderEntry(0xA2AFAA0A),  // lut
+    // CustomShaderEntry(0xA132B2FE),        // composite
+    UpgradeRTVReplaceShader(0xB1B0D9F3),  // sampling
+    UpgradeRTVReplaceShader(0x03584A3B),  // downsample1
+    UpgradeRTVReplaceShader(0x7ED6478E),  // downsample2
+    UpgradeRTVReplaceShader(0x30E39CFC),  // downsample3
+    UpgradeRTVReplaceShader(0xCEE6D90A),  // downsample4
+    UpgradeRTVReplaceShader(0x61558F02),  // downsample5
+    UpgradeRTVReplaceShader(0x7C0F5D9A),  // downsample6
+    UpgradeRTVReplaceShader(0xD744BED8),  // upscale
+    UpgradeRTVReplaceShader(0x95CBCA93),  // unknown fog
+    UpgradeRTVReplaceShader(0x6F10C641),  // a1
+    UpgradeRTVReplaceShader(0x74A84371),  // a2
+
 };
 
 const std::unordered_map<std::string, float> HDR_LOOK_VALUES = {
@@ -123,7 +106,7 @@ const std::unordered_map<std::string, float> HDR_LOOK_VALUES = {
     {"ColorGradeSaturation", 80.f},
     {"ColorGradeHighlightSaturation", 60.f},
     {"ColorGradeBlowout", 80.f},
-    {"FxBloom", 10.f},
+    {"FxBloom", 25.f},
     {"FxLensFlare", 25.f},
 };
 
@@ -332,6 +315,16 @@ renodx::utils::settings::Settings settings = {
         .parse = [](float value) { return value * 0.02f; },
     },
     new renodx::utils::settings::Setting{
+        .key = "ColorGradeLUTStrength",
+        .binding = &CUSTOM_LUT_STRENGTH,
+        .default_value = 0.f,
+        .label = "LUT Strength",
+        .section = "Color Grading",
+        .tooltip = "Strength of Definitive Edition LUT",
+        .max = 100.f,
+        .parse = [](float value) { return value * 0.01f; },
+    },
+    new renodx::utils::settings::Setting{
         .key = "FxHDRVideos",
         .binding = &CUSTOM_HDR_VIDEOS,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
@@ -352,11 +345,11 @@ renodx::utils::settings::Settings settings = {
     new renodx::utils::settings::Setting{
         .key = "FxBloom",
         .binding = &CUSTOM_BLOOM,
-        .default_value = 50.f,
+        .default_value = 100.f,
         .label = "Bloom",
         .section = "Effects",
         .max = 100.f,
-        .parse = [](float value) { return value * 0.02f; },
+        .parse = [](float value) { return value * 0.01f; },
     },
     new renodx::utils::settings::Setting{
         .key = "FxVignette",
@@ -486,9 +479,10 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("ColorGradeHighlightSaturation", 50.f);
   renodx::utils::settings::UpdateSetting("ColorGradeBlowout", 50.f);
   renodx::utils::settings::UpdateSetting("ColorGradeFlare", 50.f);
+  renodx::utils::settings::UpdateSetting("ColorGradeLUTStrength", 100.f);
   renodx::utils::settings::UpdateSetting("FxHDRVideos", 0.f);
-  renodx::utils::settings::UpdateSetting("FxBloom", 50.f);
   renodx::utils::settings::UpdateSetting("FxVignette", 50.f);
+  renodx::utils::settings::UpdateSetting("FxBloom", 100.f);
   renodx::utils::settings::UpdateSetting("FxFXAA", 100.f);
   renodx::utils::settings::UpdateSetting("FxDoF", 100.f);
   renodx::utils::settings::UpdateSetting("FxFilmGrainType", 0.f);
@@ -530,7 +524,7 @@ bool initialized = false;
 }  // namespace
 
 extern "C" __declspec(dllexport) constexpr const char* NAME = "RenoDX";
-extern "C" __declspec(dllexport) constexpr const char* DESCRIPTION = "RenoDX for Tomb Raider (2013)";
+extern "C" __declspec(dllexport) constexpr const char* DESCRIPTION = "RenoDX for Tomb Raider (2013) - Definitive Edition";
 
 BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   switch (fdw_reason) {

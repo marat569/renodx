@@ -1,3 +1,4 @@
+
 #include "./shared.h"
 
 cbuffer SceneBuffer : register(b2) {
@@ -43,6 +44,10 @@ cbuffer SceneBuffer : register(b2) {
   float4 StereoOffset : packoffset(c84);
 }
 
+cbuffer MaterialBuffer : register(b3) {
+  float4 MaterialParams[32] : packoffset(c0);
+}
+
 cbuffer InstanceBuffer : register(b5) {
   struct
   {
@@ -52,10 +57,8 @@ cbuffer InstanceBuffer : register(b5) {
   InstanceParameters[12] : packoffset(c0);
 }
 
-SamplerState p_default_Material_2E2B083C22834586_cp1_BackBufferTexture_sampler_s : register(s0);
-SamplerState p_default_Material_2E2AB03422834586_cp3_Param_sampler_s : register(s1);
-Texture2D<float4> p_default_Material_2E2B083C22834586_cp1_BackBufferTexture_texture : register(t0);
-Texture2D<float4> p_default_Material_2E2AB03422834586_cp3_Param_texture : register(t1);
+SamplerState p_default_Material_1376C724912777_0C173A8C1900006_Texture_sampler_s : register(s0);
+Texture2D<float4> p_default_Material_1376C724912777_0C173A8C1900006_Texture_texture : register(t0);
 
 // 3Dmigoto declarations
 #define cmp -
@@ -63,22 +66,35 @@ Texture2D<float4> p_default_Material_2E2AB03422834586_cp3_Param_texture : regist
 void main(
     nointerpolation uint4 v0: PSIZE0,
     float4 v1: SV_POSITION0,
+    float v2: SV_ClipDistance0,
+    float4 v3: COLOR0,
+    float4 v4: TEXCOORD0,
+    float4 v5: TEXCOORD5,
     out float4 o0: SV_Target0) {
-  float4 r0, r1, r2;
+  float4 r0, r1;
   uint4 bitmask, uiDest;
   float4 fDest;
 
-  r0.xyzw = p_default_Material_2E2AB03422834586_cp3_Param_texture.Sample(p_default_Material_2E2AB03422834586_cp3_Param_sampler_s, float2(0.5, 0.5)).xyzw;
-  r0.x = 0.00100000005 + r0.x;
-  r0.y = (int)v0.x * 24;
-  r0.zw = v1.xy * ScreenExtents.zw + ScreenExtents.xy;
-  r1.xyzw = p_default_Material_2E2B083C22834586_cp1_BackBufferTexture_texture.Sample(p_default_Material_2E2B083C22834586_cp1_BackBufferTexture_sampler_s, r0.zw).xyzw;
-  r0.yzw = InstanceParameters[r0.y].InstanceParams[0].xxx * r1.xyz;
-  // r0.xyz = r0.yzw / r0.xxx;
-  // r2.xyz = float3(1,1,1) + r0.xyz;
-  // r0.xyz = r0.xyz / r2.xyz;
-  // o0.xyz = r1.xyz + r0.xyz;
-  o0.rgb = max(0, r1.rgb);
-  o0.w = r1.w;
+  r0.x = (int)v0.x * 24;
+  r0.xyz = InstanceParameters[r0.x].InstanceParams[0].xxx * v3.xyz;
+  r0.xyz = MaterialParams[1].zzz * r0.xyz;
+  r1.xyzw = p_default_Material_1376C724912777_0C173A8C1900006_Texture_texture.Sample(p_default_Material_1376C724912777_0C173A8C1900006_Texture_sampler_s, v4.xy).xyzw;
+  r0.xyz = r1.xyz * r0.xyz;
+  r0.w = v3.w * r1.w;
+  r1.x = max(1, r0.z);
+  r1.y = max(r0.x, r0.y);
+  r1.x = max(r1.y, r1.x);
+  r1.x = 1 / r1.x;
+  r0.xyz = r1.xxx * r0.xyz;
+  r0.xyz = GlobalParams[1].www * r0.xyz;
+  r1.x = dot(r0.xyz, float3(0.298999995, 0.587000012, 0.114));
+  r0.w = r1.x * r0.w;
+  r0.x = max(r0.x, r0.y);
+  r0.x = max(r0.x, r0.z);
+  o0.w = r0.w * MaterialParams[1].y + r0.x;
+  o0.xyz = float3(0, 0, 0);
+
+  // Disable (clips)
+  // o0.w *= 0;
   return;
 }

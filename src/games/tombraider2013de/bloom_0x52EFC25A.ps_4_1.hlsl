@@ -61,10 +61,12 @@ cbuffer InstanceBuffer : register(b5) {
 
 SamplerState p_default_Material_02507D44234140_Param_sampler_s : register(s0);
 SamplerState p_default_Material_15527DCC2149906_Param_sampler_s : register(s2);
-SamplerState p_default_Material_0250670415711109_Param_sampler_s : register(s3);
+SamplerState p_default_Material_024C0294226623_BackBufferTexture_sampler_s : register(s3);
+SamplerState p_default_Material_0250670415711109_Param_sampler_s : register(s4);
 Texture2D<float4> p_default_Material_02507D44234140_Param_texture : register(t0);
 Texture2D<float4> p_default_Material_15527DCC2149906_Param_texture : register(t2);
-Texture2D<float4> p_default_Material_0250670415711109_Param_texture : register(t3);
+Texture2D<float4> p_default_Material_024C0294226623_BackBufferTexture_texture : register(t3);
+Texture2D<float4> p_default_Material_0250670415711109_Param_texture : register(t4);
 
 // 3Dmigoto declarations
 #define cmp -
@@ -72,31 +74,51 @@ Texture2D<float4> p_default_Material_0250670415711109_Param_texture : register(t
 void main(
     nointerpolation uint4 v0: PSIZE0,
     float4 v1: SV_POSITION0,
+    float v2: SV_ClipDistance0,
     out float4 o0: SV_Target0) {
-  float4 r0, r1, r2;
+  float4 r0, r1, r2, r3;
   uint4 bitmask, uiDest;
   float4 fDest;
 
   r0.xy = v1.xy * ScreenExtents.zw + ScreenExtents.xy;
-  r1.xyzw = p_default_Material_0250670415711109_Param_texture.Sample(p_default_Material_0250670415711109_Param_sampler_s, r0.xy).xyzw;
+  r1.xyz = p_default_Material_024C0294226623_BackBufferTexture_texture.Sample(p_default_Material_024C0294226623_BackBufferTexture_sampler_s, r0.xy).xyz;
+  
+  r1.rgb = max(0, r1.rgb);
 
-  r1 = max(0, r1);
+  float3 original = r1.rgb;
+  r2.xyz = p_default_Material_15527DCC2149906_Param_texture.Sample(p_default_Material_15527DCC2149906_Param_sampler_s, r0.xy).xyz;
 
-  r2.xyzw = p_default_Material_02507D44234140_Param_texture.Sample(p_default_Material_02507D44234140_Param_sampler_s, r0.xy).xyzw;
+  r2.xyz = max(0, r2.xyz);
 
-  r2 = max(0, r2);
+  r3.xyz = p_default_Material_0250670415711109_Param_texture.Sample(p_default_Material_0250670415711109_Param_sampler_s, r0.xy).xyz;
+  
+  r3.xyz = max(0, r3.xyz);
 
-  r0.xyzw = p_default_Material_15527DCC2149906_Param_texture.Sample(p_default_Material_15527DCC2149906_Param_sampler_s, r0.xy).xyzw;
-
-  r0 = max(0, r0);
+  r0.xyz = p_default_Material_02507D44234140_Param_texture.Sample(p_default_Material_02507D44234140_Param_sampler_s, r0.xy).xyz;
+  
+  r0.xyz = max(0, r0.xyz);
 
   r0.w = (int)v0.x * 24;
-  r2.xyz = InstanceParameters[r0.w].InstanceParams[0].yyy * r2.xyz;
-  r1.xyz = r1.xyz * InstanceParameters[r0.w].InstanceParams[0].xxx + r2.xyz;
-  r0.xyz = r1.xyz + r0.xyz;
-  o0.xyz = InstanceParameters[r0.w].InstanceParams[2].xxx * r0.xyz;
+  r0.xyz = InstanceParameters[r0.w].InstanceParams[0].yyy * r0.xyz;
+  r0.xyz = r3.xyz * InstanceParameters[r0.w].InstanceParams[0].xxx + r0.xyz;
+  r0.xyz = r0.xyz + r2.xyz;
+  r0.xyz = InstanceParameters[r0.w].InstanceParams[2].xxx * r0.xyz + r1.xyz;
+  r1.xyz = r0.xyz * InstanceParameters[r0.w].InstanceParams[3].xxx + InstanceParameters[r0.w].InstanceParams[1].xxx;
+  r2.xyz = InstanceParameters[r0.w].InstanceParams[3].yyy * r1.xyz + InstanceParameters[r0.w].InstanceParams[3].zzz;
+  r2.xyz = r1.xyz * r2.xyz + InstanceParameters[r0.w].InstanceParams[3].www;
+  r3.xyz = InstanceParameters[r0.w].InstanceParams[3].yyy * r1.xyz + InstanceParameters[r0.w].InstanceParams[4].xxx;
+  r1.xyz = r1.xyz * r3.xyz + InstanceParameters[r0.w].InstanceParams[4].yyy;
+  r1.xyz = r1.xyz / r2.xyz;
+  r1.xyz = InstanceParameters[r0.w].InstanceParams[4].zzz + r1.xyz;
+  r1.xyz = InstanceParameters[r0.w].InstanceParams[1].yyy * r1.xyz;
+  r1.xyz = InstanceParameters[r0.w].InstanceParams[1].www * r1.xyz;
+  // o0.xyz = r0.xyz * InstanceParameters[r0.w].InstanceParams[1].zzz + r1.xyz;
   r0.x = v0.x;
   o0.w = __InstancedMaterialOpacity[r0.x].x;
-  o0 *= CUSTOM_BLOOM;
+
+  o0.xyz = r0.xyz * InstanceParameters[r0.w].InstanceParams[1].zzz + r1.xyz;
+
+  o0.rgb = lerp(original, o0.xyz, CUSTOM_BLOOM);
+
   return;
 }

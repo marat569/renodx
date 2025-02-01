@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "./bitwise.hpp"
 #include "./resource.hpp"
 
 namespace renodx::utils::state {
@@ -126,6 +127,12 @@ static void OnBindPipeline(
     reshade::api::pipeline pipeline) {
   auto& data = cmd_list->get_private_data<CommandListData>();
   auto& state = data.current_state;
+
+  if (stages == reshade::api::pipeline_stage::all) {
+    state.pipelines.clear();
+    if (pipeline.handle == 0u) return;
+  }
+
   state.pipelines[stages] = pipeline;
 }
 

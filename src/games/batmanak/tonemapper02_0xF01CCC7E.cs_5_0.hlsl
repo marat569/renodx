@@ -205,10 +205,10 @@ cbuffer cb0 : register(b0) {
           grainedColor = grainEffect * grainInputColor;
           grainedColor = renodx::color::gamma::DecodeSafe(grainedColor, 2.2f);
         } else {
-          grainedColor = renodx::effects::ApplyFilmGrainColored(
+          grainedColor = renodx::effects::ApplyFilmGrain(
               outputColor,
               screenXY,
-              randomnessFactor,
+              frac(r3.x),
               cb0[11].z ? CUSTOM_FILM_GRAIN_STRENGTH * 0.03f : 0,
               1.f);
         }
@@ -220,7 +220,7 @@ cbuffer cb0 : register(b0) {
   if (graph_config.draw) outputColor = renodx::debug::graph::DrawEnd(outputColor, graph_config);
 #endif
 
-  outputColor *= RENODX_DIFFUSE_WHITE_NITS / 80.f;
+  outputColor = renodx::draw::RenderIntermediatePass(outputColor);
 
   u0[uint2(r2.x, r2.y)] = outputColor.xyzx;
   // No code for instruction (needs manual fix):

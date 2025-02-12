@@ -97,6 +97,20 @@ struct SwapChainUpgradeTarget {
           SwapChainViewUpgradeAll(b8g8r8a8_unorm_srgb, r10g10b10a2_unorm),
   };
 
+  const std::unordered_map<
+      std::pair<reshade::api::resource_usage, reshade::api::format>,
+      reshade::api::format, utils::hash::HashPair>
+      VIEW_UPGRADES_R11G11B10_FLOAT = {
+          SwapChainViewUpgradeAll(r10g10b10a2_typeless, r11g11b10_float),
+          SwapChainViewUpgradeAll(r8g8b8a8_typeless, r11g11b10_float),
+          SwapChainViewUpgradeAll(r10g10b10a2_unorm, r11g11b10_float),
+          SwapChainViewUpgradeAll(b10g10r10a2_unorm, r11g11b10_float),
+          SwapChainViewUpgradeAll(r8g8b8a8_unorm, r11g11b10_float),
+          SwapChainViewUpgradeAll(b8g8r8a8_unorm, r11g11b10_float),
+          SwapChainViewUpgradeAll(r8g8b8a8_unorm_srgb, r11g11b10_float),
+          SwapChainViewUpgradeAll(b8g8r8a8_unorm_srgb, r11g11b10_float),
+  };
+
   std::unordered_map<
       std::pair<reshade::api::resource_usage, reshade::api::format>,
       reshade::api::format, utils::hash::HashPair>
@@ -247,7 +261,7 @@ struct __declspec(uuid("809df2f6-e1c7-4d93-9c6e-fa88dd960b7c")) DeviceData {
   std::vector<std::uint8_t> swap_chain_proxy_pixel_shader;
   int32_t expected_constant_buffer_index = -1;
   uint32_t expected_constant_buffer_space = 0;
-  bool swapchain_proxy_revert_state;
+  bool swapchain_proxy_revert_state = false;
 };
 
 struct __declspec(uuid("0a2b51ad-ef13-4010-81a4-37a4a0f857a6")) CommandListData {
@@ -458,6 +472,27 @@ static bool ActivateCloneHotSwap(
 
   data.resource_clone_enabled.insert(resource.handle);
   return true;
+}
+
+static bool DeactivateCloneHotSwap(
+    reshade::api::device* device,
+    reshade::api::resource_view resource_view) {
+  auto resource = renodx::utils::resource::GetResourceFromView(device, resource_view);
+  if (resource.handle == 0u) {
+    std::stringstream s;
+    s << "mods::swapchain::ActivateCloneHotSwap(no handle for rsv ";
+    s << reinterpret_cast<void*>(resource_view.handle);
+    s << ")";
+    reshade::log::message(reshade::log::level::warning, s.str().c_str());
+    return false;
+  }
+  auto& data = device->get_private_data<DeviceData>();
+  if (std::addressof(data) == nullptr) return false;
+  const std::unique_lock lock(data.mutex);
+
+  reshade::api::resource clone_resource;
+
+  return data.resource_clone_enabled.erase(resource.handle) > 0;
 }
 
 static reshade::api::resource CloneResource(
@@ -1848,6 +1883,11 @@ static bool OnCopyResource(
   if (source_desc.type == reshade::api::resource_type::texture_2d
       || source_desc.type == reshade::api::resource_type::texture_3d) {
     if (dest_desc.type == source_desc.type) {
+      auto source_new = source;
+      auto dest_new = dest;
+      auto source_desc_new = source_desc;
+      auto dest_desc_new = dest_desc;
+
       if (use_resource_cloning) {
         auto& data = device->get_private_data<DeviceData>();
         const std::unique_lock lock(data.mutex);
@@ -1856,23 +1896,37 @@ static bool OnCopyResource(
         auto dest_clone = GetResourceClone(device, &data, dest);
 
         if (source_clone.handle != 0u) {
-          source_desc = device->get_resource_desc(source_clone);
-          source = source_clone;
+          source_desc_new = device->get_resource_desc(source_clone);
+          source_new = source_clone;
         }
         if (dest_clone.handle != 0u) {
-          dest_desc = device->get_resource_desc(dest_clone);
-          dest = dest_clone;
+          dest_desc_new = device->get_resource_desc(dest_clone);
+          dest_new = dest_clone;
         }
       }
 
-      if (source_desc.texture.format == dest_desc.texture.format) {
-        cmd_list->copy_resource(source, dest);
+      bool can_be_copied = (source_desc_new.texture.format == dest_desc_new.texture.format)
+                           || (reshade::api::format_to_typeless(source_desc_new.texture.format)
+                               == reshade::api::format_to_typeless(dest_desc_new.texture.format));
+
+      if (can_be_copied) {
+        cmd_list->copy_resource(source_new, dest_new);
         return true;
       }
-#ifdef DEBUG_LEVEL_2
-      reshade::log::message(reshade::log::level::debug, "mods::swapchain::OnCopyResource(prevent resource copy)");
-#endif
+
       // Mismatched (don't copy);
+#ifdef DEBUG_LEVEL_2
+      std::stringstream s;
+      s << "mods::swapchain::OnCopyResource(";
+      s << "prevent resource copy: ";
+      s << "format: " << source_desc.texture.format << " => " << dest_desc.texture.format;
+      s << ", type: " << source_desc.type << " => " << dest_desc.type;
+      s << ", clone_format: " << source_desc_new.texture.format << " => " << dest_desc_new.texture.format;
+      s << ", clone_type: " << source_desc_new.type << " => " << dest_desc_new.type;
+      s << ");";
+      reshade::log::message(reshade::log::level::debug, s.str().c_str());
+#endif
+
       return true;
     }
   }
@@ -2472,6 +2526,10 @@ static bool OnCopyTextureRegion(
   if (source_desc.type != reshade::api::resource_type::texture_2d
       && source_desc.type != reshade::api::resource_type::texture_3d) return false;
   if (dest_desc.type != source_desc.type) return false;
+  auto source_new = source;
+  auto dest_new = dest;
+  auto source_desc_new = source_desc;
+  auto dest_desc_new = dest_desc;
   if (use_resource_cloning) {
     auto& data = device->get_private_data<DeviceData>();
     const std::unique_lock lock(data.mutex);
@@ -2482,18 +2540,22 @@ static bool OnCopyTextureRegion(
     if (source_clone.handle == 0u && dest_clone.handle == 0u) return false;
 
     if (source_clone.handle != 0u) {
-      source_desc = device->get_resource_desc(source_clone);
+      source_desc_new = device->get_resource_desc(source_clone);
 
-      source = source_clone;
+      source_new = source_clone;
     }
     if (dest_clone.handle != 0u) {
-      dest_desc = device->get_resource_desc(dest_clone);
-      dest = dest_clone;
+      dest_desc_new = device->get_resource_desc(dest_clone);
+      dest_new = dest_clone;
     }
   }
 
-  if (source_desc.texture.format == dest_desc.texture.format) {
-    cmd_list->copy_texture_region(source, source_subresource, source_box, dest, dest_subresource, dest_box, filter);
+  bool can_be_copied = (source_desc_new.texture.format == dest_desc_new.texture.format)
+                       || (reshade::api::format_to_typeless(source_desc_new.texture.format)
+                           == reshade::api::format_to_typeless(dest_desc_new.texture.format));
+
+  if (can_be_copied) {
+    cmd_list->copy_texture_region(source_new, source_subresource, source_box, dest_new, dest_subresource, dest_box, filter);
     return true;
   }
   // Mismatched (don't copy);
@@ -2588,7 +2650,7 @@ static void Use(DWORD fdw_reason, T* new_injections = nullptr) {
   renodx::utils::swapchain::Use(fdw_reason);
   renodx::utils::state::Use(fdw_reason);
   if (use_resource_cloning) {
-    renodx::utils::descriptor::Use(fdw_reason);
+    // renodx::utils::descriptor::Use(fdw_reason);
   }
 
   switch (fdw_reason) {

@@ -1,5 +1,5 @@
-#ifndef SRC_UE_DX11_SHARED_H_
-#define SRC_UE_DX11_SHARED_H_
+#ifndef SRC_UNREALENGINE_SHARED_H_
+#define SRC_UNREALENGINE_SHARED_H_
 
 // Must be 32bit aligned
 // Should be 4x32
@@ -30,9 +30,6 @@ struct ShaderInjectData {
   float colorGradeStrength;
 
   float processingUseSCRGB;
-  float padding02;
-  float padding03;
-  float padding04;
 };
 
 #ifndef __cplusplus
@@ -48,6 +45,7 @@ cbuffer injectedBuffer : register(b13) {
 #pragma dxc diagnostic ignored "-Wparentheses-equality"
 #endif
 
+#define RENODX_TONE_MAP_TYPE                   injectedData.toneMapType
 #define RENODX_PEAK_NITS                       injectedData.toneMapPeakNits
 #define RENODX_GAME_NITS                       injectedData.toneMapGameNits
 #define RENODX_UI_NITS                         injectedData.toneMapUINits
@@ -60,18 +58,19 @@ cbuffer injectedBuffer : register(b13) {
 #define RENODX_TONE_MAP_HIGHLIGHT_SATURATION   injectedData.colorGradeHighlightSaturation
 #define RENODX_TONE_MAP_BLOWOUT                injectedData.colorGradeBlowout
 #define RENODX_TONE_MAP_FLARE                  injectedData.colorGradeFlare
-#define RENODX_TONE_MAP_WORKING_COLOR_SPACE    2.f
+#define RENODX_TONE_MAP_WORKING_COLOR_SPACE    color::convert::COLOR_SPACE_AP1
 #define RENODX_TONE_MAP_PER_CHANNEL            injectedData.toneMapPerChannel
 #define RENODX_TONE_MAP_HUE_PROCESSOR          injectedData.toneMapHueProcessor
 #define RENODX_TONE_MAP_HUE_CORRECTION         injectedData.toneMapHueCorrection
 #define RENODX_TONE_MAP_HUE_SHIFT              injectedData.toneMapHueShift
+#define RENODX_TONE_MAP_CLAMP_COLOR_SPACE      color::convert::COLOR_SPACE_BT2020
 #define RENODX_GAMMA_CORRECTION                injectedData.toneMapGammaCorrection
 #define RENODX_SWAP_CHAIN_CUSTOM_COLOR_SPACE   injectedData.colorGradeColorSpace
-#define RENODX_SWAP_CHAIN_CLAMP_COLOR_SPACE    2.f                                      // BT2020
-#define RENODX_SWAP_CHAIN_ENCODING_COLOR_SPACE (1.f - injectedData.processingUseSCRGB)  // BT2020 - useSCRGB
-#define RENODX_SWAP_CHAIN_ENCODING             (4.f + injectedData.processingUseSCRGB)  // PQ + useSCRGB
+#define RENODX_SWAP_CHAIN_CLAMP_COLOR_SPACE    color::convert::COLOR_SPACE_BT2020
+#define RENODX_SWAP_CHAIN_ENCODING_COLOR_SPACE (color::convert::COLOR_SPACE_BT2020 - injectedData.processingUseSCRGB)  // BT709 = BT2020 - 1
+#define RENODX_SWAP_CHAIN_ENCODING             (ENCODING_PQ + injectedData.processingUseSCRGB)                         // SCRGB = PQ + 1
 
 #include "../../shaders/renodx.hlsl"
 #endif
 
-#endif  // SRC_UE_DX11_SHARED_H_
+#endif  // SRC_UNREALENGINE_SHARED_H_

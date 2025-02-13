@@ -2,13 +2,11 @@
 // Tonemapper for All effects TAA on or AA off
 
 #include "./shared.h"
-#include "./tonemapper.hlsl" //Include our custom tonemapper
+#include "./tonemapper.hlsl"  //Include our custom tonemapper
 
 // ---- Created with 3Dmigoto v1.3.16 on Sat Sep 21 19:10:31 2024
 
-
-cbuffer _Globals : register(b0)
-{
+cbuffer _Globals : register(b0) {
   float4 vViewInfo : packoffset(c0);
   float fDistantBlurZThreshold : packoffset(c1);
   float fFar : packoffset(c1.y);
@@ -19,10 +17,10 @@ cbuffer _Globals : register(b0)
   float fLensFlareWeight : packoffset(c2.z) = {0.300000012};
   float2 SimulateHDRParams : packoffset(c3);
   float4 vLightShaftPower : packoffset(c4);
-  float3 vColorScale : packoffset(c5) = {1,1,1};
-  float3 vSaturationScale : packoffset(c6) = {1,1,1};
-  float2 vScreenSize : packoffset(c7) = {1280,720};
-  float4 vSpotParams : packoffset(c8) = {640,360,300,400};
+  float3 vColorScale : packoffset(c5) = {1, 1, 1};
+  float3 vSaturationScale : packoffset(c6) = {1, 1, 1};
+  float2 vScreenSize : packoffset(c7) = {1280, 720};
+  float4 vSpotParams : packoffset(c8) = {640, 360, 300, 400};
   float fLimbDarkening : packoffset(c9) = {755364.125};
   float fLimbDarkeningWeight : packoffset(c9.y) = {0};
   float fGamma : packoffset(c9.z) = {1};
@@ -53,24 +51,21 @@ Texture2D<float4> smplStar_Tex : register(t9);
 Texture2D<float4> smplFlare_Tex : register(t10);
 Texture2D<float4> smplLightShaftLinWork2_Tex : register(t11);
 
-
 // 3Dmigoto declarations
 #define cmp -
 
-
 void main(
-  float4 v0 : SV_Position0,
-  float4 v1 : TEXCOORD0,
-  float4 v2 : TEXCOORD1,
-  float4 v3 : TEXCOORD2,
-  out float4 o0 : SV_Target0)
-{
-  float4 r0,r1,r2,r3;
+    float4 v0 : SV_Position0,
+    float4 v1 : TEXCOORD0,
+    float4 v2 : TEXCOORD1,
+    float4 v3 : TEXCOORD2,
+    out float4 o0 : SV_Target0) {
+  float4 r0, r1, r2, r3;
   uint4 bitmask, uiDest;
   float4 fDest;
 
   r0.xyzw = smplScene_Tex.Sample(smplScene_s, v1.xy).xyzw;
-  r1.x = smplAdaptedLumCur_Tex.Sample(smplAdaptedLumCur_s, float2(0.25,0.5)).x;
+  r1.x = smplAdaptedLumCur_Tex.Sample(smplAdaptedLumCur_s, float2(0.25, 0.5)).x;
   r1.yzw = r1.xxx * r0.xyz;
   r2.x = smplDOFMerge_Tex.Sample(smplDOFMerge_s, v1.xy).w;
   r2.y = cmp(fKIDSDOFType == 0.000000);
@@ -138,23 +133,23 @@ void main(
       r2.yzw = r2.xxx * r0.xyz + r1.yzw;
     }
   }
-    if (injectedData.bloom == 1) //bloom on/off
-    {
-  r0.xyz = smplBloom_Tex.Sample(smplBloom_s, v1.xy).xyz; 
-        r0.xyz = r0.xyz * (fBloomWeight * injectedData.fxBloom) + r2.yzw; // Adjust bloom strength
-    }
-    
+  if (injectedData.bloom == 1)  // bloom on/off
+  {
+    r0.xyz = smplBloom_Tex.Sample(smplBloom_s, v1.xy).xyz;
+    r0.xyz = r0.xyz * (fBloomWeight * injectedData.fxBloom) + r2.yzw;  // Adjust bloom strength
+  }
+
   r1.xyz = smplStar_Tex.Sample(smplStar_s, v1.xy).xyz;
   r0.xyz = r1.xyz * fStarWeight + r0.xyz;
-    
+
   r1.xyz = smplFlare_Tex.Sample(smplFlare_s, v1.xy).xyz;
   r0.xyz = r1.xyz * fLensFlareWeight + r0.xyz;
-    
+
   r1.xyz = smplLightShaftLinWork2_Tex.Sample(smplLightShaftLinWork2_s, v1.xy).xyz;
   r0.xyz = r1.xyz * vLightShaftPower.xyz + r0.xyz;
-    
+
   r1.xyz = vColorScale.xyz * r0.xyz;
-  r1.x = dot(r1.xyz, float3(0.298909992,0.586610019,0.114480004));
+  r1.x = dot(r1.xyz, float3(0.298909992, 0.586610019, 0.114480004));
   r0.xyz = r0.xyz * vColorScale.xyz + -r1.xxx;
   r0.xyz = vSaturationScale.xyz * r0.xyz + r1.xxx;
   r1.xy = v1.xy * vScreenSize.xy + -vSpotParams.xy;
@@ -171,44 +166,43 @@ void main(
   r1.xyz = r1.xzw * r1.yyy;
   r1.w = 1 + -fLimbDarkeningWeight;
   r1.xyz = fLimbDarkeningWeight * r1.xyz;
-    
-  r0.xyz = r0.xyz * r1.www + r1.xyz;
-    float3 untonemapped = r0.xyz;
-    
-    //Start vanilla tonemapper
-  r1.xyz = r0.xyz * float3(0.219999999,0.219999999,0.219999999) + float3(0.0299999993,0.0299999993,0.0299999993);
-  r1.xyz = r0.xyz * r1.xyz + float3(0.00200000009,0.00200000009,0.00200000009);
-  r2.xyz = r0.xyz * float3(0.219999999,0.219999999,0.219999999) + float3(0.300000012,0.300000012,0.300000012);
-  r0.xyz = r0.xyz * r2.xyz + float3(0.0599999987,0.0599999987,0.0599999987);
-  r0.xyz = r1.xyz / r0.xyz;
-  r0.xyz = float3(-0.0333000012,-0.0333000012,-0.0333000012) + r0.xyz;
-  r0.xyz = SimulateHDRParams.xxx * r0.xyz;
-  //r0.xyz = log2(r0.xyz);
-  //r0.xyz = fGamma * r0.xyz;
-  //o0.xyz = exp2(r0.xyz);
- 
-    float3 vanillaColor = r0.xyz;
-    
- // Second hable run added to inject 0.18 midgrey
-    r0.rgb = (0.18f, 0.18f, 0.18f);
-    
-    r1.xyz = r0.xyz * float3(0.219999999, 0.219999999, 0.219999999) + float3(0.0299999993, 0.0299999993, 0.0299999993);
-    r1.xyz = r0.xyz * r1.xyz + float3(0.00200000009, 0.00200000009, 0.00200000009);
-    r2.xyz = r0.xyz * float3(0.219999999, 0.219999999, 0.219999999) + float3(0.300000012, 0.300000012, 0.300000012);
-    r0.xyz = r0.xyz * r2.xyz + float3(0.0599999987, 0.0599999987, 0.0599999987);
-    r0.xyz = r1.xyz / r0.xyz;
-    r0.xyz = float3(-0.0333000012, -0.0333000012, -0.0333000012) + r0.xyz;
-    r0.xyz = SimulateHDRParams.xxx * r0.xyz;
 
-    float3 outputColor;
-    
-    outputColor = applyUserTonemap(untonemapped, vanillaColor, renodx::color::y::from::BT709(r0.rgb)); //Apply our custom tonemapper from tonemapper.hlsl
-    outputColor = renodx::math::SafePow(outputColor, 1 / 2.2); // [inverse 2.2, final shader does 2.2]
-    
-    o0.rgb = outputColor.rgb;
-    
-    o0.w = r0.w; //vanilla Alpha, leaving for compat
- 
-    
-    return;
+  r0.xyz = r0.xyz * r1.www + r1.xyz;
+  float3 untonemapped = r0.xyz;
+
+  // Start vanilla tonemapper
+  r1.xyz = r0.xyz * float3(0.219999999, 0.219999999, 0.219999999) + float3(0.0299999993, 0.0299999993, 0.0299999993);
+  r1.xyz = r0.xyz * r1.xyz + float3(0.00200000009, 0.00200000009, 0.00200000009);
+  r2.xyz = r0.xyz * float3(0.219999999, 0.219999999, 0.219999999) + float3(0.300000012, 0.300000012, 0.300000012);
+  r0.xyz = r0.xyz * r2.xyz + float3(0.0599999987, 0.0599999987, 0.0599999987);
+  r0.xyz = r1.xyz / r0.xyz;
+  r0.xyz = float3(-0.0333000012, -0.0333000012, -0.0333000012) + r0.xyz;
+  r0.xyz = SimulateHDRParams.xxx * r0.xyz;
+  // r0.xyz = log2(r0.xyz);
+  // r0.xyz = fGamma * r0.xyz;
+  // o0.xyz = exp2(r0.xyz);
+
+  float3 vanillaColor = r0.xyz;
+
+  // Second hable run added to inject 0.18 midgrey
+  r0.rgb = (0.18f, 0.18f, 0.18f);
+
+  r1.xyz = r0.xyz * float3(0.219999999, 0.219999999, 0.219999999) + float3(0.0299999993, 0.0299999993, 0.0299999993);
+  r1.xyz = r0.xyz * r1.xyz + float3(0.00200000009, 0.00200000009, 0.00200000009);
+  r2.xyz = r0.xyz * float3(0.219999999, 0.219999999, 0.219999999) + float3(0.300000012, 0.300000012, 0.300000012);
+  r0.xyz = r0.xyz * r2.xyz + float3(0.0599999987, 0.0599999987, 0.0599999987);
+  r0.xyz = r1.xyz / r0.xyz;
+  r0.xyz = float3(-0.0333000012, -0.0333000012, -0.0333000012) + r0.xyz;
+  r0.xyz = SimulateHDRParams.xxx * r0.xyz;
+
+  float3 outputColor;
+
+  outputColor = applyUserTonemap(untonemapped, vanillaColor, renodx::color::y::from::BT709(r0.rgb));  // Apply our custom tonemapper from tonemapper.hlsl
+  outputColor = renodx::math::SafePow(outputColor, 1 / 2.2);                                          // [inverse 2.2, final shader does 2.2]
+
+  o0.rgb = outputColor.rgb;
+
+  o0.w = r0.w;  // vanilla Alpha, leaving for compat
+
+  return;
 }

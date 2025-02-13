@@ -9,18 +9,7 @@
 
 // #define DEBUG_LEVEL_1 //added
 
-#include <embed/0x006F1991.h>  //ui -- overworld hud
-#include <embed/0x0F539095.h>  // tonemapper, TAA/AA OFF
-#include <embed/0x21E7062A.h>  //combat artifacts
-#include <embed/0x3387BE75.h>  //ui -- portraits
-#include <embed/0x53FBE188.h>  // tonemapper, FXAA
-#include <embed/0x5D15CFEE.h>  //videos -- pre-renderd movies
-#include <embed/0x892226E0.h>  //ui -- fixs artifacts in menus (1)
-#include <embed/0x9F6B73CA.h>  //ui -- fixs artifacts in menus (2)
-#include <embed/0xBB055A34.h>  // Final
-#include <embed/0xCE8ED088.h>  //ui -- cutscene static images
-#include <embed/0xD9560318.h>  //ui -- npc chat bubbles
-#include <embed/0xEA314404.h>  // wardrobe
+#include <embed/shaders.h>
 
 #include <deps/imgui/imgui.h>
 #include <include/reshade.hpp>
@@ -52,6 +41,17 @@ renodx::mods::shader::CustomShaders custom_shaders = {
 ShaderInjectData shader_injection;
 
 renodx::utils::settings::Settings settings = {
+
+    new renodx::utils::settings::Setting{
+        .key = "SettingsMode",
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .can_reset = false,
+        .label = "Settings Mode",
+        .labels = {"Simple", "Advanced"},
+        .is_global = true,
+    },
+
     new renodx::utils::settings::Setting{
         .key = "toneMapType",
         .binding = &shader_injection.toneMapType,
@@ -61,7 +61,8 @@ renodx::utils::settings::Settings settings = {
         .label = "Tone Mapper",
         .section = "Tone Mapping",
         .tooltip = "Sets the tone mapper type",
-        .labels = {"Vanilla", "None", "ACES", "RenoDX"},
+        .labels = {"Vanilla", "None", "ACES", "RenoDRT"},
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
     new renodx::utils::settings::Setting{
         .key = "toneMapPeakNits",
@@ -104,18 +105,20 @@ renodx::utils::settings::Settings settings = {
         .label = "Hue Correction",
         .section = "Tone Mapping",
         .tooltip = "Applies hue shift emulation before tonemapping",
-        .labels = {"None", "Vanilla", "Reinhard", "Uncharted 2"},
+        .labels = {"None", "Vanilla", "NeutralSDR"},
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
 
     new renodx::utils::settings::Setting{
         .key = "clipPeak",
         .binding = &shader_injection.clipPeak,
         .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
-        .default_value = 1,
+        .default_value = 1.f,
         .can_reset = false,
         .label = "Enforce Peak Brightness",
         .section = "Tone Mapping",
         .tooltip = "Will make sure the output never exceeds your set peak brightness",
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
 
     new renodx::utils::settings::Setting{
@@ -127,6 +130,7 @@ renodx::utils::settings::Settings settings = {
         .min = 0.01f,
         .max = 10.f,
         .format = "%.2f",
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
     new renodx::utils::settings::Setting{
         .key = "colorGradeHighlights",
@@ -136,6 +140,7 @@ renodx::utils::settings::Settings settings = {
         .section = "Color Grading",
         .max = 100.f,
         .parse = [](float value) { return value * 0.02f; },
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
     new renodx::utils::settings::Setting{
         .key = "colorGradeShadows",
@@ -145,6 +150,7 @@ renodx::utils::settings::Settings settings = {
         .section = "Color Grading",
         .max = 100.f,
         .parse = [](float value) { return value * 0.02f; },
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
     new renodx::utils::settings::Setting{
         .key = "colorGradeContrast",
@@ -154,6 +160,7 @@ renodx::utils::settings::Settings settings = {
         .section = "Color Grading",
         .max = 100.f,
         .parse = [](float value) { return value * 0.02f; },
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
     new renodx::utils::settings::Setting{
         .key = "colorGradeSaturation",
@@ -163,6 +170,7 @@ renodx::utils::settings::Settings settings = {
         .section = "Color Grading",
         .max = 100.f,
         .parse = [](float value) { return value * 0.02f; },
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
 
     new renodx::utils::settings::Setting{
@@ -173,19 +181,38 @@ renodx::utils::settings::Settings settings = {
         .section = "Color Grading",
         .tooltip = "Controls highlight desaturation due to overexposure.",
         .max = 100.f,
-        .is_enabled = []() { return shader_injection.toneMapType == 3; },  // Dont enable unless RenoDRT is selected
+        //.is_enabled = []() { return shader_injection.toneMapType == 3; },  // Dont enable unless RenoDRT is selected
         .parse = [](float value) { return value * 0.01f; },
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
+    },
+
+    new renodx::utils::settings::Setting{
+        .key = "ColorGradeColorSpace",
+        .binding = &shader_injection.ColorGradeColorSpace,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .label = "Color Space",
+        .section = "Color Grading",
+        .tooltip = "Selects output color space"
+                   "\nUS Modern for BT.709 D65."
+                   "\nJPN Modern for BT.709 D93.",
+        .labels = {
+            "US Modern",
+            "JPN Modern",
+        },
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
 
     new renodx::utils::settings::Setting{
         .key = "blend",
         .binding = &shader_injection.blend,
         .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
-        .default_value = 0,
+        .default_value = 1.f,
         .can_reset = false,
         .label = "Blend SDR/HDR",
         .section = "Color Grading",
         .tooltip = "Enable/Disable Blend",
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
 
     new renodx::utils::settings::Setting{
@@ -255,6 +282,8 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("colorGradeContrast", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeSaturation", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeBlowout", 50.f);
+  renodx::utils::settings::UpdateSetting("ColorGradeColorSpace", 0.f);
+
   renodx::utils::settings::UpdateSetting("blend", 0.f);
   // Start PostProcess effects on/off
   renodx::utils::settings::UpdateSetting("bloom", 1.f);

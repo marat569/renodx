@@ -691,6 +691,7 @@ void AddAdvancedSettings() {
           .old_format = format,
           .new_format = reshade::api::format::r16g16b16a16_float,
           .ignore_size = (value == UPGRADE_TYPE_ANY),
+          .use_resource_view_cloning = true,
           .aspect_ratio = static_cast<float>((value == UPGRADE_TYPE_OUTPUT_RATIO)
                                                  ? renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER
                                                  : renodx::mods::swapchain::SwapChainUpgradeTarget::ANY),

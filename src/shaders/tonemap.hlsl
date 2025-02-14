@@ -5,6 +5,7 @@
 #include "./colorcorrect.hlsl"
 #include "./colorgrade.hlsl"
 #include "./lut.hlsl"
+#include "./reinhard.hlsl"
 #include "./reno_drt.hlsl"
 
 namespace renodx {
@@ -27,56 +28,6 @@ float SmoothClamp(float x) {
   const float u = 0.525;
   float q = (2.0 - u - 1.0 / u + x * (2.0 + 2.0 / u - x / u)) / 4.0;
   return (abs(1.0 - x) < u) ? q : saturate(x);
-}
-
-float Reinhard(float x, float peak = 1.f) {
-  return x / (x / peak + 1.f);
-}
-
-float3 Reinhard(float3 x, float peak = 1.f) {
-  return x / (x / peak + 1.f);
-}
-
-float ReinhardExtended(float color, float white_max = 1000.f / 203.f, float peak = 1.f) {
-  return Reinhard(color, peak) * (1.f + (peak * color) / (white_max * white_max));
-}
-
-float3 ReinhardExtended(float3 color, float white_max = 1000.f / 203.f, float peak = 1.f) {
-  return Reinhard(color, peak) * (1.f + (peak * color) / (white_max * white_max));
-}
-
-float ComputeReinhardScale(float channel_max = 1.f, float channel_min = 0.f, float gray_in = 0.18f, float gray_out = 0.18f) {
-  return (channel_max * (channel_min * gray_out + channel_min - gray_out))
-         / (gray_in * (gray_out - channel_max));
-}
-
-float ReinhardScalable(float x, float x_max = 1.f, float x_min = 0.f, float gray_in = 0.18f, float gray_out = 0.18f) {
-  float exposure = ComputeReinhardScale(x_max, x_min, gray_in, gray_out);
-  return mad(x, exposure, x_min) / mad(x, exposure / x_max, 1.f - x_min);
-}
-
-float3 ReinhardScalable(float3 x, float x_max = 1.f, float x_min = 0.f, float gray_in = 0.18f, float gray_out = 0.18f) {
-  float exposure = ComputeReinhardScale(x_max, x_min, gray_in, gray_out);
-  return mad(x, exposure, x_min) / mad(x, exposure / x_max, 1.f - x_min);
-}
-
-float ComputeReinhardExtendableScale(float w = 1.#INF, float p = 1.f, float m = 0.f, float x = 0.18f, float y = 0.18f) {
-  // y = (sx / (sx + 1) * (1 + (psx)/(sw*sw))
-  // solve for s (scale)
-  // Min not currently supported
-  return p * (w * w * y - p * x) / (w * w * x * (p - y));
-}
-
-float ReinhardScalableExtended(float x, float white_max = 100.f, float x_max = 1.f, float x_min = 0.f, float gray_in = 0.18f, float gray_out = 0.18f) {
-  float exposure = ComputeReinhardScale(x_max, x_min, gray_in, gray_out);
-  float extended = ReinhardExtended(x * exposure, white_max * exposure, x_max);
-  return min(extended, x_max);
-}
-
-float3 ReinhardScalableExtended(float3 x, float white_max = 100.f, float x_max = 1.f, float x_min = 0.f, float gray_in = 0.18f, float gray_out = 0.18f) {
-  float exposure = ComputeReinhardScale(x_max, x_min, gray_in, gray_out);
-  float3 extended = ReinhardExtended(x * exposure, white_max * exposure, x_max);
-  return min(extended, x_max);
 }
 
 /// Piecewise linear + exponential compression to a target value starting from a specified number.
@@ -248,6 +199,7 @@ struct Config {
   float reno_drt_blowout;
   float reno_drt_clamp_color_space;
   float reno_drt_clamp_peak;
+  float reno_drt_white_clip;
 };
 
 float3 UpgradeToneMap(float3 color_hdr, float3 color_sdr, float3 post_process_color, float post_process_strength) {
@@ -317,7 +269,8 @@ Config Create(
     bool reno_drt_per_channel = false,
     float reno_drt_blowout = 0,
     float reno_drt_clamp_color_space = 2.f,
-    float reno_drt_clamp_peak = 1.f) {
+    float reno_drt_clamp_peak = 1.f,
+    float reno_drt_white_clip = 100.f) {
   const Config tm_config = {
     type,
     peak_nits,
@@ -345,7 +298,8 @@ Config Create(
     reno_drt_per_channel,
     reno_drt_blowout,
     reno_drt_clamp_color_space,
-    reno_drt_clamp_peak
+    reno_drt_clamp_peak,
+    reno_drt_white_clip
   };
   return tm_config;
 }
@@ -389,6 +343,7 @@ float3 ApplyRenoDRT(float3 color, Config tm_config) {
   reno_drt_config.blowout = tm_config.reno_drt_blowout;
   reno_drt_config.clamp_color_space = tm_config.reno_drt_clamp_color_space;
   reno_drt_config.clamp_peak = tm_config.reno_drt_clamp_peak;
+  reno_drt_config.white_clip = tm_config.reno_drt_white_clip;
 
   return renodrt::BT709(color, reno_drt_config);
 }

@@ -35,25 +35,23 @@ float3 applyUserTonemap(float3 untonemapped, float3 vanillaColor, float midGray)
   config.saturation = injectedData.colorGradeSaturation;
   config.reno_drt_per_channel = true;  // per channel true fixs blue clouds/blow out related issues
 
-  if (!config.reno_drt_per_channel) {
-    // Start hue correction if
-    if (injectedData.toneMapHueCorrection == 1.f) {  // Vanilla
-      config.hue_correction_type = renodx::tonemap::config::hue_correction_type::CUSTOM;
-      config.hue_correction_color = vanillaColor;
-      config.hue_correction_strength = 50.f;
-    }
-
-    else if (injectedData.toneMapHueCorrection == 2.f) {  // RenoDRT Neutral SDR (Default)
-      config.hue_correction_type = renodx::tonemap::config::hue_correction_type::CUSTOM;
-      config.hue_correction_color = renodx::tonemap::renodrt::NeutralSDR(untonemapped);
-      config.hue_correction_strength = 50.f;
-    }
-
-    // if (injectedData.toneMapHueCorrection == 1.f) {
-    //   config.reno_drt_hue_correction_method = renodx::tonemap::renodrt::config::hue_correction_method::ICTCP;
-    //   config.hue_correction_strength = 1.f;
-    // }
+  //  Start hue correction if
+  if (injectedData.toneMapHueCorrection == 1.f) {  // Vanilla
+    config.hue_correction_type = renodx::tonemap::config::hue_correction_type::CUSTOM;
+    config.hue_correction_color = vanillaColor;
+    config.hue_correction_strength = 0.5f;
   }
+
+  else if (injectedData.toneMapHueCorrection == 2.f) {  // RenoDRT Neutral SDR (Default)
+    config.hue_correction_type = renodx::tonemap::config::hue_correction_type::CUSTOM;
+    config.hue_correction_color = renodx::tonemap::renodrt::NeutralSDR(untonemapped);
+    config.hue_correction_strength = 0.5f;
+  }
+
+  // if (injectedData.toneMapHueCorrection == 1.f) {
+  //   config.reno_drt_hue_correction_method = renodx::tonemap::renodrt::config::hue_correction_method::ICTCP;
+  //   config.hue_correction_strength = 1.f;
+  // }
 
   config.reno_drt_highlights = renoDRTHighlights;
   config.reno_drt_shadows = renoDRTShadows;

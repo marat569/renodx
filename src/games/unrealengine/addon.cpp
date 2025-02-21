@@ -487,7 +487,7 @@ void OnInitDevice(reshade::api::device* device) {
 
 bool fired_on_init_swapchain = false;
 
-void OnInitSwapchain(reshade::api::swapchain* swapchain) {
+void OnInitSwapchain(reshade::api::swapchain* swapchain, bool resize) {
   if (fired_on_init_swapchain) return;
   fired_on_init_swapchain = true;
   auto peak = renodx::utils::swapchain::GetPeakNits(swapchain);
@@ -550,7 +550,13 @@ bool OnDrawForLUTDump(
   if (g_dump_shaders == 0) return false;
 
   auto shader_state = renodx::utils::shader::GetCurrentState(cmd_list);
-  auto pixel_shader_hash = shader_state.GetCurrentPixelShaderHash();
+
+  auto pair = shader_state.stage_state.find(reshade::api::pipeline_stage::pixel_shader);
+  if (pair == shader_state.stage_state.end()) return false;
+
+  auto stage_state = pair->second;
+
+  auto pixel_shader_hash = stage_state.shader_hash;
   if (pixel_shader_hash == 0u) return false;
 
   auto& swapchain_state = cmd_list->get_private_data<renodx::utils::swapchain::CommandListData>();
@@ -580,37 +586,29 @@ bool OnDrawForLUTDump(
   renodx::utils::shader::dump::default_dump_folder = ".";
   bool found = false;
   try {
-    auto pair = shader_state.current_shader_pipelines.find(reshade::api::pipeline_stage::pixel_shader);
-    if (pair == shader_state.current_shader_pipelines.end()) return false;
-
-    auto pipeline = pair->second;
-    auto details = renodx::utils::shader::GetPipelineShaderDetails(device, pipeline);
-    for (const auto& [subobject_index, shader_hash] : details->shader_hashes_by_index) {
-      // Store immediately in case pipeline destroyed before present
-      if (shader_hash != pixel_shader_hash) continue;
-      found = true;
-      auto shader_data = details->GetShaderData(shader_hash, subobject_index);
-      if (!shader_data.has_value()) {
-        std::stringstream s;
-        s << "utils::shader::dump(Failed to retreive shader data: ";
-        s << PRINT_CRC32(shader_hash);
-        s << ")";
-        reshade::log::message(reshade::log::level::warning, s.str().c_str());
-        return false;
-      }
-
-      auto shader_version = renodx::utils::shader::compiler::directx::DecodeShaderVersion(shader_data.value());
-      if (shader_version.GetMajor() == 0) {
-        // No shader information found
-        return false;
-      }
-
-      renodx::utils::shader::dump::DumpShader(
-          shader_hash,
-          shader_data.value(),
-          reshade::api::pipeline_subobject_type::pixel_shader,
-          "lutbuilder_");
+    auto pipeline = stage_state.pipeline;
+    auto shader_data = renodx::utils::shader::GetShaderData(device, pipeline, pixel_shader_hash);
+    if (!shader_data.has_value()) {
+      std::stringstream s;
+      s << "utils::shader::dump(Failed to retreive shader data: ";
+      s << PRINT_CRC32(pixel_shader_hash);
+      s << ")";
+      reshade::log::message(reshade::log::level::warning, s.str().c_str());
+      return false;
     }
+
+    auto shader_version = renodx::utils::shader::compiler::directx::DecodeShaderVersion(shader_data.value());
+    if (shader_version.GetMajor() == 0) {
+      // No shader information found
+      return false;
+    }
+
+    renodx::utils::shader::dump::DumpShader(
+        pixel_shader_hash,
+        shader_data.value(),
+        reshade::api::pipeline_subobject_type::pixel_shader,
+        "lutbuilder_");
+
     if (!found) throw std::exception("Pipeline not found");
   } catch (...) {
     std::stringstream s;
@@ -663,7 +661,7 @@ void AddAdvancedSettings() {
         reshade::log::message(reshade::log::level::info, s.str().c_str());
       }
     }
-    renodx::utils::settings::LoadSetting(nullptr, renodx::utils::settings::global_name, setting);
+    renodx::utils::settings::LoadSetting(renodx::utils::settings::global_name, setting);
     settings.push_back(setting);
   };
 
@@ -816,6 +814,11 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       renodx::utils::resource::Use(fdw_reason);
 
       renodx::mods::shader::on_create_pipeline_layout = [](auto, auto params) {
+        auto process_path = renodx::utils::platform::GetCurrentProcessPath();
+        auto product_name = renodx::utils::platform::GetProductName(process_path);
+        if (product_name == "Wuthering Waves") {
+          if (params.size() == 25) return false;
+        }
         // UE DX12 has a 4 param root sig that crashes if modified. Track for now
         return std::ranges::any_of(params, [](auto param) {
           return (param.type == reshade::api::pipeline_layout_param_type::descriptor_table);

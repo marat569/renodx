@@ -348,7 +348,7 @@ void OnPresetOff() {
 
 bool fired_on_init_swapchain = false;
 
-void OnInitSwapchain(reshade::api::swapchain* swapchain) {
+void OnInitSwapchain(reshade::api::swapchain* swapchain, bool resize) {
   if (fired_on_init_swapchain) return;
   fired_on_init_swapchain = true;
   auto peak = renodx::utils::swapchain::GetPeakNits(swapchain);
@@ -378,7 +378,12 @@ bool OnDrawIndexedForMissingShaders(
     uint32_t index_count, uint32_t instance_count,
     uint32_t first_index, int32_t vertex_offset, uint32_t first_instance) {
   auto shader_state = renodx::utils::shader::GetCurrentState(cmd_list);
-  auto pixel_shader_hash = shader_state.GetCurrentPixelShaderHash();
+
+  auto pair = shader_state.stage_state.find(reshade::api::pipeline_stage::pixel_shader);
+  if (pair == shader_state.stage_state.end()) return false;
+
+  auto stage_state = pair->second;
+  auto pixel_shader_hash = stage_state.shader_hash;
   if (pixel_shader_hash == 0u) return false;
 
   if (!renodx::utils::swapchain::HasBackBufferRenderTarget(cmd_list)) return false;
@@ -397,38 +402,29 @@ bool OnDrawIndexedForMissingShaders(
   renodx::utils::shader::dump::default_dump_folder = ".";
   bool found = false;
   try {
-    auto pair = shader_state.current_shader_pipelines.find(reshade::api::pipeline_stage::pixel_shader);
-    if (pair == shader_state.current_shader_pipelines.end()) return false;
+    auto pipeline = pair->second.pipeline;
+    auto shader_data = renodx::utils::shader::GetShaderData(cmd_list->get_device(), pipeline, pixel_shader_hash);
 
-    auto pipeline = pair->second;
-    auto details = renodx::utils::shader::GetPipelineShaderDetails(cmd_list->get_device(), pipeline);
-    for (const auto& [subobject_index, shader_hash] : details->shader_hashes_by_index) {
-      // Store immediately in case pipeline destroyed before present
-      if (shader_hash != pixel_shader_hash) continue;
-      found = true;
-      auto shader_data = details->GetShaderData(shader_hash, subobject_index);
-      if (!shader_data.has_value()) {
-        std::stringstream s;
-        s << "utils::shader::dump(Failed to retreive shader data: ";
-        s << PRINT_CRC32(shader_hash);
-        s << ")";
-        reshade::log::message(reshade::log::level::warning, s.str().c_str());
-        return false;
-      }
-
-      auto shader_version = renodx::utils::shader::compiler::directx::DecodeShaderVersion(shader_data.value());
-      if (shader_version.GetMajor() == 0) {
-        // No shader information found
-        return false;
-      }
-
-      renodx::utils::shader::dump::DumpShader(
-          shader_hash,
-          shader_data.value(),
-          reshade::api::pipeline_subobject_type::pixel_shader,
-          "output_");
+    if (!shader_data.has_value()) {
+      std::stringstream s;
+      s << "utils::shader::dump(Failed to retreive shader data: ";
+      s << PRINT_CRC32(pixel_shader_hash);
+      s << ")";
+      reshade::log::message(reshade::log::level::warning, s.str().c_str());
+      return false;
     }
-    if (!found) throw std::exception("Pipeline not found");
+
+    auto shader_version = renodx::utils::shader::compiler::directx::DecodeShaderVersion(shader_data.value());
+    if (shader_version.GetMajor() == 0) {
+      // No shader information found
+      return false;
+    }
+
+    renodx::utils::shader::dump::DumpShader(
+        pixel_shader_hash,
+        shader_data.value(),
+        reshade::api::pipeline_subobject_type::pixel_shader,
+        "output_");
   } catch (...) {
     std::stringstream s;
     s << "utils::shader::dump(Failed to decode shader data: ";

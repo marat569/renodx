@@ -1,4 +1,6 @@
-#include "./shared.h"
+// Final Shader for Pirates
+
+#include "./common.hlsl"
 
 Texture2D<float4> s0_t : register(t0);
 
@@ -28,12 +30,9 @@ float4 main(
   float4 _6 = s0_t.Sample(s0_s, float2((TEXCOORD.x), (TEXCOORD.y)));  // untonemapped srv
 
   if (injectedData.toneMapType != 0.f) {
-    float3 gamma = renodx::math::PowSafe(_6.rgb, 2.2f);                                                                                   // Linearize
-    float3 bt2020Color = renodx::color::bt2020::from::BT709(gamma.rgb);                                                                   // get 2020 color from 709 color
-    float3 tonemap = renodx::tonemap::ExponentialRollOff(bt2020Color, 1.f, injectedData.toneMapPeakNits / injectedData.toneMapGameNits);  // Display map with ExponentialRollOff
-    float3 pqEncode = renodx::color::pq::Encode(tonemap, injectedData.toneMapGameNits);                                                   // PQ Encode to paper white
-    SV_Target.xyz = pqEncode;
-    SV_Target.w = _6.a;
+    float3 color = ProcessColor(_6.rgb);
+    SV_Target.xyz = color.rgb;
+    SV_Target.w = 1.f;
     return SV_Target;
   }
 

@@ -23,7 +23,8 @@ namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
 
-    CustomShaderEntry(0xC20B9EB6),  // Final shader
+    CustomShaderEntry(0xC20B9EB6),  // Final Shader -- Pirates
+    CustomShaderEntry(0x594993B8),  // Final Shader  -- Gaiden and Infinite Wealth
 
 };
 
@@ -62,7 +63,22 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Sets the value of 100%% white in nits",
         .min = 48.f,
         .max = 500.f,
+        .is_enabled = []() { return shader_injection.toneMapType != 0; },
     },
+
+    new renodx::utils::settings::Setting{
+        .key = "gamma",
+        .binding = &shader_injection.gamma,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .can_reset = true,
+        .label = "Gamma",
+        .section = "Tone Mapping",
+        .tooltip = "The game defaults to 2.2 Gamma.",
+        .labels = {"2.2 Gamma", "2.4 Gamma"},
+        .is_enabled = []() { return shader_injection.toneMapType != 0; },
+    },
+
     // new renodx::utils::settings::Setting{
     //     .key = "toneMapUINits",
     //     .binding = &shader_injection.toneMapUINits,
@@ -176,6 +192,7 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("toneMapType", 0.f);
   renodx::utils::settings::UpdateSetting("toneMapPeakNits", 203.f);
   renodx::utils::settings::UpdateSetting("toneMapGameNits", 203.f);
+  renodx::utils::settings::UpdateSetting("gamma", 0.f);
   renodx::utils::settings::UpdateSetting("toneMapUINits", 203.f);
   renodx::utils::settings::UpdateSetting("colorGradeExposure", 1.f);
   renodx::utils::settings::UpdateSetting("colorGradeHighlights", 50.f);

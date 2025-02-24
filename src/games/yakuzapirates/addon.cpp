@@ -25,6 +25,7 @@ renodx::mods::shader::CustomShaders custom_shaders = {
 
     CustomShaderEntry(0xC20B9EB6),  // Final Shader -- Pirates
     CustomShaderEntry(0x594993B8),  // Final Shader  -- Gaiden and Infinite Wealth
+    CustomShaderEntry(0xC970E2F6),  // Final Shader -- Pirates FSR3 FG
 
 };
 
@@ -79,84 +80,6 @@ renodx::utils::settings::Settings settings = {
         .is_enabled = []() { return shader_injection.toneMapType != 0; },
     },
 
-    // new renodx::utils::settings::Setting{
-    //     .key = "toneMapUINits",
-    //     .binding = &shader_injection.toneMapUINits,
-    //     .default_value = 203.f,
-    //     .label = "UI Brightness",
-    //     .section = "Tone Mapping",
-    //     .tooltip = "Sets the brightness of UI and HUD elements in nits",
-    //     .min = 48.f,
-    //     .max = 500.f,
-    // },
-    // new renodx::utils::settings::Setting{
-    //     .key = "colorGradeExposure",
-    //     .binding = &shader_injection.colorGradeExposure,
-    //     .default_value = 1.f,
-    //     .label = "Exposure",
-    //     .section = "Color Grading",
-    //     .max = 10.f,
-    //     .format = "%.2f",
-    // },
-    // new renodx::utils::settings::Setting{
-    //     .key = "colorGradeHighlights",
-    //     .binding = &shader_injection.colorGradeHighlights,
-    //     .default_value = 50.f,
-    //     .label = "Highlights",
-    //     .section = "Color Grading",
-    //     .max = 100.f,
-    //     .parse = [](float value) { return value * 0.02f; },
-    // },
-    // new renodx::utils::settings::Setting{
-    //     .key = "colorGradeShadows",
-    //     .binding = &shader_injection.colorGradeShadows,
-    //     .default_value = 50.f,
-    //     .label = "Shadows",
-    //     .section = "Color Grading",
-    //     .max = 100.f,
-    //     .parse = [](float value) { return value * 0.02f; },
-    // },
-    // new renodx::utils::settings::Setting{
-    //     .key = "colorGradeContrast",
-    //     .binding = &shader_injection.colorGradeContrast,
-    //     .default_value = 50.f,
-    //     .label = "Contrast",
-    //     .section = "Color Grading",
-    //     .max = 100.f,
-    //     .parse = [](float value) { return value * 0.02f; },
-    // },
-    // new renodx::utils::settings::Setting{
-    //     .key = "colorGradeSaturation",
-    //     .binding = &shader_injection.colorGradeSaturation,
-    //     .default_value = 50.f,
-    //     .label = "Saturation",
-    //     .section = "Color Grading",
-    //     .max = 100.f,
-    //     .parse = [](float value) { return value * 0.02f; },
-    // },
-
-    // new renodx::utils::settings::Setting{
-    //     .key = "colorGradeBlowout",
-    //     .binding = &shader_injection.colorGradeBlowout,
-    //     .default_value = 50.f,
-    //     .label = "Blowout",
-    //     .section = "Color Grading",
-    //     .tooltip = "Controls highlight desaturation due to overexposure.",
-    //     .max = 100.f,
-    //     .parse = [](float value) { return value * 0.01f; },
-    // },
-
-    // new renodx::utils::settings::Setting{
-    //     .key = "toneMapHueCorrection",
-    //     .binding = &shader_injection.toneMapHueCorrection,
-    //     .default_value = 50.f,
-    //     .label = "Hue Correction",
-    //     .section = "Color Grading",
-    //     .tooltip = "Emulates hue shifting from the vanilla tonemapper",
-    //     .max = 100.f,
-    //     .parse = [](float value) { return value * 0.01f; },
-    // },
-
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
         .label = " - Please make sure Native HDR is on! \r\n - Control Peak and Game brightness in the mod! \r\n \r\n - Join the HDR Den discord for help!",
@@ -193,14 +116,6 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("toneMapPeakNits", 203.f);
   renodx::utils::settings::UpdateSetting("toneMapGameNits", 203.f);
   renodx::utils::settings::UpdateSetting("gamma", 0.f);
-  renodx::utils::settings::UpdateSetting("toneMapUINits", 203.f);
-  renodx::utils::settings::UpdateSetting("colorGradeExposure", 1.f);
-  renodx::utils::settings::UpdateSetting("colorGradeHighlights", 50.f);
-  renodx::utils::settings::UpdateSetting("colorGradeShadows", 50.f);
-  renodx::utils::settings::UpdateSetting("colorGradeContrast", 50.f);
-  renodx::utils::settings::UpdateSetting("colorGradeSaturation", 50.f);
-  // renodx::utils::settings::UpdateSetting("colorGradeBlowout", 50.f);
-  // renodx::utils::settings::UpdateSetting("toneMapHueCorrection", 50.f);
 }
 
 }  // namespace

@@ -25,10 +25,10 @@ struct ShaderInjectData {
   float colorGradeBlowout;
   float colorGradeDechroma;
   float colorGradeFlare;
-  float fxAutoExposure;
   float fxBloom;
   float fxLens;
   float fxSharpen;
+  float fxBlur;
   float fxVignette;
   float fxFilmGrain;
   float fxFilmGrainType;

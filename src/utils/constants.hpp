@@ -8,18 +8,19 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
-#include <include/reshade.hpp>
 
-#include <include/reshade_api_device.hpp>
-#include <include/reshade_api_resource.hpp>
 #include <mutex>
 #include <shared_mutex>
 #include <span>
+#include <sstream>
 #include <unordered_map>
 #include <vector>
 
+#include <include/reshade.hpp>
+
 #include "./bitwise.hpp"
 #include "./data.hpp"
+#include "./format.hpp"
 
 namespace renodx::utils::constants {
 
@@ -47,7 +48,22 @@ static void OnInitDevice(reshade::api::device* device) {
   bool created = renodx::utils::data::CreateOrGet<DeviceData>(device, data);
   if (!created) return;
 
-  internal::is_primary_hook = true;
+  if (created) {
+    std::stringstream s;
+    s << "utils::constants::OnInitDevice(Hooking device: ";
+    s << reinterpret_cast<uintptr_t>(device);
+    s << ", api: " << device->get_api();
+    s << ")";
+    reshade::log::message(reshade::log::level::debug, s.str().c_str());
+    internal::is_primary_hook = true;
+  } else {
+    std::stringstream s;
+    s << "utils::constants::OnInitDevice(Attaching to hook: ";
+    s << reinterpret_cast<uintptr_t>(device);
+    s << ", api: " << device->get_api();
+    s << ")";
+    reshade::log::message(reshade::log::level::debug, s.str().c_str());
+  }
 }
 
 static void OnDestroyDevice(reshade::api::device* device) {
@@ -77,33 +93,33 @@ static void OnInitResource(
 
   if (!internal::is_primary_hook) return;
 
-  auto& data = device->get_private_data<DeviceData>();
-  const std::unique_lock lock(data.mutex);
+  auto* data = renodx::utils::data::Get<DeviceData>(device);
+  const std::unique_lock lock(data->mutex);
 
   if (initial_data == nullptr) {
     if (desc.buffer.size > 64 * 1024) {
       // Invalid size?
       return;
     }
-    data.buffer_cache[resource.handle] = std::vector<uint8_t>(desc.buffer.size, 0);
+    data->buffer_cache[resource.handle] = std::vector<uint8_t>(desc.buffer.size, 0);
   } else {
-    data.buffer_cache[resource.handle] = {
+    data->buffer_cache[resource.handle] = {
         static_cast<uint8_t*>(initial_data->data),
         static_cast<uint8_t*>(initial_data->data) + desc.buffer.size,
     };
   }
-  data.buffer_mapping[resource.handle] = {};
+  data->buffer_mapping[resource.handle] = {};
 }
 
 static void OnDestroyResource(reshade::api::device* device, reshade::api::resource resource) {
   if (!internal::is_primary_hook) return;
-  auto& data = device->get_private_data<DeviceData>();
-  const std::unique_lock lock(data.mutex);
-  data.buffer_mapping.erase(resource.handle);
-  auto pair = data.buffer_cache.find(resource.handle);
-  if (pair != data.buffer_cache.end()) {
-    data.buffer_history[resource.handle] = pair->second;
-    data.buffer_cache.erase(pair);
+  auto* data = renodx::utils::data::Get<DeviceData>(device);
+  const std::unique_lock lock(data->mutex);
+  data->buffer_mapping.erase(resource.handle);
+  auto pair = data->buffer_cache.find(resource.handle);
+  if (pair != data->buffer_cache.end()) {
+    data->buffer_history[resource.handle] = pair->second;
+    data->buffer_cache.erase(pair);
   }
 }
 
@@ -114,12 +130,12 @@ static void OnInitPipelineLayout(
     reshade::api::pipeline_layout layout) {
   if (!internal::is_primary_hook) return;
 
-  auto& data = device->get_private_data<DeviceData>();
-  const std::unique_lock lock(data.mutex);
+  auto* data = renodx::utils::data::Get<DeviceData>(device);
+  const std::unique_lock lock(data->mutex);
   std::vector<reshade::api::pipeline_layout_param> cloned_params = {
       params, params + param_count};
 
-  data.pipeline_layout_params[layout.handle] = cloned_params;
+  data->pipeline_layout_params[layout.handle] = cloned_params;
 }
 
 static void OnMapBufferRegion(
@@ -130,13 +146,13 @@ static void OnMapBufferRegion(
     reshade::api::map_access access,
     void** mapped_data) {
   if (!internal::is_primary_hook) return;
-  auto& data = device->get_private_data<DeviceData>();
+  auto* data = renodx::utils::data::Get<DeviceData>(device);
 
-  std::shared_lock read_lock(data.mutex);
-  auto pair = data.buffer_mapping.find(resource.handle);
-  if (pair == data.buffer_mapping.end()) return;
+  std::shared_lock read_lock(data->mutex);
+  auto pair = data->buffer_mapping.find(resource.handle);
+  if (pair == data->buffer_mapping.end()) return;
   read_lock.unlock();
-  std::unique_lock write_lock(data.mutex);
+  std::unique_lock write_lock(data->mutex);
   uint8_t* start = *(reinterpret_cast<uint8_t**>(mapped_data));
   if (size == UINT64_MAX) {
     auto desc = device->get_resource_desc(resource);
@@ -154,18 +170,18 @@ static void OnUnmapBufferRegion(
     reshade::api::device* device,
     reshade::api::resource resource) {
   if (!internal::is_primary_hook) return;
-  auto& data = device->get_private_data<DeviceData>();
+  auto* data = renodx::utils::data::Get<DeviceData>(device);
 
-  std::shared_lock read_lock(data.mutex);
-  auto pair = data.buffer_mapping.find(resource.handle);
-  if (pair == data.buffer_mapping.end()) return;
+  std::shared_lock read_lock(data->mutex);
+  auto pair = data->buffer_mapping.find(resource.handle);
+  if (pair == data->buffer_mapping.end()) return;
   // Update contents of
   read_lock.unlock();
 
-  std::unique_lock write_lock(data.mutex);
+  std::unique_lock write_lock(data->mutex);
 
-  auto pair2 = data.buffer_cache.find(resource.handle);
-  if (pair2 != data.buffer_cache.end()) {
+  auto pair2 = data->buffer_cache.find(resource.handle);
+  if (pair2 != data->buffer_cache.end()) {
     pair2->second.assign(
         static_cast<uint8_t*>(pair->second.data()),
         static_cast<uint8_t*>(pair->second.data()) + pair->second.size());
@@ -181,19 +197,19 @@ static bool OnUpdateBufferRegion(
     const void* buffer_data, reshade::api::resource resource,
     uint64_t offset, uint64_t size) {
   if (!internal::is_primary_hook) return false;
-  auto& data = device->get_private_data<DeviceData>();
+  auto* data = renodx::utils::data::Get<DeviceData>(device);
 
-  std::shared_lock read_lock(data.mutex);
-  auto pair = data.buffer_mapping.find(resource.handle);
-  if (pair == data.buffer_mapping.end()) return false;
+  std::shared_lock read_lock(data->mutex);
+  auto pair = data->buffer_mapping.find(resource.handle);
+  if (pair == data->buffer_mapping.end()) return false;
   read_lock.unlock();
 
-  auto pair2 = data.buffer_cache.find(resource.handle);
+  auto pair2 = data->buffer_cache.find(resource.handle);
   auto desc = device->get_resource_desc(resource);
-  if (pair2 == data.buffer_cache.end()) {
+  if (pair2 == data->buffer_cache.end()) {
     auto new_data = std::vector<uint8_t>(desc.buffer.size, 0);
     memcpy(new_data.data() + offset, static_cast<const uint8_t*>(buffer_data) + offset, size);
-    data.buffer_cache[resource.handle] = new_data;
+    data->buffer_cache[resource.handle] = new_data;
   } else {
     memcpy(pair2->second.data() + offset, static_cast<const uint8_t*>(buffer_data) + offset, size);
   }
@@ -228,10 +244,10 @@ static void OnPushDescriptors(
 
     if (!fetched_param) {
       auto* device = cmd_list->get_device();
-      auto& device_data = device->get_private_data<DeviceData>();
-      std::shared_lock lock(device_data.mutex);
-      auto pair = device_data.pipeline_layout_params.find(layout.handle);
-      if (pair == device_data.pipeline_layout_params.end()) {
+      auto* device_data = renodx::utils::data::Get<DeviceData>(device);
+      std::shared_lock lock(device_data->mutex);
+      auto pair = device_data->pipeline_layout_params.find(layout.handle);
+      if (pair == device_data->pipeline_layout_params.end()) {
         reshade::log::message(reshade::log::level::error, "Could not find handle.");
         // add warning
         return;
@@ -249,20 +265,20 @@ static void OnPushDescriptors(
 }
 
 inline std::vector<uint8_t> GetResourceCache(reshade::api::device* device, reshade::api::resource resource) {
-  auto& data = device->get_private_data<DeviceData>();
+  auto* data = renodx::utils::data::Get<DeviceData>(device);
 
-  std::shared_lock read_lock(data.mutex);
-  auto pair = data.buffer_cache.find(resource.handle);
-  if (pair != data.buffer_cache.end()) return pair->second;
+  std::shared_lock read_lock(data->mutex);
+  auto pair = data->buffer_cache.find(resource.handle);
+  if (pair != data->buffer_cache.end()) return pair->second;
   return {};
 }
 
 inline std::vector<uint8_t> GetResourceHistory(reshade::api::device* device, reshade::api::resource resource) {
-  auto& data = device->get_private_data<DeviceData>();
+  auto* data = renodx::utils::data::Get<DeviceData>(device);
 
-  std::shared_lock read_lock(data.mutex);
-  auto pair = data.buffer_history.find(resource.handle);
-  if (pair != data.buffer_history.end()) return pair->second;
+  std::shared_lock read_lock(data->mutex);
+  auto pair = data->buffer_history.find(resource.handle);
+  if (pair != data->buffer_history.end()) return pair->second;
   return {};
 }
 

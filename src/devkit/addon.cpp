@@ -9,7 +9,6 @@
 #include <exception>
 #include <filesystem>
 #include <initializer_list>
-#include <memory>
 #include <mutex>
 #include <optional>
 #include <variant>
@@ -207,15 +206,15 @@ struct __declspec(uuid("0190ec1a-2e19-74a6-ad41-4df0d4d8caed")) DeviceData {
     is_snapshotting = false;
   }
 
-  ShaderDetails& GetShaderDetails(uint32_t shader_hash) {
+  ShaderDetails* GetShaderDetails(uint32_t shader_hash) {
     // assert(shader_hash != 0u);
     if (auto pair = shader_details.find(shader_hash);
         pair != shader_details.end()) {
-      return pair->second;
+      return &pair->second;
     }
 
     auto [iterator, is_new] = shader_details.emplace(shader_hash, shader_hash);
-    return iterator->second;
+    return &iterator->second;
   }
 
   static ResourceViewDetails GetResourceViewDetails(reshade::api::resource_view resource_view, reshade::api::device* device) {
@@ -387,19 +386,19 @@ std::vector<std::pair<std::string, std::string>> setting_shader_defines;
 bool setting_shader_defines_changed = false;
 
 void OnInitDevice(reshade::api::device* device) {
-  auto& data = device->create_private_data<DeviceData>();
+  renodx::utils::data::Create<DeviceData>(device);
 }
 
 void OnDestroyDevice(reshade::api::device* device) {
-  device->destroy_private_data<DeviceData>();
+  renodx::utils::data::Delete<DeviceData>(device);
 }
 
 void OnInitCommandList(reshade::api::command_list* cmd_list) {
-  cmd_list->create_private_data<CommandListData>();
+  renodx::utils::data::Create<CommandListData>(cmd_list);
 }
 
 void OnDestroyCommandList(reshade::api::command_list* cmd_list) {
-  cmd_list->destroy_private_data<CommandListData>();
+  renodx::utils::data::Delete<CommandListData>(cmd_list);
 }
 
 void OnInitPipelineLayout(
@@ -407,12 +406,12 @@ void OnInitPipelineLayout(
     const uint32_t param_count,
     const reshade::api::pipeline_layout_param* params,
     reshade::api::pipeline_layout layout) {
-  auto& data = *renodx::utils::data::Get<DeviceData>(device);
-  const std::unique_lock lock(data.mutex);
+  auto* data = renodx::utils::data::Get<DeviceData>(device);
+  const std::unique_lock lock(data->mutex);
   std::vector<reshade::api::pipeline_layout_param> cloned_params = {
       params, params + param_count};
 
-  data.pipeline_layout_params[layout.handle] = cloned_params;
+  data->pipeline_layout_params[layout.handle] = cloned_params;
 }
 
 bool has_fired_on_init_pipeline_track_addons = false;
@@ -425,13 +424,13 @@ void OnInitPipelineTrackAddons(
   if (has_fired_on_init_pipeline_track_addons) return;
   has_fired_on_init_pipeline_track_addons = true;
 
-  auto& data = *renodx::utils::data::Get<DeviceData>(device);
-  auto& shader_device_data = renodx::utils::shader::GetShaderDeviceData(device);
-  std::shared_lock shader_data_lock(shader_device_data.mutex);
-  for (const auto& [shader_hash, addon_data] : shader_device_data.runtime_replacements) {
-    auto& shader_details = data.GetShaderDetails(shader_hash);
-    shader_details.addon_shader = addon_data;
-    shader_details.shader_source = ShaderDetails::ShaderSource::ADDON_SHADER;
+  auto* data = renodx::utils::data::Get<DeviceData>(device);
+  auto* shader_device_data = renodx::utils::shader::GetShaderDeviceData(device);
+  std::shared_lock shader_data_lock(shader_device_data->mutex);
+  for (const auto& [shader_hash, addon_data] : shader_device_data->runtime_replacements) {
+    auto* shader_details = data->GetShaderDetails(shader_hash);
+    shader_details->addon_shader = addon_data;
+    shader_details->shader_source = ShaderDetails::ShaderSource::ADDON_SHADER;
   }
 }
 
@@ -443,18 +442,18 @@ void OnInitPipeline(
     reshade::api::pipeline pipeline) {
   if (pipeline.handle == 0u) return;
 
-  auto& data = *renodx::utils::data::Get<DeviceData>(device);
-  const std::unique_lock lock(data.mutex);
-  data.live_pipelines.emplace(pipeline.handle);
+  auto* data = renodx::utils::data::Get<DeviceData>(device);
+  const std::unique_lock lock(data->mutex);
+  data->live_pipelines.emplace(pipeline.handle);
 }
 
 void OnDestroyPipeline(
     reshade::api::device* device,
     reshade::api::pipeline pipeline) {
   if (pipeline.handle == 0u) return;
-  auto& data = *renodx::utils::data::Get<DeviceData>(device);
-  const std::unique_lock lock(data.mutex);
-  data.live_pipelines.erase(pipeline.handle);
+  auto* data = renodx::utils::data::Get<DeviceData>(device);
+  const std::unique_lock lock(data->mutex);
+  data->live_pipelines.erase(pipeline.handle);
 }
 
 void OnBindPipeline(
@@ -463,8 +462,8 @@ void OnBindPipeline(
     reshade::api::pipeline pipeline) {
   if (!is_snapshotting) return;
 
-  auto& cmd_list_data = *renodx::utils::data::Get<CommandListData>(cmd_list);
-  auto& details = cmd_list_data.GetCurrentDrawDetails();
+  auto* cmd_list_data = renodx::utils::data::Get<CommandListData>(cmd_list);
+  auto& details = cmd_list_data->GetCurrentDrawDetails();
 
   PipelineBindDetails bind_details = {
       .pipeline = pipeline,
@@ -472,7 +471,7 @@ void OnBindPipeline(
   };
 
   std::vector<uint32_t> added_shaders;
-  auto *shader_state = renodx::utils::shader::GetCurrentState(cmd_list);
+  auto* shader_state = renodx::utils::shader::GetCurrentState(cmd_list);
   for (auto compatible_stage : renodx::utils::shader::COMPATIBLE_STAGES) {
     if (renodx::utils::bitwise::HasFlag(stage, compatible_stage)) {
       if (pipeline.handle == 0u) {
@@ -490,15 +489,15 @@ void OnBindPipeline(
 
   auto* device = cmd_list->get_device();
 
-  auto& device_data = device->get_private_data<DeviceData>();
-  std::unique_lock lock(device_data.mutex);
+  auto* device_data = renodx::utils::data::Get<DeviceData>(device);
+  std::unique_lock lock(device_data->mutex);
 
   for (const auto shader_hash : added_shaders) {
     if (shader_hash == 0u) continue;
-    auto& shader_details = device_data.GetShaderDetails(shader_hash);
-    if (static_cast<uint32_t>(shader_details.shader_type) != 0u) continue;
-    if (!shader_details.program_version.has_value()) {
-      if (shader_details.shader_data.empty()) {
+    auto* shader_details = device_data->GetShaderDetails(shader_hash);
+    if (static_cast<uint32_t>(shader_details->shader_type) != 0u) continue;
+    if (!shader_details->program_version.has_value()) {
+      if (shader_details->shader_data.empty()) {
         try {
           auto* pipeline_details = renodx::utils::shader::GetPipelineShaderDetails(pipeline);
           if (pipeline_details == nullptr) return;
@@ -507,30 +506,30 @@ void OnBindPipeline(
           if (!shader_data.has_value()) {
             throw std::exception("Failed to get shader data");
           }
-          shader_details.shader_data = shader_data.value();
+          shader_details->shader_data = shader_data.value();
         } catch (const std::exception& e) {
           reshade::log::message(reshade::log::level::error, e.what());
         }
       }
       if (renodx::utils::device::IsDirectX(device)) {
         try {
-          shader_details.program_version = renodx::utils::shader::compiler::directx::DecodeShaderVersion(shader_details.shader_data);
+          shader_details->program_version = renodx::utils::shader::compiler::directx::DecodeShaderVersion(shader_details->shader_data);
         } catch (const std::exception& e) {
           reshade::log::message(reshade::log::level::error, e.what());
         }
       }
     }
 
-    if (shader_details.program_version.has_value()) {
-      switch (shader_details.program_version->GetKind()) {
+    if (shader_details->program_version.has_value()) {
+      switch (shader_details->program_version->GetKind()) {
         case D3D11_SHVER_VERTEX_SHADER:
-          shader_details.shader_type = reshade::api::pipeline_stage::vertex_shader;
+          shader_details->shader_type = reshade::api::pipeline_stage::vertex_shader;
           break;
         case D3D11_SHVER_PIXEL_SHADER:
-          shader_details.shader_type = reshade::api::pipeline_stage::pixel_shader;
+          shader_details->shader_type = reshade::api::pipeline_stage::pixel_shader;
           break;
         case D3D11_SHVER_COMPUTE_SHADER:
-          shader_details.shader_type = reshade::api::pipeline_stage::compute_shader;
+          shader_details->shader_type = reshade::api::pipeline_stage::compute_shader;
           break;
         default:
           break;
@@ -540,7 +539,7 @@ void OnBindPipeline(
         case reshade::api::pipeline_stage::vertex_shader:
         case reshade::api::pipeline_stage::pixel_shader:
         case reshade::api::pipeline_stage::compute_shader:
-          shader_details.shader_type = stage;
+          shader_details->shader_type = stage;
         default:
           break;
       }
@@ -555,18 +554,18 @@ void OnPushDescriptors(
     uint32_t layout_param,
     const reshade::api::descriptor_table_update& update) {
   if (!is_snapshotting) return;
-  auto& data = cmd_list->get_private_data<CommandListData>();
-  auto& details = data.GetCurrentDrawDetails();
+  auto* data = renodx::utils::data::Get<CommandListData>(cmd_list);
+  auto& details = data->GetCurrentDrawDetails();
   auto* device = cmd_list->get_device();
-  auto& device_data = device->get_private_data<DeviceData>();
-  std::unique_lock lock(device_data.mutex);
+  auto* device_data = renodx::utils::data::Get<DeviceData>(device);
+  std::unique_lock lock(device_data->mutex);
 
   auto log_resource_view = [&](uint32_t index,
                                reshade::api::resource_view view,
                                std::map<std::pair<uint32_t, uint32_t>,
                                         ResourceViewDetails>& destination) {
-    auto pair = device_data.pipeline_layout_params.find(layout.handle);
-    if (pair == device_data.pipeline_layout_params.end()) {
+    auto pair = device_data->pipeline_layout_params.find(layout.handle);
+    if (pair == device_data->pipeline_layout_params.end()) {
       reshade::log::message(reshade::log::level::error, "Could not find handle.");
       // add warning
       return;
@@ -630,8 +629,8 @@ void OnPushDescriptors(
         break;
       }
       case reshade::api::descriptor_type::constant_buffer: {
-        auto pair = device_data.pipeline_layout_params.find(layout.handle);
-        if (pair == device_data.pipeline_layout_params.end()) {
+        auto pair = device_data->pipeline_layout_params.find(layout.handle);
+        if (pair == device_data->pipeline_layout_params.end()) {
           reshade::log::message(reshade::log::level::error, "Could not find handle.");
           // add warning
           return;
@@ -683,8 +682,8 @@ bool OnDraw(reshade::api::command_list* cmd_list, DrawDetails::DrawMethods draw_
   }
 
   if (is_snapshotting) {
-    auto& command_list_data = cmd_list->get_private_data<CommandListData>();
-    auto& draw_details = command_list_data.GetCurrentDrawDetails();
+    auto* command_list_data = renodx::utils::data::Get<CommandListData>(cmd_list);
+    auto& draw_details = command_list_data->GetCurrentDrawDetails();
     draw_details.draw_method = draw_method;
 
     std::unique_lock lock(device_data->mutex);
@@ -698,7 +697,7 @@ bool OnDraw(reshade::api::command_list* cmd_list, DrawDetails::DrawMethods draw_
 
       const auto& info = *layout_data;
       auto param_count = info.params.size();
-      auto& descriptor_data = device->get_private_data<renodx::utils::descriptor::DeviceData>();
+      auto* descriptor_data = renodx::utils::data::Get<renodx::utils::descriptor::DeviceData>(device);
       for (auto param_index = 0; param_index < param_count; ++param_index) {
         const auto& param = info.params.at(param_index);
 
@@ -752,11 +751,11 @@ bool OnDraw(reshade::api::command_list* cmd_list, DrawDetails::DrawMethods draw_
           uint32_t base_offset = 0;
           reshade::api::descriptor_heap heap = {0};
           device->get_descriptor_heap_offset(table, range.binding, 0, &heap, &base_offset);
-          const std::shared_lock descriptor_lock(descriptor_data.mutex);
+          const std::shared_lock descriptor_lock(descriptor_data->mutex);
 
           for (uint32_t k = 0; k < range.count; ++k) {
-            auto heap_pair = descriptor_data.heaps.find(heap.handle);
-            if (heap_pair == descriptor_data.heaps.end()) {
+            auto heap_pair = descriptor_data->heaps.find(heap.handle);
+            if (heap_pair == descriptor_data->heaps.end()) {
               // Unknown heap?
               continue;
             }
@@ -766,8 +765,8 @@ bool OnDraw(reshade::api::command_list* cmd_list, DrawDetails::DrawMethods draw_
               // Invalid location (may be oversized bind)
               continue;
             }
-            auto known_pair = descriptor_data.resource_view_heap_locations.find(heap.handle);
-            if (known_pair == descriptor_data.resource_view_heap_locations.end()) continue;
+            auto known_pair = descriptor_data->resource_view_heap_locations.find(heap.handle);
+            if (known_pair == descriptor_data->resource_view_heap_locations.end()) continue;
             auto& known = known_pair->second;
             if (!known.contains(offset)) {
               // Unknown Resource View
@@ -839,8 +838,8 @@ bool OnDraw(reshade::api::command_list* cmd_list, DrawDetails::DrawMethods draw_
       }
     }
 
-    device_data->command_list_data.push_back(command_list_data);
-    command_list_data.draw_details.clear();
+    device_data->command_list_data.push_back(*command_list_data);
+    command_list_data->draw_details.clear();
   }
 
   return bypass_draw;
@@ -887,7 +886,7 @@ void ActivateShader(reshade::api::device* device, uint32_t shader_hash, std::vec
   renodx::utils::shader::AddRuntimeReplacement(device, shader_hash, shader_data);
 }
 
-void LoadDiskShaders(reshade::api::device* device, DeviceData& data, bool activate = true) {
+void LoadDiskShaders(reshade::api::device* device, DeviceData* data, bool activate = true) {
   if (setting_live_reload) {
     if (!renodx::utils::shader::compiler::watcher::HasChanged()) return;
   } else {
@@ -896,11 +895,11 @@ void LoadDiskShaders(reshade::api::device* device, DeviceData& data, bool activa
   auto new_shaders = renodx::utils::shader::compiler::watcher::FlushCompiledShaders();
   for (auto& [shader_hash, custom_shader] : new_shaders) {
     reshade::log::message(reshade::log::level::debug, "new shaders");
-    auto& details = data.GetShaderDetails(shader_hash);
-    details.disk_shader = custom_shader;
+    auto* details = data->GetShaderDetails(shader_hash);
+    details->disk_shader = custom_shader;
 
     if (activate) {
-      details.shader_source = ShaderDetails::ShaderSource::DISK_SHADER;
+      details->shader_source = ShaderDetails::ShaderSource::DISK_SHADER;
       DeactivateShader(device, shader_hash);
 
       if (!custom_shader.removed && custom_shader.IsCompilationOK()) {
@@ -933,11 +932,11 @@ void RenderFileAlias(std::optional<renodx::utils::shader::compiler::watcher::Cus
   }
 }
 
-void RenderMenuBar(reshade::api::device* device, DeviceData& data) {
+void RenderMenuBar(reshade::api::device* device, DeviceData* data) {
   if (ImGui::BeginMenuBar()) {
     ImGui::PushID("##SnapshotButton");
     if (ImGui::MenuItem("Snapshot")) {
-      data.StartSnapshot();
+      data->StartSnapshot();
       renodx::utils::trace::trace_running = true;
     }
     ImGui::PopID();
@@ -981,7 +980,7 @@ void RenderMenuBar(reshade::api::device* device, DeviceData& data) {
   }
 }
 
-void RenderNavRail(reshade::api::device* device, DeviceData& data) {
+void RenderNavRail(reshade::api::device* device, DeviceData* data) {
   if (ImGui::BeginChild("##NavRail", ImVec2(SETTING_NAV_RAIL_SIZE, 0))) {
     for (auto i = 0; i < SETTING_NAV_TITLES.size(); ++i) {
       auto* font = ImGui::GetFont();
@@ -1024,7 +1023,7 @@ enum CapturePaneColumns : uint8_t {
   CAPTURE_PANE_COLUMN_COUNT
 };
 
-void RenderCapturePane(reshade::api::device* device, DeviceData& data) {
+void RenderCapturePane(reshade::api::device* device, DeviceData* data) {
   static ImGuiTreeNodeFlags tree_node_flags = ImGuiTreeNodeFlags_SpanAllColumns | ImGuiTreeNodeFlags_SpanFullWidth;
   if (ImGui::BeginTable(
           "##SnapshotTree",
@@ -1041,7 +1040,7 @@ void RenderCapturePane(reshade::api::device* device, DeviceData& data) {
 
     uint32_t row_index = 0x2000;
     int draw_index = 0;
-    for (auto& command_list_data : data.command_list_data) {
+    for (auto& command_list_data : data->command_list_data) {
       for (auto& draw_details : command_list_data.draw_details) {
         ImGui::TableNextRow();
         bool draw_node_open = false;
@@ -1099,7 +1098,7 @@ void RenderCapturePane(reshade::api::device* device, DeviceData& data) {
         }
 
         for (const auto& pipeline_bind : draw_details.pipeline_binds) {
-          auto& shader_device_data = renodx::utils::shader::GetShaderDeviceData(device);
+          auto* shader_device_data = renodx::utils::shader::GetShaderDeviceData(device);
 
           auto* pipeline_details_ptr = renodx::utils::shader::GetPipelineShaderDetails(pipeline_bind.pipeline);
           if (pipeline_details_ptr == nullptr) continue;
@@ -1108,7 +1107,7 @@ void RenderCapturePane(reshade::api::device* device, DeviceData& data) {
 
           if (!pipeline_details.tag.has_value()) {
             pipeline_details.tag = "";
-            if (data.live_pipelines.contains(pipeline_bind.pipeline.handle)) {
+            if (data->live_pipelines.contains(pipeline_bind.pipeline.handle)) {
               auto result = renodx::utils::trace::GetDebugName(device->get_api(), pipeline_bind.pipeline);
               if (result.has_value()) {
                 pipeline_details.tag = result.value();
@@ -1117,8 +1116,8 @@ void RenderCapturePane(reshade::api::device* device, DeviceData& data) {
           }
 
           for (const auto& shader_hash : pipeline_bind.shader_hashes) {
-            auto& shader_details = data.GetShaderDetails(shader_hash);
-            switch (shader_details.shader_type) {
+            auto* shader_details = data->GetShaderDetails(shader_hash);
+            switch (shader_details->shader_type) {
               case reshade::api::pipeline_stage::vertex_shader:
                 if (!snapshot_pane_show_vertex_shaders) continue;
                 break;
@@ -1146,14 +1145,14 @@ void RenderCapturePane(reshade::api::device* device, DeviceData& data) {
               // Fallback to subobject
               if ((ImGui::TableSetColumnIndex(CAPTURE_PANE_COLUMN_TYPE))) {
                 ImGui::PushID(row_index);
-                if (shader_details.program_version.has_value()) {
+                if (shader_details->program_version.has_value()) {
                   ImGui::TreeNodeEx("", bullet_flags, "%s_%d_%d",
-                                    shader_details.program_version->GetKindAbbr(),
-                                    shader_details.program_version->GetMajor(),
-                                    shader_details.program_version->GetMinor());
+                                    shader_details->program_version->GetKindAbbr(),
+                                    shader_details->program_version->GetMajor(),
+                                    shader_details->program_version->GetMinor());
                 } else {
                   std::stringstream s;
-                  s << shader_details.shader_type;
+                  s << shader_details->shader_type;
                   ImGui::TreeNodeEx("", bullet_flags, "%s", s.str().c_str());
                 }
                 ImGui::PopID();
@@ -1170,7 +1169,7 @@ void RenderCapturePane(reshade::api::device* device, DeviceData& data) {
               }
 
               if ((ImGui::TableSetColumnIndex(CAPTURE_PANE_COLUMN_INFO))) {
-                RenderFileAlias(shader_details.disk_shader);
+                RenderFileAlias(shader_details->disk_shader);
               }
 
               if ((ImGui::TableSetColumnIndex(CAPTURE_PANE_COLUMN_REFLECTION))) {
@@ -1497,7 +1496,7 @@ enum ShaderPaneColumns : uint8_t {
   SHADER_PANE_COLUMN_COUNT
 };
 
-void RenderShadersPane(reshade::api::device* device, DeviceData& data) {
+void RenderShadersPane(reshade::api::device* device, DeviceData* data) {
   static ImGuiTreeNodeFlags tree_node_flags = ImGuiTreeNodeFlags_SpanAllColumns | ImGuiTreeNodeFlags_SpanFullWidth;
 
   if (ImGui::BeginTable(
@@ -1520,9 +1519,9 @@ void RenderShadersPane(reshade::api::device* device, DeviceData& data) {
 
     std::unordered_set<uint32_t> drawn_hashes;
 
-    auto draw_row = [&](ShaderDetails& shader_details, int snapshot_index = -1) {
-      if (drawn_hashes.contains(shader_details.shader_hash)) return;
-      switch (shader_details.shader_type) {
+    auto draw_row = [&](ShaderDetails* shader_details, int snapshot_index = -1) {
+      if (drawn_hashes.contains(shader_details->shader_hash)) return;
+      switch (shader_details->shader_type) {
         case reshade::api::pipeline_stage::vertex_shader:
           if (!shaders_pane_show_vertex_shaders) return;
           break;
@@ -1535,7 +1534,7 @@ void RenderShadersPane(reshade::api::device* device, DeviceData& data) {
         default:
           break;
       }
-      SettingSelection search = {.shader_hash = shader_details.shader_hash};
+      SettingSelection search = {.shader_hash = shader_details->shader_hash};
       auto& selection = GetSelection(search);
 
       // Undocumented ImGui Combo height
@@ -1551,7 +1550,7 @@ void RenderShadersPane(reshade::api::device* device, DeviceData& data) {
 
         ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0, 0.5f));
         if (ImGui::Selectable(
-                std::format("0x{:08x}", shader_details.shader_hash).c_str(),
+                std::format("0x{:08x}", shader_details->shader_hash).c_str(),
                 selection.is_current,
                 ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap,
                 ImVec2(0, selectable_height))) {
@@ -1565,20 +1564,20 @@ void RenderShadersPane(reshade::api::device* device, DeviceData& data) {
       if (ImGui::TableSetColumnIndex(SHADER_PANE_COLUMN_ALIAS)) {
         ImGui::PushID(cell_index_id++);
         ImGui::AlignTextToFramePadding();
-        RenderFileAlias(shader_details.disk_shader);
+        RenderFileAlias(shader_details->disk_shader);
         ImGui::PopID();
       }
 
       if (ImGui::TableSetColumnIndex(SHADER_PANE_COLUMN_TYPE)) {
         ImGui::PushID(cell_index_id++);
-        if (shader_details.program_version.has_value()) {
+        if (shader_details->program_version.has_value()) {
           ImGui::Text("%s_%d_%d",
-                      shader_details.program_version->GetKindAbbr(),
-                      shader_details.program_version->GetMajor(),
-                      shader_details.program_version->GetMinor());
+                      shader_details->program_version->GetKindAbbr(),
+                      shader_details->program_version->GetMajor(),
+                      shader_details->program_version->GetMinor());
         } else {
           std::stringstream s;
-          s << shader_details.shader_type;
+          s << shader_details->shader_type;
           ImGui::TextUnformatted(s.str().c_str());
         }
         ImGui::PopID();
@@ -1587,28 +1586,28 @@ void RenderShadersPane(reshade::api::device* device, DeviceData& data) {
       if (ImGui::TableSetColumnIndex(SHADER_PANE_COLUMN_SOURCE)) {  // Source
         ImGui::PushID(cell_index_id++);
         ImGui::SetNextItemWidth(ImGui::GetColumnWidth(2));
-        if (shader_details.shader_source == ShaderDetails::ShaderSource::ORIGINAL_SHADER
-            && shader_details.addon_shader.empty() && !shader_details.disk_shader.has_value()) {
+        if (shader_details->shader_source == ShaderDetails::ShaderSource::ORIGINAL_SHADER
+            && shader_details->addon_shader.empty() && !shader_details->disk_shader.has_value()) {
           ImGui::TextDisabled("%s", ShaderDetails::SHADER_SOURCE_NAMES[0]);
         } else {
           if (ImGui::BeginCombo(
                   "",
-                  ShaderDetails::SHADER_SOURCE_NAMES[static_cast<int>(shader_details.shader_source)],
+                  ShaderDetails::SHADER_SOURCE_NAMES[static_cast<int>(shader_details->shader_source)],
                   ImGuiComboFlags_None)) {
             for (int i = 0; i < IM_ARRAYSIZE(ShaderDetails::SHADER_SOURCE_NAMES); ++i) {
-              const bool is_selected = (i == static_cast<int>(shader_details.shader_source));
+              const bool is_selected = (i == static_cast<int>(shader_details->shader_source));
 
               ImGui::BeginDisabled(
-                  (i == 1 && shader_details.addon_shader.empty())
-                  || (i == 2 && (!shader_details.disk_shader.has_value() || !shader_details.disk_shader->IsCompilationOK())));
+                  (i == 1 && shader_details->addon_shader.empty())
+                  || (i == 2 && (!shader_details->disk_shader.has_value() || !shader_details->disk_shader->IsCompilationOK())));
               if (ImGui::Selectable(ShaderDetails::SHADER_SOURCE_NAMES[i], is_selected)) {
-                shader_details.shader_source = static_cast<ShaderDetails::ShaderSource>(i);
-                DeactivateShader(device, shader_details.shader_hash);
+                shader_details->shader_source = static_cast<ShaderDetails::ShaderSource>(i);
+                DeactivateShader(device, shader_details->shader_hash);
                 if (i == 1) {
-                  ActivateShader(device, shader_details.shader_hash, shader_details.addon_shader);
+                  ActivateShader(device, shader_details->shader_hash, shader_details->addon_shader);
                 } else if (i == 2) {
-                  auto shader_data = shader_details.disk_shader->GetCompilationData();
-                  ActivateShader(device, shader_details.shader_hash, shader_data);
+                  auto shader_data = shader_details->disk_shader->GetCompilationData();
+                  ActivateShader(device, shader_details->shader_hash, shader_data);
                 }
               }
               if (is_selected) {
@@ -1627,7 +1626,7 @@ void RenderShadersPane(reshade::api::device* device, DeviceData& data) {
         ImGui::PushID(cell_index_id++);
 
         auto color_vec4 = ImGui::GetStyleColorVec4(ImGuiCol_Button);
-        if (shader_details.bypass_draw) {
+        if (shader_details->bypass_draw) {
           color_vec4 = {.5, .5, .5, color_vec4.w};
         }
         ImGui::PushStyleColor(ImGuiCol_Button, color_vec4);
@@ -1639,22 +1638,22 @@ void RenderShadersPane(reshade::api::device* device, DeviceData& data) {
                           })
                           + (ImGui::GetStyle().FramePadding.x * 2);
         if (ImGui::Button("Draw", {text_size, 0})) {
-          shader_details.bypass_draw = !shader_details.bypass_draw;
+          shader_details->bypass_draw = !shader_details->bypass_draw;
         }
         ImGui::PopStyleColor();
 
         ImGui::SameLine();
 
         if (ImGui::Button("Dump", {text_size, 0})) {
-          renodx::utils::shader::dump::DumpShader(shader_details.shader_hash, shader_details.shader_data);
+          renodx::utils::shader::dump::DumpShader(shader_details->shader_hash, shader_details->shader_data);
         }
 
-        ImGui::BeginDisabled(!shader_details.disk_shader.has_value());
+        ImGui::BeginDisabled(!shader_details->disk_shader.has_value());
         ImGui::SameLine();
         if (ImGui::Button("Edit", {text_size, 0})) {
-          if (shader_details.disk_shader.has_value()) {
-            if (!shader_details.disk_shader->file_path.empty()) {
-              ShellExecute(0, "open", shader_details.disk_shader->file_path.string().c_str(), 0, 0, SW_SHOW);
+          if (shader_details->disk_shader.has_value()) {
+            if (!shader_details->disk_shader->file_path.empty()) {
+              ShellExecute(0, "open", shader_details->disk_shader->file_path.string().c_str(), 0, 0, SW_SHOW);
             }
           }
         }
@@ -1672,15 +1671,15 @@ void RenderShadersPane(reshade::api::device* device, DeviceData& data) {
         }
         ImGui::PopID();
       }
-      drawn_hashes.emplace(shader_details.shader_hash);
+      drawn_hashes.emplace(shader_details->shader_hash);
     };
 
-    for (auto& command_list_data : data.command_list_data) {
+    for (auto& command_list_data : data->command_list_data) {
       for (auto& draw_details : command_list_data.draw_details) {
         for (const auto& pipeline_bind : draw_details.pipeline_binds) {
           for (const auto& shader_hash : pipeline_bind.shader_hashes) {
             if (shader_hash == 0u) continue;
-            auto& shader_details = data.GetShaderDetails(shader_hash);
+            auto* shader_details = data->GetShaderDetails(shader_hash);
             draw_row(shader_details, current_snapshot_index);
           }
         }
@@ -1688,15 +1687,15 @@ void RenderShadersPane(reshade::api::device* device, DeviceData& data) {
       }
     }
 
-    for (auto& [shader_hash, shader_details] : data.shader_details) {
-      draw_row(shader_details);
+    for (auto& [shader_hash, shader_details] : data->shader_details) {
+      draw_row(&shader_details);
     }
 
     ImGui::EndTable();
   }  // ShadersPaneTable
 }
 
-void RenderShaderDefinesPane(reshade::api::device* device, DeviceData& data) {
+void RenderShaderDefinesPane(reshade::api::device* device, DeviceData* data) {
   static ImGuiTreeNodeFlags tree_node_flags = ImGuiTreeNodeFlags_SpanAllColumns | ImGuiTreeNodeFlags_SpanFullWidth;
   if (ImGui::BeginTable(
           "##ShaderDefinesTable",
@@ -1793,14 +1792,14 @@ void DrawSettingBoolCheckbox(reshade::api::effect_runtime* runtime, const char* 
   ImGui::PopID();
 }
 
-void RenderSettingsPane(reshade::api::device* device, DeviceData& data) {
+void RenderSettingsPane(reshade::api::device* device, DeviceData* data) {
   {
     ImGui::SeparatorText("Snapshot");
 
-    DrawSettingBoolCheckbox(data.runtime, "Show Vertex Shaders", "SnapshotPaneShowVertexShaders", &snapshot_pane_show_vertex_shaders);
-    DrawSettingBoolCheckbox(data.runtime, "Show Pixel Shaders", "SnapshotPaneShowPixelShaders", &snapshot_pane_show_pixel_shaders);
-    DrawSettingBoolCheckbox(data.runtime, "Show Compute Shaders", "SnapshotPaneShowComputeShaders", &snapshot_pane_show_compute_shaders);
-    DrawSettingBoolCheckbox(data.runtime, "Show Blends", "SnapshotPaneShowBlends", &snapshot_pane_show_blends);
+    DrawSettingBoolCheckbox(data->runtime, "Show Vertex Shaders", "SnapshotPaneShowVertexShaders", &snapshot_pane_show_vertex_shaders);
+    DrawSettingBoolCheckbox(data->runtime, "Show Pixel Shaders", "SnapshotPaneShowPixelShaders", &snapshot_pane_show_pixel_shaders);
+    DrawSettingBoolCheckbox(data->runtime, "Show Compute Shaders", "SnapshotPaneShowComputeShaders", &snapshot_pane_show_compute_shaders);
+    DrawSettingBoolCheckbox(data->runtime, "Show Blends", "SnapshotPaneShowBlends", &snapshot_pane_show_blends);
   }
 
   {
@@ -1816,35 +1815,35 @@ void RenderSettingsPane(reshade::api::device* device, DeviceData& data) {
       }
 
       renodx::utils::shader::compiler::watcher::SetLivePath(temp_string);
-      reshade::set_config_value(data.runtime, "renodx-dev", "LivePath", temp_string.c_str());
+      reshade::set_config_value(data->runtime, "renodx-dev", "LivePath", temp_string.c_str());
     }
 
-    DrawSettingBoolCheckbox(data.runtime, "Show Vertex Shaders", "ShadersPaneShowVertexShaders", &shaders_pane_show_vertex_shaders);
-    DrawSettingBoolCheckbox(data.runtime, "Show Pixel Shaders", "ShadersPaneShowPixelShaders", &shaders_pane_show_pixel_shaders);
-    DrawSettingBoolCheckbox(data.runtime, "Show Compute Shaders", "ShadersPaneShowComputeShaders", &shaders_pane_show_compute_shaders);
+    DrawSettingBoolCheckbox(data->runtime, "Show Vertex Shaders", "ShadersPaneShowVertexShaders", &shaders_pane_show_vertex_shaders);
+    DrawSettingBoolCheckbox(data->runtime, "Show Pixel Shaders", "ShadersPaneShowPixelShaders", &shaders_pane_show_pixel_shaders);
+    DrawSettingBoolCheckbox(data->runtime, "Show Compute Shaders", "ShadersPaneShowComputeShaders", &shaders_pane_show_compute_shaders);
   }
 
   {
     ImGui::SeparatorText("Trace");
-    DrawSettingBoolCheckbox(data.runtime, "Trace Pipeline Creation", "TracePipelineCreation", &renodx::utils::trace::trace_pipeline_creation);
-    DrawSettingBoolCheckbox(data.runtime, "Trace Descriptor Tables", "TraceDescriptorTables", &renodx::utils::descriptor::trace_descriptor_tables);
+    DrawSettingBoolCheckbox(data->runtime, "Trace Pipeline Creation", "TracePipelineCreation", &renodx::utils::trace::trace_pipeline_creation);
+    DrawSettingBoolCheckbox(data->runtime, "Trace Descriptor Tables", "TraceDescriptorTables", &renodx::utils::descriptor::trace_descriptor_tables);
   }
 }
 
-void RenderShaderViewDisassembly(reshade::api::device* device, DeviceData& data, ShaderDetails& shader_details) {
+void RenderShaderViewDisassembly(reshade::api::device* device, DeviceData* data, ShaderDetails* shader_details) {
   std::string disassembly_string;
   bool failed = false;
-  if (std::holds_alternative<std::nullopt_t>(shader_details.disassembly)) {
+  if (std::holds_alternative<std::nullopt_t>(shader_details->disassembly)) {
     // Never disassembled
     try {
-      if (shader_details.shader_data.empty()) {
+      if (shader_details->shader_data.empty()) {
         reshade::api::pipeline pipeline = {0};
         {
           // Get pipeline handle
-          auto& shader_device_data = renodx::utils::shader::GetShaderDeviceData(device);
-          std::shared_lock lock(shader_device_data.mutex);
-          auto pair = shader_device_data.shader_pipeline_handles.find(shader_details.shader_hash);
-          if (pair == shader_device_data.shader_pipeline_handles.end()) {
+          auto* shader_device_data = renodx::utils::shader::GetShaderDeviceData(device);
+          std::shared_lock lock(shader_device_data->mutex);
+          auto pair = shader_device_data->shader_pipeline_handles.find(shader_details->shader_hash);
+          if (pair == shader_device_data->shader_pipeline_handles.end()) {
             throw std::exception("Shader data not found.");
           }
           auto& pipeline_handles = pair->second;
@@ -1852,23 +1851,23 @@ void RenderShaderViewDisassembly(reshade::api::device* device, DeviceData& data,
           pipeline = {*(pipeline_handles.begin())};
         }
 
-        auto shader_data = renodx::utils::shader::GetShaderData(pipeline, shader_details.shader_hash);
+        auto shader_data = renodx::utils::shader::GetShaderData(pipeline, shader_details->shader_hash);
         if (!shader_data.has_value()) throw std::exception("Invalid shader selection");
-        shader_details.shader_data = shader_data.value();
+        shader_details->shader_data = shader_data.value();
       }
       if (renodx::utils::device::IsDirectX(device)) {
-        shader_details.disassembly = renodx::utils::shader::compiler::directx::DisassembleShader(shader_details.shader_data);
+        shader_details->disassembly = renodx::utils::shader::compiler::directx::DisassembleShader(shader_details->shader_data);
       }
     } catch (std::exception& e) {
-      shader_details.disassembly = e;
+      shader_details->disassembly = e;
     }
   }
 
-  if (std::holds_alternative<std::exception>(shader_details.disassembly)) {
-    disassembly_string.assign(std::get<std::exception>(shader_details.disassembly).what());
+  if (std::holds_alternative<std::exception>(shader_details->disassembly)) {
+    disassembly_string.assign(std::get<std::exception>(shader_details->disassembly).what());
     failed = true;
-  } else if (std::holds_alternative<std::string>(shader_details.disassembly)) {
-    disassembly_string.assign(std::get<std::string>(shader_details.disassembly));
+  } else if (std::holds_alternative<std::string>(shader_details->disassembly)) {
+    disassembly_string.assign(std::get<std::string>(shader_details->disassembly));
   }
 
   if (failed) {
@@ -1885,15 +1884,15 @@ void RenderShaderViewDisassembly(reshade::api::device* device, DeviceData& data,
   }
 }
 
-void RenderShaderViewLive(reshade::api::device* device, DeviceData& data, ShaderDetails& shader_details) {
+void RenderShaderViewLive(reshade::api::device* device, DeviceData* data, ShaderDetails* shader_details) {
   std::string live_string;
   bool failed = false;
-  if (shader_details.disk_shader.has_value()) {
-    if (!shader_details.disk_shader->IsCompilationOK()) {
-      live_string = shader_details.disk_shader->GetCompilationException().what();
-    } else if (shader_details.disk_shader->is_hlsl) {
+  if (shader_details->disk_shader.has_value()) {
+    if (!shader_details->disk_shader->IsCompilationOK()) {
+      live_string = shader_details->disk_shader->GetCompilationException().what();
+    } else if (shader_details->disk_shader->is_hlsl) {
       try {
-        live_string = renodx::utils::path::ReadTextFile(shader_details.disk_shader->file_path);
+        live_string = renodx::utils::path::ReadTextFile(shader_details->disk_shader->file_path);
       } catch (std::exception& e) {
         live_string = e.what();
         failed = true;
@@ -1904,7 +1903,7 @@ void RenderShaderViewLive(reshade::api::device* device, DeviceData& data, Shader
     ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(192, 0, 0, 255));
   }
   ImGui::InputTextMultiline(
-      std::format("##shader_view_live_0x{:08x}", shader_details.shader_hash).c_str(),
+      std::format("##shader_view_live_0x{:08x}", shader_details->shader_hash).c_str(),
       const_cast<char*>(live_string.c_str()),
       live_string.length(),
       ImVec2(-4, -4),
@@ -1914,20 +1913,20 @@ void RenderShaderViewLive(reshade::api::device* device, DeviceData& data, Shader
   }
 }
 
-void RenderShaderViewDecompilation(reshade::api::device* device, DeviceData& data, ShaderDetails& shader_details) {
+void RenderShaderViewDecompilation(reshade::api::device* device, DeviceData* data, ShaderDetails* shader_details) {
   std::string decompilation_string;
   bool failed = false;
-  if (std::holds_alternative<std::nullopt_t>(shader_details.decompilation)) {
+  if (std::holds_alternative<std::nullopt_t>(shader_details->decompilation)) {
     // Never disassembled
     try {
-      if (shader_details.shader_data.empty()) {
+      if (shader_details->shader_data.empty()) {
         reshade::api::pipeline pipeline = {0};
         {
           // Get pipeline handle
-          auto& shader_device_data = renodx::utils::shader::GetShaderDeviceData(device);
-          std::shared_lock lock(shader_device_data.mutex);
-          auto pair = shader_device_data.shader_pipeline_handles.find(shader_details.shader_hash);
-          if (pair == shader_device_data.shader_pipeline_handles.end()) {
+          auto* shader_device_data = renodx::utils::shader::GetShaderDeviceData(device);
+          std::shared_lock lock(shader_device_data->mutex);
+          auto pair = shader_device_data->shader_pipeline_handles.find(shader_details->shader_hash);
+          if (pair == shader_device_data->shader_pipeline_handles.end()) {
             throw std::exception("Shader data not found.");
           }
           auto& pipeline_handles = pair->second;
@@ -1935,29 +1934,29 @@ void RenderShaderViewDecompilation(reshade::api::device* device, DeviceData& dat
           pipeline = {*(pipeline_handles.begin())};
         }
 
-        auto shader_data = renodx::utils::shader::GetShaderData(pipeline, shader_details.shader_hash);
+        auto shader_data = renodx::utils::shader::GetShaderData(pipeline, shader_details->shader_hash);
         if (!shader_data.has_value()) throw std::exception("Invalid shader selection");
-        shader_details.shader_data = shader_data.value();
+        shader_details->shader_data = shader_data.value();
       }
       if (renodx::utils::device::IsDirectX(device)) {
         auto decompiler = renodx::utils::shader::decompiler::dxc::Decompiler();
-        auto disassembly_string = renodx::utils::shader::compiler::directx::DisassembleShader(shader_details.shader_data);
-        shader_details.decompilation = decompiler.Decompile(
+        auto disassembly_string = renodx::utils::shader::compiler::directx::DisassembleShader(shader_details->shader_data);
+        shader_details->decompilation = decompiler.Decompile(
             disassembly_string,
             {
                 .flatten = true,
             });
       }
     } catch (std::exception& e) {
-      shader_details.decompilation = e;
+      shader_details->decompilation = e;
     }
   }
 
-  if (std::holds_alternative<std::exception>(shader_details.decompilation)) {
-    decompilation_string.assign(std::get<std::exception>(shader_details.decompilation).what());
+  if (std::holds_alternative<std::exception>(shader_details->decompilation)) {
+    decompilation_string.assign(std::get<std::exception>(shader_details->decompilation).what());
     failed = true;
-  } else if (std::holds_alternative<std::string>(shader_details.decompilation)) {
-    decompilation_string.assign(std::get<std::string>(shader_details.decompilation));
+  } else if (std::holds_alternative<std::string>(shader_details->decompilation)) {
+    decompilation_string.assign(std::get<std::string>(shader_details->decompilation));
   }
 
   if (failed) {
@@ -1975,7 +1974,7 @@ void RenderShaderViewDecompilation(reshade::api::device* device, DeviceData& dat
 }
 
 // Returns false selection is to be removed
-void RenderShaderView(reshade::api::device* device, DeviceData& data, SettingSelection& selection) {
+void RenderShaderView(reshade::api::device* device, DeviceData* data, SettingSelection& selection) {
   ImGui::PushID(std::format("##shader_view_tab_0x{:08x}", selection.shader_hash).c_str());
   auto style = ImGui::GetStyleColorVec4(ImGuiCol_Text);
   if (!selection.is_pinned) {
@@ -2002,7 +2001,7 @@ void RenderShaderView(reshade::api::device* device, DeviceData& data, SettingSel
     if (ImGui::BeginChild(
             std::format("##shader_view_tab_child_0x{:08x}", selection.shader_hash).c_str(),
             ImVec2(0, 0))) {
-      auto& shader_details = data.GetShaderDetails(selection.shader_hash);
+      auto* shader_details = data->GetShaderDetails(selection.shader_hash);
 
       switch (selection.shader_view) {
         case 0:
@@ -2023,7 +2022,7 @@ void RenderShaderView(reshade::api::device* device, DeviceData& data, SettingSel
 }
 
 // Returns false selection is to be removed
-void RenderResourceViewView(reshade::api::device* device, DeviceData& data, SettingSelection& selection) {
+void RenderResourceViewView(reshade::api::device* device, DeviceData* data, SettingSelection& selection) {
   ImGui::PushID(std::format("##resource_view_view_tab_0x{:08x}", selection.resource_view_handle).c_str());
   auto style = ImGui::GetStyleColorVec4(ImGuiCol_Text);
   if (!selection.is_pinned) {
@@ -2080,7 +2079,7 @@ void RenderResourceViewView(reshade::api::device* device, DeviceData& data, Sett
   }
 }
 
-void RenderConstantBufferView(reshade::api::device* device, DeviceData& data, SettingSelection& selection) {
+void RenderConstantBufferView(reshade::api::device* device, DeviceData* data, SettingSelection& selection) {
   ImGui::PushID(std::format("##constant_buffer_view_tab_0x{:08x}", selection.constant_buffer_handle).c_str());
   auto style = ImGui::GetStyleColorVec4(ImGuiCol_Text);
   if (!selection.is_pinned) {
@@ -2225,16 +2224,16 @@ void InitializeUserSettings(reshade::api::effect_runtime* runtime) {
 void OnRegisterOverlay(reshade::api::effect_runtime* runtime) {
   auto* device = runtime->get_device();
 
-  auto* data_ptr = renodx::utils::data::Get<DeviceData>(device);
+  auto* data = renodx::utils::data::Get<DeviceData>(device);
 
   // Runtime may be on a separate device
-  if (data_ptr == nullptr) return;
+  if (data == nullptr) return;
 
-  auto& data = *data_ptr;
+  
 
-  std::unique_lock lock(data.mutex);  // Probably not needed
-  if (data.runtime == nullptr) {
-    data.runtime = runtime;
+  std::unique_lock lock(data->mutex);  // Probably not needed
+  if (data->runtime == nullptr) {
+    data->runtime = runtime;
   }
   static auto setting_window_size = 0;
   static auto setting_side_sheet_width = 0;
@@ -2330,8 +2329,8 @@ void OnPresent(
       renodx::utils::shader::compiler::watcher::Start();
     }
     auto* device = swapchain->get_device();
-    auto& data = device->get_private_data<DeviceData>();
-    std::unique_lock lock(data.mutex);
+    auto* data = renodx::utils::data::Get<DeviceData>(device);
+    std::unique_lock lock(data->mutex);
     LoadDiskShaders(device, data, true);
   } else {
     if (renodx::utils::shader::compiler::watcher::IsEnabled()) {

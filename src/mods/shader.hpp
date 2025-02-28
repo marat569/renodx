@@ -50,11 +50,13 @@ struct CustomShader {
 
 using CustomShaders = std::unordered_map<uint32_t, CustomShader>;
 
+static std::function<bool(reshade::api::command_list*)> invoked_custom_swapchain_shader = nullptr;
+
 // clang-format off
 #define BypassShaderEntry(__crc32__)               {__crc32__, {.crc32 = __crc32__, .on_draw = &renodx::mods::shader::internal::OnBypassShaderDraw}}
 #define CustomShaderEntry(crc32)                   {crc32, {crc32, __##crc32}}
 #define CustomCountedShader(crc32, index)          {crc32, {crc32, __##crc32, ##index}}
-#define CustomSwapchainShader(crc32)               {crc32, {crc32, __##crc32, -1, &renodx::utils::swapchain::HasBackBufferRenderTarget}}
+#define CustomSwapchainShader(crc32)               {crc32, {crc32, __##crc32, -1, renodx::mods::shader::invoked_custom_swapchain_shader = &renodx::utils::swapchain::HasBackBufferRenderTarget}}
 #define CustomShaderEntryCallback(crc32, callback) {crc32, {crc32, __##crc32, -1, callback}}
 // clang-format on
 #define RENODX_JOIN_MACRO(x, y) x##y
@@ -697,7 +699,7 @@ inline bool HandleStatesAndBypass(
   auto& state = shader_state->stage_states[index];
   if (state.pipeline == 0u) return false;
 
-  const auto& shader_hash = renodx::utils::shader::GetCurrentShaderHash(shader_state, index);
+  const auto& shader_hash = renodx::utils::shader::GetCurrentShaderHash(&state, index);
   if (shader_hash == 0u) return false;
   auto custom_shader_info_pair = custom_shaders.find(shader_hash);
   bool is_custom_shader = custom_shader_info_pair != custom_shaders.end();
@@ -760,11 +762,9 @@ inline bool HandleStatesAndBypass(
     }
   }
 
+  bool should_inject = true;
   if (custom_shader_info.on_inject != nullptr) {
-    bool should_inject = custom_shader_info.on_inject(cmd_list);
-    if (!should_inject) {
-      // should_inject_cbuffer = false;
-    }
+    should_inject = custom_shader_info.on_inject(cmd_list);
   }
 
   if (custom_shader_info.on_drawn != nullptr) {
@@ -774,7 +774,7 @@ inline bool HandleStatesAndBypass(
   utils::shader::BuildReplacementPipeline(state.pipeline_details);
 
   // Perform Push
-  if (shader_injection_size != 0) {
+  if (shader_injection_size != 0 && should_inject) {
     if (state.pipeline_details->layout_data->injection_index == -1) {
 #ifdef DEBUG_LEVEL_1
       if (!state.pipeline_details->layout_data->failed_injection) {
@@ -886,7 +886,7 @@ inline bool OnDrawOrDispatchIndirect(
       {
         auto* cmd_list_data = renodx::utils::shader::GetCurrentState(cmd_list);
         auto shader_hash = renodx::utils::shader::GetCurrentComputeShaderHash(cmd_list_data);
-        is_dispatch = (shader_hash != 0U);
+        is_dispatch = (shader_hash != 0u);
       }
       break;
     }
@@ -946,7 +946,7 @@ template <typename T = float*>
 static void Use(DWORD fdw_reason, CustomShaders new_custom_shaders, T* new_injections = nullptr) {
   renodx::utils::shader::Use(fdw_reason);
   renodx::utils::resource::Use(fdw_reason);
-  if (trace_unmodified_shaders) {
+  if (trace_unmodified_shaders || invoked_custom_swapchain_shader != nullptr) {
     renodx::utils::swapchain::Use(fdw_reason);
   }
   renodx::utils::pipeline_layout::Use(fdw_reason);

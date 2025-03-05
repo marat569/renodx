@@ -38,6 +38,7 @@ namespace renodx::utils::shader {
 static bool use_replace_on_bind = true;
 static bool use_replace_async = false;
 static bool use_shader_cache = false;
+static bool initialized_device = false;
 static std::atomic_size_t runtime_replacement_count = 0;
 
 static bool is_primary_hook = false;
@@ -710,8 +711,16 @@ static bool OnCreatePipeline(
     uint32_t subobject_count,
     const reshade::api::pipeline_subobject* subobjects) {
   if (!is_primary_hook) return false;
-  if (use_replace_async) return false;
+  if (initialized_device) {
+    if (use_replace_async) return false;
+  }
   auto* data = renodx::utils::data::Get<DeviceData>(device);
+
+  if (!initialized_device) {
+    use_replace_async = data->use_replace_async;
+    use_shader_cache = data->use_shader_cache;
+    initialized_device = true;
+  }
   std::vector<std::pair<uint32_t, uint32_t>> hash_changes;
 
   {
@@ -796,7 +805,7 @@ static void OnInitPipeline(
   bool has_useful_details = !details.subobject_shaders.empty();
   if (!has_useful_details) return;
 
-  if (use_replace_async || use_shader_cache) {
+  if (data->use_replace_async || data->use_shader_cache) {
     reshade::api::pipeline_subobject* subobjects_clone = renodx::utils::pipeline::ClonePipelineSubObjects(subobjects, subobject_count);
 
     // Store clone of subobjects
@@ -811,7 +820,7 @@ static void OnInitPipeline(
     const std::unique_lock write_lock(store->pipeline_shader_details_mutex);
     store->pipeline_shader_details[pipeline.handle] = details;
 
-    if (use_replace_async) {
+    if (data->use_replace_async) {
       for (const auto shader_hash : details.shader_hashes) {
         if (auto pair = data->shader_pipeline_handles.find(shader_hash);
             pair != data->shader_pipeline_handles.end()) {

@@ -633,6 +633,7 @@ class Decompiler {
 
     enum class ResourceFormat {
       NA,
+      BYTE,
       F32,
       I32,
       U32,
@@ -672,6 +673,7 @@ class Decompiler {
 
     static ResourceFormat ResourceFormatFromString(std::string_view input) {
       if (input == "NA") return ResourceFormat::NA;
+      if (input == "byte") return ResourceFormat::BYTE;
       if (input == "f32") return ResourceFormat::F32;
       if (input == "i32") return ResourceFormat::I32;
       if (input == "u32") return ResourceFormat::U32;
@@ -792,10 +794,11 @@ class Decompiler {
         case ResourceKind::TextureCubeArray:
           return "TextureCubeArray";
         case ResourceKind::TypedBuffer:
-          return "Buffer";
           // return "TypedBuffer";
+          return "Buffer";
         case ResourceKind::RawBuffer:
-          return "RawBuffer";
+          // return "RawBuffer";
+          return "Buffer";
         case ResourceKind::StructuredBuffer:
           return "StructuredBuffer";
         case ResourceKind::CBuffer:
@@ -908,17 +911,23 @@ class Decompiler {
       FromStringView(ParseKeyValue(metadata[6])[1], shape);
       this->shape = static_cast<ResourceKind>(shape);
       FromStringView(ParseKeyValue(metadata[7])[1], this->sample_count);
-      auto pairs = raw_metadata[metadata[8]];
-      int type_value;
-      FromStringView(ParseKeyValue(pairs[0])[1], type_value);
-      if (type_value == 0) {
-        uint32_t element_type;
-        FromStringView(ParseKeyValue(pairs[1])[1], element_type);
-        this->element_type = static_cast<ComponentType>(element_type);
-      } else {
+      if (metadata[8] == "null") {
         this->element_type = Resource::ComponentType::Invalid;
-        FromStringView(ParseKeyValue(pairs[1])[1], this->stride);
-        this->data_type = std::format("_{}", this->name);
+        this->stride = 4;
+        this->data_type = "uint4";
+      } else {
+        auto pairs = raw_metadata[metadata[8]];
+        int type_value;
+        FromStringView(ParseKeyValue(pairs[0])[1], type_value);
+        if (type_value == 0) {
+          uint32_t element_type;
+          FromStringView(ParseKeyValue(pairs[1])[1], element_type);
+          this->element_type = static_cast<ComponentType>(element_type);
+        } else {
+          this->element_type = Resource::ComponentType::Invalid;
+          FromStringView(ParseKeyValue(pairs[1])[1], this->stride);
+          this->data_type = std::format("_{}", this->name);
+        }
       }
     }
   };
@@ -1716,18 +1725,48 @@ class Decompiler {
           auto [opNumber, srv, index, elementOffset, mask, alignment] = StringViewSplit<6>(functionParamsString, param_regex, 2);
           auto ref = std::string{srv.substr(1)};
           auto [res_name, range_index, resource_class] = preprocess_state.resource_binding_variables.at(ref);
+          bool is_raw_buffer = false;
+          if (resource_class == "0") {
+            is_raw_buffer = preprocess_state.srv_resources[range_index].shape == Resource::ResourceKind::RawBuffer;
+          } else if (resource_class == "1") {
+            is_raw_buffer = preprocess_state.uav_resources[range_index].shape == Resource::ResourceKind::RawBuffer;
+          } else {
+            throw std::invalid_argument("Unknown @dx.op.rawBufferLoad.i32 resource");
+          }
+
           assignment_type = "float4";
-          assignment_value = std::format("{}[{}].data[{} / {}]",
-                                         res_name, ParseInt(index),
-                                         ParseInt(elementOffset), ParseInt(alignment));
+          if (is_raw_buffer) {
+            assert(elementOffset == "undef");
+            assignment_value = std::format("{}[{} / {}]",
+                                           res_name, ParseInt(index), ParseInt(alignment));
+          } else {
+            assignment_value = std::format("{}[{}].data[{} / {}]",
+                                           res_name, ParseInt(index),
+                                           ParseInt(elementOffset), ParseInt(alignment));
+          }
         } else if (functionName == "@dx.op.rawBufferLoad.i32") {
           auto [opNumber, srv, index, elementOffset, mask, alignment] = StringViewSplit<6>(functionParamsString, param_regex, 2);
           auto ref = std::string{srv.substr(1)};
           auto [res_name, res_range_index, resource_class] = preprocess_state.resource_binding_variables.at(ref);
+          bool is_raw_buffer = false;
+          if (resource_class == "0") {
+            is_raw_buffer = preprocess_state.srv_resources[res_range_index].shape == Resource::ResourceKind::RawBuffer;
+          } else if (resource_class == "1") {
+            is_raw_buffer = preprocess_state.uav_resources[res_range_index].shape == Resource::ResourceKind::RawBuffer;
+          } else {
+            throw std::invalid_argument("Unknown @dx.op.rawBufferLoad.i32 resource");
+          }
+
           assignment_type = "int4";
-          assignment_value = std::format("asint({}[{}].data[{} / {}])",
-                                         res_name, ParseInt(index),
-                                         ParseInt(elementOffset), ParseInt(alignment));
+          if (is_raw_buffer) {
+            assert(elementOffset == "undef");
+            assignment_value = std::format("asint({}[{} / {}])",
+                                           res_name, ParseInt(index), ParseInt(alignment));
+          } else {
+            assignment_value = std::format("asint({}[{}].data[{} / {}])",
+                                           res_name, ParseInt(index),
+                                           ParseInt(elementOffset), ParseInt(alignment));
+          }
         } else if (functionName == "@dx.op.bufferLoad.i32") {
           // call %dx.types.ResRet.i32 @dx.op.bufferLoad.i32(i32 68, %dx.types.Handle %4, i32 6, i32 undef)  ; BufferLoad(srv,index,wot)
           // call %dx.types.ResRet.i32 @dx.op.bufferLoad.i32(i32 68, %dx.types.Handle %31, i32 %28, i32 undef)  ; BufferLoad(srv,index,wot)
@@ -1777,8 +1816,13 @@ class Decompiler {
         } else if (functionName == "@dx.op.isSpecialFloat.f32") {
           // call i1 @dx.op.isSpecialFloat.f32(i32 8, float %309)  ; IsNaN(value)
           auto [opNumber, value] = StringViewSplit<2>(functionParamsString, param_regex, 2);
-          assignment_type = "bool";
-          assignment_value = std::format("isnan({})", ParseFloat(value));
+          if (auto pair = UNARY_FLOAT_OPS.find(std::string(opNumber));
+              pair != UNARY_FLOAT_OPS.end()) {
+            assignment_type = ParseType(type);
+            assignment_value = std::format("{}({})", pair->second, ParseFloat(value));
+          } else {
+            throw std::invalid_argument("Unknown @dx.op.isSpecialFloat.f32");
+          }
         } else if (functionName == "@dx.op.getDimensions") {
           // call %dx.types.Dimensions @dx.op.getDimensions(i32 72, %dx.types.Handle %1, i32 0)  ; GetDimensions(handle,mipLevel)
           auto [opNumber, handle, mip_level] = StringViewSplit<3>(functionParamsString, param_regex, 2);
@@ -2147,10 +2191,8 @@ class Decompiler {
         assignment_type = ParseType(to_type);
         if (from_type == "i16") {
           assignment_value = std::format("(min16uint)({})", ParseInt(a));
-        } else if (from_type == "i32") {
+        } else {
           assignment_value = std::format("(uint)({})", ParseInt(a));
-        } else if (from_type == "i1") {
-          assignment_value = std::format("(bool)({})", ParseInt(a));
         }
       } else if (instruction == "sitofp") {
         // sitofp i32 %47 to float
@@ -2526,7 +2568,7 @@ class Decompiler {
         } else if (line.starts_with("  store ")) {
           this->AddCodeStore(line, preprocess_state);
         } else if (line.starts_with("  ret ")) {
-          //
+          this->CloseBranch();
         } else if (line.starts_with("  br ")) {
           this->AddCodeBranch(line, preprocess_state);
         } else if (line.empty()) {
@@ -2538,7 +2580,6 @@ class Decompiler {
           throw std::invalid_argument("Unexpected code block");
         }
       }
-      this->CloseBranch();
     }
 
     auto ListConvergences() {
@@ -3227,11 +3268,7 @@ class Decompiler {
         string_stream << "};\n";
       }
       string_stream << SRVResource::ResourceKindString(srv_resource.shape);
-      if (srv_resource.element_type != SRVResource::ComponentType::Invalid) {
-        string_stream << "<" << srv_resource.data_type << ">";
-      } else {
-        string_stream << "<_" << srv_resource.name << ">";
-      }
+      string_stream << "<" << srv_resource.data_type << ">";
 
       string_stream << " " << srv_resource.name;
       if (srv_resource.array_size.has_value()) {
@@ -3480,7 +3517,7 @@ class Decompiler {
       int next_convergence = pending_convergences.empty() ? -1 : pending_convergences.rbegin()[0];
 
       auto on_branch = [&](int branch_number) {
-        if (current_loop == code_block.branch.branch_condition_true) {
+        if (current_loop == branch_number) {
           string_stream << spacing << "continue;\n";  // go back
         } else if (next_convergence == branch_number) {
 #if DECOMPILER_DXC_DEBUG >= 1
@@ -3694,8 +3731,9 @@ class Decompiler {
     string_stream << "}\n";
 #if DECOMPILER_DXC_DEBUG == 3
     return "";
-#endif
+#else
     return string_stream.str();
+#endif
   }
 };  // namespace Decompiler
 

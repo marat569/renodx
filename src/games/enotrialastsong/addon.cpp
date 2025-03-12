@@ -118,6 +118,25 @@ renodx::utils::settings::Settings settings = {
         .parse = [](float value) { return value * 0.01f; },
         .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
+
+    new renodx::utils::settings::Setting{
+        .key = "ToneMapHueShiftMethod",
+        .binding = &shader_injection.toneMapHueShiftMethod,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 4.f,
+        .label = "Hue Shift Method",
+        .section = "Tone Mapping",
+        .tooltip = "Hue Shift Method",
+        .labels = {
+            "HUE_SHIFT_METHOD_CLIP",
+            "HUE_SHIFT_METHOD_SDR_MODIFIED",
+            "HUE_SHIFT_METHOD_AP1_ROLL_OFF",
+            "HUE_SHIFT_METHOD_ACES_FITTED_BT709",
+            "HUE_SHIFT_METHOD_ACES_FITTED_AP1",
+        },
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
+    },
+
     new renodx::utils::settings::Setting{
         .key = "ToneMapHueCorrection",
         .binding = &shader_injection.toneMapHueCorrection,
@@ -313,6 +332,7 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("ColorGradeLUTStrength", 100.f);
   renodx::utils::settings::UpdateSetting("ColorGradeLUTScaling", 0.f);
   renodx::utils::settings::UpdateSetting("ColorGradeColorSpace", 0.f);
+  renodx::utils::settings::UpdateSetting("ToneMapHueShiftMethod", 4.f);
 }
 
 // bool fired_on_init_swapchain = false;
@@ -341,9 +361,9 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
     case DLL_PROCESS_ATTACH:
       if (!reshade::register_addon(h_module)) return FALSE;
 
-      // renodx::mods::shader::on_init_pipeline_layout = [](reshade::api::device* device, auto, auto) {
-      //   return device->get_api() == reshade::api::device_api::d3d12;  // So overlays dont kill the game
-      // };
+      renodx::mods::shader::on_init_pipeline_layout = [](reshade::api::device* device, auto, auto) {
+        return device->get_api() == reshade::api::device_api::d3d12;  // So overlays dont kill the game
+      };
 
       renodx::mods::swapchain::SetUseHDR10(true);
       renodx::mods::shader::expected_constant_buffer_space = 50;

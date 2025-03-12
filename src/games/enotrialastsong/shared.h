@@ -20,6 +20,8 @@
 #define RENODX_TONE_MAP_HUE_PROCESSOR        shader_injection.toneMapHueProcessor
 #define RENODX_TONE_MAP_HUE_CORRECTION       shader_injection.toneMapHueCorrection
 #define RENODX_TONE_MAP_HUE_SHIFT            shader_injection.toneMapHueShift
+#define RENODX_TONE_MAP_HUE_SHIFT_METHOD     shader_injection.toneMapHueShiftMethod
+#define RENODX_TONE_MAP_HUE_SHIFT_MODIFIER   0.5f
 #define RENODX_TONE_MAP_CLAMP_COLOR_SPACE    color::convert::COLOR_SPACE_BT2020
 #define RENODX_RENO_DRT_TONE_MAP_METHOD      renodx::tonemap::renodrt::config::tone_map_method::REINHARD
 #define RENODX_GAMMA_CORRECTION              shader_injection.toneMapGammaCorrection
@@ -43,6 +45,7 @@ struct ShaderInjectData {
   float toneMapHueShift;
   float toneMapHueCorrection;
   float toneMapHueProcessor;
+  float toneMapHueShiftMethod;
 
   float toneMapPerChannel;
   float colorGradeExposure;

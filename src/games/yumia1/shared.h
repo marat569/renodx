@@ -28,6 +28,7 @@
 #define RENODX_SWAP_CHAIN_CLAMP_COLOR_SPACE  color::convert::COLOR_SPACE_BT2020
 // #define RENODX_SWAP_CHAIN_ENCODING_COLOR_SPACE (color::convert::COLOR_SPACE_BT2020 - shader_injection.processingUseSCRGB)  // BT709 = BT2020 - 1
 // #define RENODX_SWAP_CHAIN_ENCODING             (ENCODING_PQ + shader_injection.processingUseSCRGB)                         // SCRGB = PQ + 1
+// 0 = HDR10, 1 = scRGB
 #define RENODX_SWAP_CHAIN_ENCODING_COLOR_SPACE (color::convert::COLOR_SPACE_BT2020 - 1.f)  // BT709 = BT2020 - 1
 #define RENODX_SWAP_CHAIN_ENCODING             (ENCODING_PQ + 1.f)                         // SCRGB = PQ + 1
 

@@ -20,6 +20,7 @@
 namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
+    // CustomDirectXShaders
     CustomShaderEntry(0x7FC9B7B2),  // Tonemap, Ingame -- Starter area/cave
     CustomShaderEntry(0x2C4C70E8),  // Tonemap, Open World
 };
@@ -362,9 +363,9 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
     case DLL_PROCESS_ATTACH:
       if (!reshade::register_addon(h_module)) return FALSE;
 
-      // renodx::mods::shader::on_init_pipeline_layout = [](reshade::api::device* device, auto, auto) {
-      //   return device->get_api() == reshade::api::device_api::d3d12;  // So overlays dont kill the game
-      // };
+      renodx::mods::shader::on_init_pipeline_layout = [](reshade::api::device* device, auto, auto) {
+        return device->get_api() == reshade::api::device_api::d3d12;  // So overlays dont kill the game
+      };
 
       // renodx::mods::swapchain::SetUseHDR10(true);
       renodx::mods::shader::expected_constant_buffer_space = 50;
@@ -381,14 +382,22 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       renodx::mods::swapchain::use_resource_cloning = true;
       renodx::mods::swapchain::swap_chain_proxy_vertex_shader = __swap_chain_proxy_vertex_shader;
       renodx::mods::swapchain::swap_chain_proxy_pixel_shader = __swap_chain_proxy_pixel_shader;
-      renodx::mods::swapchain::swapchain_proxy_compatibility_mode = false;
-      renodx::mods::swapchain::swapchain_proxy_revert_state = false;
+      renodx::mods::swapchain::swapchain_proxy_compatibility_mode = false;  // true crashes the game when an FMV plays
+      renodx::mods::swapchain::swapchain_proxy_revert_state = true;
 
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::b8g8r8a8_unorm,
           .new_format = reshade::api::format::r16g16b16a16_float,
-          //.use_resource_view_cloning = true,
-          //.aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
+          .use_resource_view_cloning = true,
+          .aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
+          //.usage_include = reshade::api::resource_usage::render_target,
+      });
+
+      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+          .old_format = reshade::api::format::b8g8r8a8_typeless,
+          .new_format = reshade::api::format::r16g16b16a16_float,
+          .use_resource_view_cloning = true,
+          .aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
           //.usage_include = reshade::api::resource_usage::render_target,
       });
 

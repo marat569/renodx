@@ -91,7 +91,7 @@ void main(
   r3.xyz = g_tSceneMap.SampleLevel(sampleLinear_s, r2.xz, 0).xyz;
   r3.xyz = min(float3(65024, 65024, 65024), r3.xyz);
   r1.w = cmp(0 < g_vEtcEffect.x);
-  if (r1.w != 0) {
+  if (r1.w != 0.f) {
     r1.w = (uint)g_vEtcEffect.y;
     r4.xy = r2.xz * float2(2, 2) + float2(-1, -1);
     r2.w = dot(r4.xy, r4.xy);
@@ -116,14 +116,14 @@ void main(
     r4.w = 1;
     while (true) {
       r5.w = cmp((int)r4.w >= (int)r2.w);
-      if (r5.w != 0) break;
+      if (r5.w != 0.f) break;
       r10.xy = r10.xy + r4.xy;
       r11.xyz = g_tSceneMap.SampleLevel(sampleLinear_s, r10.xy, 0).xyz;
       r11.xyz = min(float3(65024, 65024, 65024), r11.xyz);
       r5.w = (int)r4.w;
       r5.w = r5.w / r3.w;
       r6.w = cmp(r5.w < 0.5);
-      if (r6.w != 0) {
+      if (r6.w != 0.f) {
         r6.w = r5.w + r5.w;
         r12.xyz = r6.www * r6.xyz + icb[r1.w + 0].xyz;
       } else {
@@ -137,7 +137,7 @@ void main(
     r3.xyz = r8.xyz / r9.xyz;
   }
   r3.xyz = r3.xyz * r1.zzz;
-  if (r0.z != 0) {
+  if (r0.z != 0.f) {
     r0.z = dot(v0.xy, float2(171, 231));
     r4.xyz = float3(0.00970873795, 0.0140845068, 0.010309278) * r0.zzz;
     r4.xyz = frac(r4.xyz);
@@ -145,7 +145,7 @@ void main(
     r4.xyz = float3(-0.00196078443, -0.00196078443, -0.00196078443) + r4.xyz;
     r3.xyz = max(float3(0, 0, 0), r4.xyz);
   }
-  if (r0.x != 0) {
+  if (r0.x != 0.f) {
     r4.xyz = g_tSceneMap.SampleLevel(sampleLinear_s, g_vSun2dInfo.xy, 0).xyz;
     r4.xyz = min(float3(65024, 65024, 65024), r4.xyz);
     r4.xyz = r4.xyz * r1.zzz;
@@ -157,7 +157,7 @@ void main(
     r4.xyz = r5.xyz * r4.xyz;
     r3.xyz = r4.xyz * r0.xxx + r3.xyz;
   }
-  if (r0.y != 0) {
+  if (r0.y != 0.f) {
     r0.xz = float2(-0.5, -0.5) + v1.xy;
     r0.y = g_vCompositeInfo.x * r0.x;
     r0.x = dot(r0.yz, r0.yz);
@@ -176,12 +176,12 @@ void main(
     r0.x = r0.x * g_vLimbDarkenningInfo.w + r0.y;
     r3.xyz = r3.xyz * r0.xxx;
   }
-  if (r1.x != 0) {
+  if (r1.x != 0.f) {
     r0.x = 1 + -r2.z;
     r0.x = -g_vVerticalLimbDarkenningTopInfo.y + r0.x;
     r0.x = g_vVerticalLimbDarkenningTopInfo.z * r0.x;
     r0.y = cmp(r0.x >= 1);
-    if (r0.y != 0) {
+    if (r0.y != 0.f) {
       r0.y = 1 + -g_vVerticalLimbDarkenningTopInfo.x;
     } else {
       r0.z = cmp(0 < r0.x);
@@ -197,11 +197,11 @@ void main(
     }
     r3.xyz = r3.xyz * r0.yyy;
   }
-  if (r1.y != 0) {
+  if (r1.y != 0.f) {
     r0.x = -g_vVerticalLimbDarkenningBottomInfo.y + r2.z;
     r0.x = g_vVerticalLimbDarkenningBottomInfo.z * r0.x;
     r0.y = cmp(r0.x >= 1);
-    if (r0.y != 0) {
+    if (r0.y != 0.f) {
       r0.y = 1 + -g_vVerticalLimbDarkenningBottomInfo.x;
     } else {
       r0.z = cmp(0 < r0.x);
@@ -226,7 +226,7 @@ void main(
   r0.xyz = log2(r0.xyz);
   r0.xyz = saturate(r0.xyz * float3(0.0734997839, 0.0734997839, 0.0734997839) + float3(0.386036009, 0.386036009, 0.386036009));
   r1.xyz = g_tHdrLut.SampleLevel(sampleLinear_s, r0.xyz, 0).xyz;
-  if (g_vDramaticHdrLutInfo0[0].w != 0) {
+  if (g_vDramaticHdrLutInfo0[0].w != 0.f) {
     r0.w = g_tSceneDepth.SampleLevel(samplePoint_s, r2.xz, 0).x;
     r0.w = g_vP2V.x + r0.w;
     r0.w = g_vP2V.y / r0.w;
@@ -243,14 +243,17 @@ void main(
     r0.w = 0;
     r1.w = 0;
   }
-  r2.w = cmp(0 < g_vDramaticHdrLutInfo0[0].x);
-  if (r2.w != 0) {
-    r2.w = cmp(0 < g_vDramaticHdrLutInfo0[0].y);
-    if (r2.w != 0) {
+  float3 postLut = r1.rgb;
+  r2.w = cmp(0.f < g_vDramaticHdrLutInfo0[0].x);
+  if (r2.w != 0.f) {
+    r2.w = cmp(0.f < g_vDramaticHdrLutInfo0[0].y);
+    if (r2.w != 0.f) {
       r2.w = (int)g_vDramaticHdrLutInfo0[0].z & 0x0000ffff;
-      if (r2.w == 0) {
-        r2.w = g_tDramaticHdrLutMask0.SampleLevel(sampleLinear_s, r2.xz, 0).x;
+      if (r2.w == 0.f) {
+        // r2.w = g_tDramaticHdrLutMask0.SampleLevel(sampleLinear_s, r2.xz, 0.f).x;  // creates griefed mask
+
         r2.w = g_vDramaticHdrLutInfo0[0].x * r2.w;
+
       } else {
         if (8 == 0)
           r3.x = 0;
@@ -259,7 +262,7 @@ void main(
           r3.x = (uint)r3.x >> (32 - 8);
         } else
           r3.x = (uint)g_vDramaticHdrLutInfo0[0].z >> 16;
-        if (r3.x != 0) {
+        if (r3.x != 0.f) {
           r3.y = -r0.w * g_vDramaticHdrLutInfo0[1].x + g_vDramaticHdrLutInfo0[1].y;
           r3.z = cmp(r3.y >= 0);
           r3.w = cmp(1 >= r3.y);
@@ -283,7 +286,7 @@ void main(
           r2.w = g_vDramaticHdrLutInfo0[0].x;
         }
         r3.x = (uint)g_vDramaticHdrLutInfo0[0].z >> 24;
-        if (r3.x != 0) {
+        if (r3.x != 0.f) {
           r3.y = r1.w * g_vDramaticHdrLutInfo0[1].z + g_vDramaticHdrLutInfo0[1].w;
           r3.z = cmp(r3.y >= 0);
           r3.w = cmp(1 >= r3.y);
@@ -314,10 +317,11 @@ void main(
     r3.xyz = r3.xyz + -r1.xyz;
     r1.xyz = r2.www * r3.xyz + r1.xyz;
   }
+
   r2.w = cmp(0 < g_vDramaticHdrLutInfo1[0].x);
-  if (r2.w != 0) {
+  if (r2.w != 0.f) {
     r2.w = cmp(0 < g_vDramaticHdrLutInfo1[0].y);
-    if (r2.w != 0) {
+    if (r2.w != 0.f) {
       r2.w = (int)g_vDramaticHdrLutInfo1[0].z & 0x0000ffff;
       if (r2.w == 0) {
         r2.x = g_tDramaticHdrLutMask1.SampleLevel(sampleLinear_s, r2.xz, 0).x;
@@ -330,7 +334,7 @@ void main(
           r2.z = (uint)r2.z >> (32 - 8);
         } else
           r2.z = (uint)g_vDramaticHdrLutInfo1[0].z >> 16;
-        if (r2.z != 0) {
+        if (r2.z != 0.f) {
           r0.w = -r0.w * g_vDramaticHdrLutInfo1[1].x + g_vDramaticHdrLutInfo1[1].y;
           r2.w = cmp(r0.w >= 0);
           r3.x = cmp(1 >= r0.w);
@@ -354,7 +358,7 @@ void main(
           r2.x = g_vDramaticHdrLutInfo1[0].x;
         }
         r0.w = (uint)g_vDramaticHdrLutInfo1[0].z >> 24;
-        if (r0.w != 0) {
+        if (r0.w != 0.f) {
           r1.w = r1.w * g_vDramaticHdrLutInfo1[1].z + g_vDramaticHdrLutInfo1[1].w;
           r2.z = cmp(r1.w >= 0);
           r2.w = cmp(1 >= r1.w);
@@ -385,7 +389,8 @@ void main(
     r0.xyz = r0.xyz + -r1.xyz;
     r1.xyz = r0.www * r0.xyz + r1.xyz;
   }
-  if (r2.y != 0) {
+
+  if (r2.y != 0.f) {
     r0.xyz = saturate(r1.xyz);
     r0.xyz = log2(r0.xyz);
     r0.xyz = float3(0.454545468, 0.454545468, 0.454545468) * r0.xyz;
@@ -404,8 +409,10 @@ void main(
 
   float3 postGamma = o0.rgb;
 
-  if (RENODX_TONE_MAP_TYPE != 0) {
-    o0.rgb = renodx::draw::ToneMapPass(renodx::color::gamma::DecodeSafe(untonemapped, 2.2f), postGamma);
+  if (RENODX_TONE_MAP_TYPE != 0.f) {
+    float3 color1 = renodx::color::gamma::DecodeSafe(untonemapped, 2.2f);
+    float3 color2 = renodx::color::gamma::DecodeSafe(postLut, 2.2f);
+    o0.rgb = renodx::draw::ToneMapPass(color1, postGamma);
     o0.rgb = renodx::draw::RenderIntermediatePass(o0.rgb);
     o0.w = 1.f;
     return;

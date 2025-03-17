@@ -15,6 +15,7 @@ struct Config {
   uint size;
   float3 precompute;
   bool tetrahedral;
+  float recolor;
 };
 
 namespace config {
@@ -32,17 +33,17 @@ static const uint PQ = 9u;
 }  // namespace type
 
 Config Create(SamplerState lut_sampler, float strength, float scaling, uint type_input, uint type_output, uint size = 0) {
-  Config lut_config = { lut_sampler, strength, scaling, type_input, type_output, size, float3(0, 0, 0), false };
+  Config lut_config = { lut_sampler, strength, scaling, type_input, type_output, size, float3(0, 0, 0), false, 1.f };
   return lut_config;
 }
 
 Config Create(SamplerState lut_sampler, float strength, float scaling, uint type_input, uint type_output, float size) {
-  Config lut_config = { lut_sampler, strength, scaling, type_input, type_output, (uint)size, float3(0, 0, 0), false };
+  Config lut_config = { lut_sampler, strength, scaling, type_input, type_output, (uint)size, float3(0, 0, 0), false, 1.f };
   return lut_config;
 }
 
 Config Create(SamplerState lut_sampler, float strength, float scaling, uint type_input, uint type_output, float3 precompute) {
-  Config lut_config = { lut_sampler, strength, scaling, type_input, type_output, 0, precompute, false };
+  Config lut_config = { lut_sampler, strength, scaling, type_input, type_output, 0, precompute, false, 1.f };
   return lut_config;
 }
 
@@ -64,7 +65,8 @@ Config Create() {
     config::type::SRGB,
     0,
     float3(0, 0, 0),
-    true
+    true,
+    1.f
   };
   return lut_config;
 }
@@ -352,13 +354,13 @@ float3 Unclamp(float3 original_gamma, float3 black_gamma, float3 mid_gray_gamma,
 
   const float mid_gray_average = (mid_gray_gamma.r + mid_gray_gamma.g + mid_gray_gamma.b) / 3.f;
 
-  // Remove relative to distance to inverse midgray
-  const float shadow_length = 1.f - mid_gray_average;
+  // Remove from 0 to mid-gray
+  const float shadow_length = mid_gray_average;
   const float shadow_stop = max(neutral_gamma.r, max(neutral_gamma.g, neutral_gamma.b));
   const float3 floor_remove = added_gamma * max(0, shadow_length - shadow_stop) / shadow_length;
 
-  // Add back relative to distance from midgray
-  const float highlights_length = mid_gray_average;
+  // Add back from mid-gray to 1.f
+  const float highlights_length = 1.f - mid_gray_average;
   const float highlights_stop = 1.f - min(neutral_gamma.r, min(neutral_gamma.g, neutral_gamma.b));
   const float3 ceiling_add = removed_gamma * (max(0, highlights_length - highlights_stop) / highlights_length);
 
@@ -491,7 +493,7 @@ float3 RestoreSaturationLoss(float3 color_input, float3 color_output, Config lut
   float chroma_loss = renodx::math::DivideSafe(chroma_in, chroma_clamped, 0.f);
   float chroma_new = chroma_out * chroma_loss;
 
-  perceptual_out.yz *= renodx::math::DivideSafe(chroma_new, chroma_out, 1.f);
+  perceptual_out.yz *= lerp(1.f, renodx::math::DivideSafe(chroma_new, chroma_out, 1.f), lut_config.recolor);
 
   return renodx::color::bt709::from::OkLab(perceptual_out);
 }
@@ -502,7 +504,7 @@ float3 RestoreSaturationLoss(float3 color_input, float3 color_output, Config lut
     float3 lutOutputColor = SampleColor(lutInputColor, lut_config, lut_texture);               \
     float3 color_output = LinearOutput(lutOutputColor, lut_config);                            \
     [branch]                                                                                   \
-    if (lut_config.scaling != 0) {                                                             \
+    if (lut_config.scaling != 0.f) {                                                           \
       float3 lutBlack = SampleColor(ConvertInput(0, lut_config), lut_config, lut_texture);     \
       float3 lutMid = SampleColor(ConvertInput(0.18f, lut_config), lut_config, lut_texture);   \
       float3 lutWhite = SampleColor(ConvertInput(1.f, lut_config), lut_config, lut_texture);   \
@@ -517,7 +519,9 @@ float3 RestoreSaturationLoss(float3 color_input, float3 color_output, Config lut
       color_output = recolored;                                                                \
     } else {                                                                                   \
     }                                                                                          \
-    color_output = RestoreSaturationLoss(color_input, color_output, lut_config);               \
+    if (lut_config.recolor != 0.f) {                                                           \
+      color_output = RestoreSaturationLoss(color_input, color_output, lut_config);             \
+    }                                                                                          \
                                                                                                \
     return lerp(color_input, color_output, lut_config.strength);                               \
   }

@@ -1,6 +1,6 @@
-// ---- Created with 3Dmigoto v1.3.16 on Sun Mar 16 21:27:40 2025
+// ---- Created with 3Dmigoto v1.3.16 on Mon Mar 17 02:25:08 2025
 
-// Main menu tonemap shader
+// Game, Open World 1
 
 #include "./common.hlsl"
 
@@ -45,9 +45,22 @@ Texture2D<float4> g_tSceneDepth : register(t11);
 // 3Dmigoto declarations
 #define cmp -
 
-void main(float4 v0 : SV_Position0, float2 v1 : TEXCOORD0,
-          out float4 o0 : SV_Target0) {
-  const float4 icb[] = {{0, 0, 1.000000, 0}, {0, 1.000000, 0, 0}, {1.000000, 0, 0, 0}, {1.000000, 0, 0, 0}, {0, 1.000000, 0, 0}, {0, 0, 1.000000, 0}, {0, 1.000000, 0, 0}, {1.000000, 0, 0, 0}, {1.000000, 0, 1.000000, 0}, {1.000000, 0, 1.000000, 0}, {1.000000, 0, 0, 0}, {0, 1.000000, 0, 0}};
+void main(
+    float4 v0 : SV_Position0,
+    float2 v1 : TEXCOORD0,
+    out float4 o0 : SV_Target0) {
+  const float4 icb[] = {{0, 0, 1.000000, 0},
+                        {0, 1.000000, 0, 0},
+                        {1.000000, 0, 0, 0},
+                        {1.000000, 0, 0, 0},
+                        {0, 1.000000, 0, 0},
+                        {0, 0, 1.000000, 0},
+                        {0, 1.000000, 0, 0},
+                        {1.000000, 0, 0, 0},
+                        {1.000000, 0, 1.000000, 0},
+                        {1.000000, 0, 1.000000, 0},
+                        {1.000000, 0, 0, 0},
+                        {0, 1.000000, 0, 0}};
   float4 r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12;
   uint4 bitmask, uiDest;
   float4 fDest;
@@ -78,7 +91,6 @@ void main(float4 v0 : SV_Position0, float2 v1 : TEXCOORD0,
   r3.xyz = g_tSceneMap.SampleLevel(sampleLinear_s, r2.xz, 0).xyz;
   r3.xyz = min(float3(65024, 65024, 65024), r3.xyz);
   r1.w = cmp(0 < g_vEtcEffect.x);
-
   if (r1.w != 0) {
     r1.w = (uint)g_vEtcEffect.y;
     r4.xy = r2.xz * float2(2, 2) + float2(-1, -1);
@@ -104,8 +116,7 @@ void main(float4 v0 : SV_Position0, float2 v1 : TEXCOORD0,
     r4.w = 1;
     while (true) {
       r5.w = cmp((int)r4.w >= (int)r2.w);
-      if (r5.w != 0)
-        break;
+      if (r5.w != 0) break;
       r10.xy = r10.xy + r4.xy;
       r11.xyz = g_tSceneMap.SampleLevel(sampleLinear_s, r10.xy, 0).xyz;
       r11.xyz = min(float3(65024, 65024, 65024), r11.xyz);
@@ -126,16 +137,11 @@ void main(float4 v0 : SV_Position0, float2 v1 : TEXCOORD0,
     r3.xyz = r8.xyz / r9.xyz;
   }
   r3.xyz = r3.xyz * r1.zzz;
-
-  o0.rgb = r3.rgb;
-  return;
-
   if (r0.z != 0) {
     r0.z = dot(v0.xy, float2(171, 231));
     r4.xyz = float3(0.00970873795, 0.0140845068, 0.010309278) * r0.zzz;
     r4.xyz = frac(r4.xyz);
-    r4.xyz =
-        r4.xyz * float3(0.00392156886, 0.00392156886, 0.00392156886) + r3.xyz;
+    r4.xyz = r4.xyz * float3(0.00392156886, 0.00392156886, 0.00392156886) + r3.xyz;
     r4.xyz = float3(-0.00196078443, -0.00196078443, -0.00196078443) + r4.xyz;
     r3.xyz = max(float3(0, 0, 0), r4.xyz);
   }
@@ -220,9 +226,6 @@ void main(float4 v0 : SV_Position0, float2 v1 : TEXCOORD0,
   r0.xyz = log2(r0.xyz);
   r0.xyz = saturate(r0.xyz * float3(0.0734997839, 0.0734997839, 0.0734997839) + float3(0.386036009, 0.386036009, 0.386036009));
   r1.xyz = g_tHdrLut.SampleLevel(sampleLinear_s, r0.xyz, 0).xyz;
-
-  float3 postLut = r1.rgb;
-
   if (g_vDramaticHdrLutInfo0[0].w != 0) {
     r0.w = g_tSceneDepth.SampleLevel(samplePoint_s, r2.xz, 0).x;
     r0.w = g_vP2V.x + r0.w;
@@ -257,8 +260,7 @@ void main(float4 v0 : SV_Position0, float2 v1 : TEXCOORD0,
         } else
           r3.x = (uint)g_vDramaticHdrLutInfo0[0].z >> 16;
         if (r3.x != 0) {
-          r3.y =
-              -r0.w * g_vDramaticHdrLutInfo0[1].x + g_vDramaticHdrLutInfo0[1].y;
+          r3.y = -r0.w * g_vDramaticHdrLutInfo0[1].x + g_vDramaticHdrLutInfo0[1].y;
           r3.z = cmp(r3.y >= 0);
           r3.w = cmp(1 >= r3.y);
           r3.z = r3.w ? r3.z : 0;
@@ -282,8 +284,7 @@ void main(float4 v0 : SV_Position0, float2 v1 : TEXCOORD0,
         }
         r3.x = (uint)g_vDramaticHdrLutInfo0[0].z >> 24;
         if (r3.x != 0) {
-          r3.y =
-              r1.w * g_vDramaticHdrLutInfo0[1].z + g_vDramaticHdrLutInfo0[1].w;
+          r3.y = r1.w * g_vDramaticHdrLutInfo0[1].z + g_vDramaticHdrLutInfo0[1].w;
           r3.z = cmp(r3.y >= 0);
           r3.w = cmp(1 >= r3.y);
           r3.z = r3.w ? r3.z : 0;
@@ -330,8 +331,7 @@ void main(float4 v0 : SV_Position0, float2 v1 : TEXCOORD0,
         } else
           r2.z = (uint)g_vDramaticHdrLutInfo1[0].z >> 16;
         if (r2.z != 0) {
-          r0.w =
-              -r0.w * g_vDramaticHdrLutInfo1[1].x + g_vDramaticHdrLutInfo1[1].y;
+          r0.w = -r0.w * g_vDramaticHdrLutInfo1[1].x + g_vDramaticHdrLutInfo1[1].y;
           r2.w = cmp(r0.w >= 0);
           r3.x = cmp(1 >= r0.w);
           r2.w = r2.w ? r3.x : 0;
@@ -355,8 +355,7 @@ void main(float4 v0 : SV_Position0, float2 v1 : TEXCOORD0,
         }
         r0.w = (uint)g_vDramaticHdrLutInfo1[0].z >> 24;
         if (r0.w != 0) {
-          r1.w =
-              r1.w * g_vDramaticHdrLutInfo1[1].z + g_vDramaticHdrLutInfo1[1].w;
+          r1.w = r1.w * g_vDramaticHdrLutInfo1[1].z + g_vDramaticHdrLutInfo1[1].w;
           r2.z = cmp(r1.w >= 0);
           r2.w = cmp(1 >= r1.w);
           r2.z = r2.w ? r2.z : 0;
@@ -406,7 +405,7 @@ void main(float4 v0 : SV_Position0, float2 v1 : TEXCOORD0,
   float3 postGamma = o0.rgb;
 
   if (RENODX_TONE_MAP_TYPE != 0) {
-    o0.rgb = renodx::draw::ToneMapPass(untonemapped, postGamma);
+    o0.rgb = renodx::draw::ToneMapPass(renodx::color::gamma::DecodeSafe(untonemapped, 2.2f), postGamma);
     o0.rgb = renodx::draw::RenderIntermediatePass(o0.rgb);
     o0.w = 1.f;
     return;

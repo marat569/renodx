@@ -20,8 +20,8 @@
 namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
-    // CustomShaderEntry(0x2C4C70E8),  // Tonemap, Main Menu
-    CustomShaderEntry(0x7FC9B7B2),  // Tonemap, Ingame
+    CustomShaderEntry(0x7FC9B7B2),  // Tonemap, Ingame -- Starter area/cave
+    CustomShaderEntry(0x2C4C70E8),  // Tonemap, Open World
 };
 
 ShaderInjectData shader_injection;
@@ -389,7 +389,7 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
           .new_format = reshade::api::format::r16g16b16a16_float,
           //.use_resource_view_cloning = true,
           //.aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
-          .usage_include = reshade::api::resource_usage::render_target,
+          //.usage_include = reshade::api::resource_usage::render_target,
       });
 
       break;

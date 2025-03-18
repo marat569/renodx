@@ -410,14 +410,17 @@ void main(
   float3 postGamma = o0.rgb;
 
   if (RENODX_TONE_MAP_TYPE != 0.f) {
-    float3 color1 = renodx::color::gamma::DecodeSafe(untonemapped, 2.2f);
-    float3 color2 = renodx::color::gamma::DecodeSafe(postLut, 2.2f);
-    o0.rgb = renodx::draw::ToneMapPass(color1, postGamma);
+    float3 linearUntonemapped = renodx::math::PowSafe(untonemapped, 2.2f);
+    float3 linearpostGamma = renodx::math::PowSafe(postGamma, 2.2f);
+    o0.rgb = renodx::math::PowSafe(o0.rgb, 2.2f);
+    o0.rgb = renodx::draw::ToneMapPass(linearUntonemapped, postGamma);
     o0.rgb = renodx::draw::RenderIntermediatePass(o0.rgb);
+
     o0.w = 1.f;
     return;
   }
 
+  o0.rgb = postGamma;
   o0.rgb = renodx::draw::RenderIntermediatePass(o0.rgb);
 
   return;

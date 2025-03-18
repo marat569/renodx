@@ -84,17 +84,17 @@ renodx::utils::settings::Settings settings = {
         .min = 48.f,
         .max = 500.f,
     },
-    new renodx::utils::settings::Setting{
-        .key = "ToneMapGammaCorrection",
-        .binding = &shader_injection.toneMapGammaCorrection,
-        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 1.f,
-        .label = "Gamma Correction",
-        .section = "Tone Mapping",
-        .tooltip = "Emulates a display EOTF.",
-        .labels = {"Off", "2.2", "BT.1886"},
-        .is_visible = []() { return settings[0]->GetValue() >= 1; },
-    },
+    // new renodx::utils::settings::Setting{
+    //     .key = "ToneMapGammaCorrection",
+    //     .binding = &shader_injection.toneMapGammaCorrection,
+    //     .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+    //     .default_value = 1.f,
+    //     .label = "Gamma Correction",
+    //     .section = "Tone Mapping",
+    //     .tooltip = "Emulates a display EOTF.",
+    //     .labels = {"Off", "2.2", "BT.1886"},
+    //     .is_visible = []() { return settings[0]->GetValue() >= 1; },
+    // },
     new renodx::utils::settings::Setting{
         .key = "ToneMapHueProcessor",
         .binding = &shader_injection.toneMapHueProcessor,
@@ -274,22 +274,17 @@ renodx::utils::settings::Settings settings = {
         .section = "Color Grading",
         .tooltip = "Selects output color space"
                    "\nUS Modern for BT.709 D65."
-                   "\nJPN Modern for BT.709 D93."
-                   "\nUS CRT for BT.601 (NTSC-U)."
-                   "\nJPN CRT for BT.601 ARIB-TR-B9 D93 (NTSC-J)."
-                   "\nDefault: US CRT",
+                   "\nJPN Modern for BT.709 D93.",
         .labels = {
             "US Modern",
             "JPN Modern",
-            "US CRT",
-            "JPN CRT",
         },
         .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
 
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
-        .label = " - Please make sure the game's brightness is set to default! \r\n \r\n - Join the HDR Den discord for help!",
+        .label = " - Make sure XeSS is off, or the game will crash! \r\n - Please report bugs, this mod was based on the demo! \r\n \r\n - Join the HDR Den discord for help!",
         .section = "Instructions",
     },
 
@@ -395,6 +390,14 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
 
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::b8g8r8a8_typeless,
+          .new_format = reshade::api::format::r16g16b16a16_float,
+          .use_resource_view_cloning = true,
+          .aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
+          //.usage_include = reshade::api::resource_usage::render_target,
+      });
+
+      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+          .old_format = reshade::api::format::b8g8r8a8_unorm_srgb,
           .new_format = reshade::api::format::r16g16b16a16_float,
           .use_resource_view_cloning = true,
           .aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,

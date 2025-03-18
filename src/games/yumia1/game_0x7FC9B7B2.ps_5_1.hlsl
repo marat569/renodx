@@ -248,14 +248,22 @@ void main(
 
   float3 postGamma = o0.rgb;
 
-  if (RENODX_TONE_MAP_TYPE != 0) {
-    o0.rgb = renodx::draw::ToneMapPass(renodx::color::gamma::DecodeSafe(untonemapped, 2.2f), postGamma);
-    o0.rgb = renodx::draw::RenderIntermediatePass(o0.rgb);
+  if (RENODX_TONE_MAP_TYPE != 0.f) {
+    float3 linearUntonemapped = renodx::math::PowSafe(untonemapped, 2.2f);
+    float3 linearpostGamma = renodx::math::PowSafe(postGamma, 2.2f);
+    o0.rgb = renodx::color::correct::GammaSafe(o0.rgb);
+    o0.rgb = renodx::draw::ToneMapPass(untonemapped, postGamma);
+    o0.rgb *= RENODX_GAME_NITS / RENODX_UI_NITS;
+    o0.rgb = renodx::color::correct::GammaSafe(o0.rgb, true);
+
     o0.w = 1.f;
     return;
   }
 
-  o0.rgb = renodx::draw::RenderIntermediatePass(o0.rgb);
+  o0.rgb = postGamma;
+  o0.rgb = renodx::color::correct::GammaSafe(o0.rgb);
+  o0.rgb *= RENODX_GAME_NITS / RENODX_UI_NITS;
+  o0.rgb = renodx::color::correct::GammaSafe(o0.rgb, true);
 
   return;
 }

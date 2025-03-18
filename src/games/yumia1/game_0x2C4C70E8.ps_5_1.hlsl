@@ -248,9 +248,9 @@ void main(
   if (r2.w != 0.f) {
     r2.w = cmp(0.f < g_vDramaticHdrLutInfo0[0].y);
     if (r2.w != 0.f) {
-      r2.w = (int)g_vDramaticHdrLutInfo0[0].z & 0x0000ffff;
+      r2.w = asuint((int)g_vDramaticHdrLutInfo0[0].z) & 0x0000ffff;
       if (r2.w == 0.f) {
-        // r2.w = g_tDramaticHdrLutMask0.SampleLevel(sampleLinear_s, r2.xz, 0.f).x;  // creates griefed mask
+        //r2.w = g_tDramaticHdrLutMask0.SampleLevel(sampleLinear_s, r2.xz, 0.f).x;  // creates griefed mask
 
         r2.w = g_vDramaticHdrLutInfo0[0].x * r2.w;
 
@@ -412,16 +412,19 @@ void main(
   if (RENODX_TONE_MAP_TYPE != 0.f) {
     float3 linearUntonemapped = renodx::math::PowSafe(untonemapped, 2.2f);
     float3 linearpostGamma = renodx::math::PowSafe(postGamma, 2.2f);
-    o0.rgb = renodx::math::PowSafe(o0.rgb, 2.2f);
-    o0.rgb = renodx::draw::ToneMapPass(linearUntonemapped, postGamma);
-    o0.rgb = renodx::draw::RenderIntermediatePass(o0.rgb);
+    o0.rgb = renodx::color::correct::GammaSafe(o0.rgb);
+    o0.rgb = renodx::draw::ToneMapPass(untonemapped, postGamma);
+    o0.rgb *= RENODX_GAME_NITS / RENODX_UI_NITS;
+    o0.rgb = renodx::color::correct::GammaSafe(o0.rgb, true);
 
     o0.w = 1.f;
     return;
   }
 
   o0.rgb = postGamma;
-  o0.rgb = renodx::draw::RenderIntermediatePass(o0.rgb);
+  o0.rgb = renodx::color::correct::GammaSafe(o0.rgb);
+  o0.rgb *= RENODX_GAME_NITS / RENODX_UI_NITS;
+  o0.rgb = renodx::color::correct::GammaSafe(o0.rgb, true);
 
   return;
 }

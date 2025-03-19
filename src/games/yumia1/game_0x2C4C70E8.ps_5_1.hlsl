@@ -46,21 +46,21 @@ Texture2D<float4> g_tSceneDepth : register(t11);
 #define cmp -
 
 void main(
-    float4 v0 : SV_Position0,
-    float2 v1 : TEXCOORD0,
-    out float4 o0 : SV_Target0) {
-  const float4 icb[] = {{0, 0, 1.000000, 0},
-                        {0, 1.000000, 0, 0},
-                        {1.000000, 0, 0, 0},
-                        {1.000000, 0, 0, 0},
-                        {0, 1.000000, 0, 0},
-                        {0, 0, 1.000000, 0},
-                        {0, 1.000000, 0, 0},
-                        {1.000000, 0, 0, 0},
-                        {1.000000, 0, 1.000000, 0},
-                        {1.000000, 0, 1.000000, 0},
-                        {1.000000, 0, 0, 0},
-                        {0, 1.000000, 0, 0}};
+    float4 v0: SV_Position0,
+    float2 v1: TEXCOORD0,
+    out float4 o0: SV_Target0) {
+  const float4 icb[] = { { 0, 0, 1.000000, 0 },
+                         { 0, 1.000000, 0, 0 },
+                         { 1.000000, 0, 0, 0 },
+                         { 1.000000, 0, 0, 0 },
+                         { 0, 1.000000, 0, 0 },
+                         { 0, 0, 1.000000, 0 },
+                         { 0, 1.000000, 0, 0 },
+                         { 1.000000, 0, 0, 0 },
+                         { 1.000000, 0, 1.000000, 0 },
+                         { 1.000000, 0, 1.000000, 0 },
+                         { 1.000000, 0, 0, 0 },
+                         { 0, 1.000000, 0, 0 } };
   float4 r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12;
   uint4 bitmask, uiDest;
   float4 fDest;
@@ -250,7 +250,7 @@ void main(
     if (r2.w != 0.f) {
       r2.w = asuint((int)g_vDramaticHdrLutInfo0[0].z) & 0x0000ffff;
       if (r2.w == 0.f) {
-        //r2.w = g_tDramaticHdrLutMask0.SampleLevel(sampleLinear_s, r2.xz, 0.f).x;  // creates griefed mask
+        // r2.w = g_tDramaticHdrLutMask0.SampleLevel(sampleLinear_s, r2.xz, 0.f).x;  // creates griefed mask
 
         r2.w = g_vDramaticHdrLutInfo0[0].x * r2.w;
 

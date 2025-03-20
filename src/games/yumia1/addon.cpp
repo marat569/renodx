@@ -62,7 +62,9 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Sets the value of peak white in nits",
         .min = 48.f,
         .max = 4000.f,
-        .is_visible = []() { return settings[0]->GetValue() >= 1; },
+        .is_visible = []() {
+          return settings[0]->GetValue() >= 1;
+        },
     },
     new renodx::utils::settings::Setting{
         .key = "ToneMapGameNits",
@@ -136,7 +138,9 @@ renodx::utils::settings::Settings settings = {
             "HUE_SHIFT_METHOD_ACES_FITTED_BT709",
             "HUE_SHIFT_METHOD_ACES_FITTED_AP1",
         },
-        .is_visible = []() { return settings[0]->GetValue() >= 1; },
+        .is_visible = []() {
+          return settings[0]->GetValue() >= 1;
+        },
     },
 
     new renodx::utils::settings::Setting{
@@ -279,7 +283,9 @@ renodx::utils::settings::Settings settings = {
             "US Modern",
             "JPN Modern",
         },
-        .is_visible = []() { return settings[0]->GetValue() >= 1; },
+        .is_visible = []() {
+          return settings[0]->GetValue() >= 1;
+        },
     },
 
     new renodx::utils::settings::Setting{
@@ -310,7 +316,6 @@ renodx::utils::settings::Settings settings = {
           system("start https://github.com/clshortfuse/renodx/wiki/Mods");
         },
     },
-
 };
 
 void OnPresetOff() {

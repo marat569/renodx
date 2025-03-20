@@ -1,9 +1,9 @@
-// ---- Created with 3Dmigoto v1.3.16 on Mon Mar 17 02:25:08 2025
-
-// Game, Open World 1
+// Open world tonemap shader
+// Rewrite by Miru97
 
 #include "./common.hlsl"
 
+// Constant buffers
 cbuffer cbComposite : register(b2) {
   float4 g_vSceneTexSize : packoffset(c0);
   float4 g_vCompositeInfo : packoffset(c1);
@@ -29,8 +29,15 @@ cbuffer cbComposite : register(b2) {
   float4 g_vVerticalLimbDarkenningBottomInfo : packoffset(c26);
 }
 
-SamplerState sampleLinear_s : register(s7);
-SamplerState samplePoint_s : register(s8);
+static const float3 BlurWeights[12] = {
+    float3(0, 0, 1), float3(0, 1, 0), float3(1, 0, 0),
+    float3(1, 0, 0), float3(0, 1, 0), float3(0, 0, 1),
+    float3(0, 1, 0), float3(1, 0, 0), float3(1, 0, 1),
+    float3(1, 0, 1), float3(1, 0, 0), float3(0, 1, 0)};
+
+// Textures and samplers
+SamplerState sampleLinear : register(s7);
+SamplerState samplePoint : register(s8);
 Texture2D<float4> g_tSceneMap : register(t0);
 Texture2D<float4> g_tLensFlareMap : register(t1);
 Texture2D<float4> g_tExposureScaleInfo : register(t2);
@@ -42,389 +49,307 @@ Texture3D<float4> g_tDramaticHdrLut1 : register(t9);
 Texture2D<float4> g_tDramaticHdrLutMask1 : register(t10);
 Texture2D<float4> g_tSceneDepth : register(t11);
 
-// 3Dmigoto declarations
-#define cmp -
+// Input structure
+struct PS_INPUT {
+  float4 Position : SV_Position0;
+  float2 TexCoord : TEXCOORD0;
+};
 
-void main(
-    float4 v0: SV_Position0,
-    float2 v1: TEXCOORD0,
-    out float4 o0: SV_Target0) {
-  const float4 icb[] = { { 0, 0, 1.000000, 0 },
-                         { 0, 1.000000, 0, 0 },
-                         { 1.000000, 0, 0, 0 },
-                         { 1.000000, 0, 0, 0 },
-                         { 0, 1.000000, 0, 0 },
-                         { 0, 0, 1.000000, 0 },
-                         { 0, 1.000000, 0, 0 },
-                         { 1.000000, 0, 0, 0 },
-                         { 1.000000, 0, 1.000000, 0 },
-                         { 1.000000, 0, 1.000000, 0 },
-                         { 1.000000, 0, 0, 0 },
-                         { 0, 1.000000, 0, 0 } };
-  float4 r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12;
-  uint4 bitmask, uiDest;
-  float4 fDest;
+// Output structure
+struct PS_OUTPUT {
+  float4 Color : SV_Target0;
+};
 
-  r0.x = cmp(0 < g_vSun2dInfo.z);
-  r0.y = cmp(0 < g_vLimbDarkenningInfo.w);
-  r0.zw = cmp(float2(0, 0) < g_vDrawFixParams.xy);
-  r1.x = cmp(0 < g_vVerticalLimbDarkenningTopInfo.x);
-  r1.y = cmp(0 < g_vVerticalLimbDarkenningBottomInfo.x);
-  r1.z = cmp(g_vCompositeInfo.z < 0);
-  r1.w = g_tExposureScaleInfo.Load(float4(0, 0, 0, 0)).x;
-  r2.xy = cmp(float2(0, 0) < g_vCompositeInfo.zy);
-  r2.x = r2.x ? g_vCompositeInfo.z : 1;
-  r1.z = r1.z ? r1.w : r2.x;
-  r2.xz = v1.xy * g_vCompositeLastViewport.zw + g_vCompositeLastViewport.xy;
-  r3.xy = cmp(g_vDistortionParams.xy != float2(0, 0));
-  r1.w = (int)r3.y | (int)r3.x;
-  r3.yz = float2(-0.5, -0.5) + r2.xz;
-  r3.x = g_vCompositeInfo.x * r3.y;
-  r2.w = dot(r3.xz, r3.xz);
-  r3.y = r2.w * r2.w;
-  r2.w = g_vDistortionParams.x * r2.w + 1;
-  r2.w = g_vDistortionParams.y * r3.y + r2.w;
-  r3.yz = r2.ww * r3.xz;
-  r3.x = r3.y / g_vCompositeInfo.x;
-  r3.xy = r3.xz * g_vDistortionParams.zz + float2(0.5, 0.5);
-  r2.xz = r1.ww ? r3.xy : r2.xz;
-  r3.xyz = g_tSceneMap.SampleLevel(sampleLinear_s, r2.xz, 0).xyz;
-  r3.xyz = min(float3(65024, 65024, 65024), r3.xyz);
-  r1.w = cmp(0 < g_vEtcEffect.x);
-  if (r1.w != 0.f) {
-    r1.w = (uint)g_vEtcEffect.y;
-    r4.xy = r2.xz * float2(2, 2) + float2(-1, -1);
-    r2.w = dot(r4.xy, r4.xy);
-    r4.xy = r4.xy * r2.ww;
-    r4.xy = g_vEtcEffect.xx * r4.xy;
-    r4.zw = g_vSceneTexSize.xy * -r4.xy;
-    r4.zw = float2(0.5, 0.5) * r4.zw;
-    r2.w = dot(r4.zw, r4.zw);
-    r2.w = sqrt(r2.w);
-    r2.w = (int)r2.w;
-    r2.w = max(3, (int)r2.w);
-    r2.w = min(16, (int)r2.w);
-    r3.w = (int)r2.w;
-    r4.xy = -r4.xy / r3.ww;
-    r5.xyz = icb[r1.w + 0].xyz * r3.xyz;
-    r4.zw = (int2)r1.ww + int2(1, 2);
-    r6.xyz = icb[r4.z + 0].xyz + -icb[r1.w + 0].xyz;
-    r7.xyz = icb[r4.w + 0].xyz + -icb[r4.z + 0].xyz;
-    r8.xyz = r5.xyz;
-    r9.xyz = icb[r1.w + 0].xyz;
-    r10.xy = r2.xz;
-    r4.w = 1;
-    while (true) {
-      r5.w = cmp((int)r4.w >= (int)r2.w);
-      if (r5.w != 0.f) break;
-      r10.xy = r10.xy + r4.xy;
-      r11.xyz = g_tSceneMap.SampleLevel(sampleLinear_s, r10.xy, 0).xyz;
-      r11.xyz = min(float3(65024, 65024, 65024), r11.xyz);
-      r5.w = (int)r4.w;
-      r5.w = r5.w / r3.w;
-      r6.w = cmp(r5.w < 0.5);
-      if (r6.w != 0.f) {
-        r6.w = r5.w + r5.w;
-        r12.xyz = r6.www * r6.xyz + icb[r1.w + 0].xyz;
+// Main pixel shader
+PS_OUTPUT main(PS_INPUT input) {
+  PS_OUTPUT output;
+
+  // Initial checks
+  bool enableSun = g_vSun2dInfo.z > 0;
+  bool enableLimbDarkening = g_vLimbDarkenningInfo.w > 0;
+  bool enableDrawFix0 = g_vDrawFixParams.x > 0;
+  bool enableDrawFix1 = g_vDrawFixParams.y > 0;
+  bool enableTopDarkening = g_vVerticalLimbDarkenningTopInfo.x > 0;
+  bool enableBottomDarkening = g_vVerticalLimbDarkenningBottomInfo.x > 0;
+  bool useExposureScale = g_vCompositeInfo.z < 0;
+
+  // Exposure scale
+  float exposureScale = useExposureScale ? g_tExposureScaleInfo.Load(int3(0, 0, 0)).x : (g_vCompositeInfo.z > 0 ? g_vCompositeInfo.z : 1.0);
+
+  // Distortion coordinates
+  float2 uv = input.TexCoord * g_vCompositeLastViewport.zw + g_vCompositeLastViewport.xy;
+  bool applyDistortion = any(g_vDistortionParams.xy != 0);
+  if (applyDistortion) {
+    float2 centeredUV = uv - 0.5;
+    centeredUV.x *= g_vCompositeInfo.x;
+
+    // Center strength
+    float r2 = dot(centeredUV, centeredUV);
+    float r4 = r2 * r2;
+
+    float distortion = 1.0 + g_vDistortionParams.x * r2 + g_vDistortionParams.y * r4;
+    centeredUV *= distortion;
+    centeredUV.x /= g_vCompositeInfo.x;
+    uv = centeredUV * g_vDistortionParams.z + 0.5;
+  }
+
+  // Sample scene color
+  float3 color = min(g_tSceneMap.SampleLevel(sampleLinear, uv, 0).rgb, 65024.0);
+
+  // Bloom effect
+  if (g_vEtcEffect.x > 0) {
+    uint steps = (uint)g_vEtcEffect.y;
+    float2 normalized_UV = (uv * 2.0 - 1.0);
+    normalized_UV *= dot(normalized_UV, normalized_UV);
+    normalized_UV = normalized_UV * g_vEtcEffect.x;  // normalize
+    float2 blurStep = -normalized_UV * g_vSceneTexSize.xy * 0.5;
+    float blurRadius = sqrt(dot(blurStep, blurStep));  // length
+    int sampleCount = clamp((int)blurRadius, 3, 16);
+
+    // float invSampleCount = 1.0 / sampleCount;
+    normalized_UV = -normalized_UV / sampleCount;
+
+    float3 blurWeight0 = BlurWeights[steps + 1] - BlurWeights[steps];
+    float3 blurWeight1 = BlurWeights[steps + 2] - BlurWeights[steps + 1];
+    float3 accumColor = color * BlurWeights[steps];
+    float3 accumWeight = BlurWeights[steps];
+    float3 blurColor, blurWeight;
+
+    float2 currentUV = uv;
+
+    for (int i = 1; i < sampleCount; i++) {
+      currentUV += normalized_UV;
+      float3 sampleColor = min(g_tSceneMap.SampleLevel(sampleLinear, currentUV, 0).rgb, 65024.0);
+      float t = (float)i / sampleCount;
+      if (t < 0.5) {
+        t *= 2;
+        blurWeight = blurWeight0 * t + BlurWeights[steps];
       } else {
-        r5.w = r5.w * 2 + -1;
-        r12.xyz = r5.www * r7.xyz + icb[r4.z + 0].xyz;
+        t = t * 2 - 1;
+        blurWeight = blurWeight1 * t + BlurWeights[steps + 1];
       }
-      r8.xyz = r11.xyz * r12.xyz + r8.xyz;
-      r9.xyz = r12.xyz + r9.xyz;
-      r4.w = (int)r4.w + 1;
+      accumColor += sampleColor * blurWeight;
+      accumWeight += blurWeight;
     }
-    r3.xyz = r8.xyz / r9.xyz;
+
+    color = accumColor / accumWeight;
   }
-  r3.xyz = r3.xyz * r1.zzz;
-  if (r0.z != 0.f) {
-    r0.z = dot(v0.xy, float2(171, 231));
-    r4.xyz = float3(0.00970873795, 0.0140845068, 0.010309278) * r0.zzz;
-    r4.xyz = frac(r4.xyz);
-    r4.xyz = r4.xyz * float3(0.00392156886, 0.00392156886, 0.00392156886) + r3.xyz;
-    r4.xyz = float3(-0.00196078443, -0.00196078443, -0.00196078443) + r4.xyz;
-    r3.xyz = max(float3(0, 0, 0), r4.xyz);
+
+  color *= exposureScale;
+
+  // Draw fix (dithering)
+  if (enableDrawFix0) {
+    float dither = dot(input.Position.xy, float2(171.0, 231.0));
+    color += frac(dither * float3(0.00970873795, 0.0140845068, 0.010309278)) * 0.00392156886 - 0.00196078443;
+    color = max(color, 0);
   }
-  if (r0.x != 0.f) {
-    r4.xyz = g_tSceneMap.SampleLevel(sampleLinear_s, g_vSun2dInfo.xy, 0).xyz;
-    r4.xyz = min(float3(65024, 65024, 65024), r4.xyz);
-    r4.xyz = r4.xyz * r1.zzz;
-    r5.xyz = g_tLensFlareMap.SampleLevel(sampleLinear_s, r2.xz, 0).xyz;
-    r5.xyz = min(float3(65024, 65024, 65024), r5.xyz);
-    r0.x = dot(r4.xyz, float3(0.222014993, 0.706655025, 0.0713300034));
-    r0.x = cmp(g_vEtcEffect.w < r0.x);
-    r0.x = r0.x ? g_vEtcEffect.z : 0;
-    r4.xyz = r5.xyz * r4.xyz;
-    r3.xyz = r4.xyz * r0.xxx + r3.xyz;
+
+  // Sun and lens flare
+  if (enableSun) {
+    float3 sunColor = min(g_tSceneMap.SampleLevel(sampleLinear, g_vSun2dInfo.xy, 0).rgb, 65024.0) * exposureScale;
+    float3 flareColor = min(g_tLensFlareMap.SampleLevel(sampleLinear, uv, 0).rgb, 65024.0);
+    float luminance = dot(sunColor, float3(0.222014993, 0.706655025, 0.0713300034));
+    float flareFactor = (luminance > g_vEtcEffect.w) ? g_vEtcEffect.z : 0;
+    color += sunColor * flareColor * flareFactor;
   }
-  if (r0.y != 0.f) {
-    r0.xz = float2(-0.5, -0.5) + v1.xy;
-    r0.y = g_vCompositeInfo.x * r0.x;
-    r0.x = dot(r0.yz, r0.yz);
-    r0.y = sqrt(r0.x);
-    r0.y = -g_vLimbDarkenningInfo.y + r0.y;
-    r0.z = cmp(0 < r0.y);
-    r0.y = saturate(-r0.y * g_vLimbDarkenningInfo.z + 1);
-    r0.y = r0.z ? r0.y : 1;
-    r0.z = cmp(0 < r0.y);
-    r0.x = g_vLimbDarkenningInfo.x + r0.x;
-    r0.x = g_vLimbDarkenningInfo.x / r0.x;
-    r0.x = r0.x * r0.x;
-    r0.x = r0.z ? r0.x : 1;
-    r0.x = r0.x * r0.y;
-    r0.y = 1 + -g_vLimbDarkenningInfo.w;
-    r0.x = r0.x * g_vLimbDarkenningInfo.w + r0.y;
-    r3.xyz = r3.xyz * r0.xxx;
+
+  // Limb darkening
+  if (enableLimbDarkening) {
+    float2 centeredUV = input.TexCoord - 0.5;
+    centeredUV.x *= g_vCompositeInfo.x;
+    float r = sqrt(dot(centeredUV, centeredUV));
+
+    float rMinusLimbDarkenning = r - g_vLimbDarkenningInfo.y;
+    float darkening;
+    darkening = (rMinusLimbDarkenning > 0) ? saturate(1.0 - rMinusLimbDarkenning * g_vLimbDarkenningInfo.z) : 1.0;
+
+    float vignette = g_vLimbDarkenningInfo.x / (dot(centeredUV, centeredUV) + g_vLimbDarkenningInfo.x);
+    darkening = (darkening > 0) ? (darkening * vignette * vignette) : darkening;
+    darkening = (darkening - 1) * g_vLimbDarkenningInfo.w + 1;  // lerp
+    color *= darkening;
   }
-  if (r1.x != 0.f) {
-    r0.x = 1 + -r2.z;
-    r0.x = -g_vVerticalLimbDarkenningTopInfo.y + r0.x;
-    r0.x = g_vVerticalLimbDarkenningTopInfo.z * r0.x;
-    r0.y = cmp(r0.x >= 1);
-    if (r0.y != 0.f) {
-      r0.y = 1 + -g_vVerticalLimbDarkenningTopInfo.x;
-    } else {
-      r0.z = cmp(0 < r0.x);
-      r0.x = max(0, r0.x);
-      r0.x = log2(r0.x);
-      r0.x = g_vVerticalLimbDarkenningTopInfo.w * r0.x;
-      r0.x = exp2(r0.x);
-      r0.x = 1 + -r0.x;
-      r0.x = r0.x * r0.x;
-      r1.x = 1 + -g_vVerticalLimbDarkenningTopInfo.x;
-      r0.x = r0.x * g_vVerticalLimbDarkenningTopInfo.x + r1.x;
-      r0.y = r0.z ? r0.x : 1;
+
+  // Vertical limb darkening (top)
+  if (enableTopDarkening) {
+    float v = 1.0 - uv.y - g_vVerticalLimbDarkenningTopInfo.y;
+    v *= g_vVerticalLimbDarkenningTopInfo.z;
+    float darkening;
+    if (v >= 1.0)
+      darkening = 1.0 - g_vVerticalLimbDarkenningTopInfo.x;
+    else {
+      bool isVPositive = (v > 0.0);
+      v = max(v, 0);
+      darkening = 1.0 - pow(v, g_vVerticalLimbDarkenningTopInfo.w);
+      darkening *= darkening;
+
+      darkening = isVPositive ? lerp(1.0 - g_vVerticalLimbDarkenningTopInfo.x, 1.0, darkening) : 1.0;
     }
-    r3.xyz = r3.xyz * r0.yyy;
+    color *= darkening;
   }
-  if (r1.y != 0.f) {
-    r0.x = -g_vVerticalLimbDarkenningBottomInfo.y + r2.z;
-    r0.x = g_vVerticalLimbDarkenningBottomInfo.z * r0.x;
-    r0.y = cmp(r0.x >= 1);
-    if (r0.y != 0.f) {
-      r0.y = 1 + -g_vVerticalLimbDarkenningBottomInfo.x;
-    } else {
-      r0.z = cmp(0 < r0.x);
-      r0.x = max(0, r0.x);
-      r0.x = log2(r0.x);
-      r0.x = g_vVerticalLimbDarkenningBottomInfo.w * r0.x;
-      r0.x = exp2(r0.x);
-      r0.x = 1 + -r0.x;
-      r0.x = r0.x * r0.x;
-      r1.x = 1 + -g_vVerticalLimbDarkenningBottomInfo.x;
-      r0.x = r0.x * g_vVerticalLimbDarkenningBottomInfo.x + r1.x;
-      r0.y = r0.z ? r0.x : 1;
+
+  // Vertical limb darkening (bottom)
+  if (enableBottomDarkening) {
+    float v = uv.y - g_vVerticalLimbDarkenningBottomInfo.y;
+    v *= g_vVerticalLimbDarkenningBottomInfo.z;
+    float darkening;
+    if (v >= 1.0)
+      darkening = 1.0 - g_vVerticalLimbDarkenningBottomInfo.x;
+    else {
+      bool isVPositive = (v > 0.0);
+      v = max(v, 0);
+      darkening = 1.0 - pow(v, g_vVerticalLimbDarkenningBottomInfo.w);
+      darkening *= darkening;
+
+      darkening = isVPositive ? lerp(1.0 - g_vVerticalLimbDarkenningBottomInfo.x, 1.0, darkening) : 1.0;
     }
-    r3.xyz = r3.xyz * r0.yyy;
+    color *= darkening;
   }
 
-  float3 untonemapped = r3.rgb;
+  float3 untonemapped = color;
 
-  r0.xyz = r3.xyz * float3(1.00006652, 1.00006652, 1.00006652) + float3(-0.00391646381, -0.00391646381, -0.00391646381);
-  r0.xyz = r0.www ? r0.xyz : r3.xyz;
-  r0.xyz = r0.xyz * float3(5.55555582, 5.55555582, 5.55555582) + float3(0.0479959995, 0.0479959995, 0.0479959995);
-  r0.xyz = log2(r0.xyz);
-  r0.xyz = saturate(r0.xyz * float3(0.0734997839, 0.0734997839, 0.0734997839) + float3(0.386036009, 0.386036009, 0.386036009));
-  r1.xyz = g_tHdrLut.SampleLevel(sampleLinear_s, r0.xyz, 0).xyz;
-  if (g_vDramaticHdrLutInfo0[0].w != 0.f) {
-    r0.w = g_tSceneDepth.SampleLevel(samplePoint_s, r2.xz, 0).x;
-    r0.w = g_vP2V.x + r0.w;
-    r0.w = g_vP2V.y / r0.w;
-    r1.w = (int)g_vDramaticHdrLutInfo0[0].w & 2;
-    r3.xy = r2.xz * float2(2, -2) + float2(-1, 1);
-    r3.xy = g_vP2V.zw * r3.xy;
-    r3.xy = r3.xy * -r0.ww;
-    r2.w = g_mV2W._m11 * r3.y;
-    r2.w = g_mV2W._m10 * r3.x + r2.w;
-    r2.w = g_mV2W._m12 * r0.w + r2.w;
-    r2.w = g_mV2W._m13 + r2.w;
-    r1.w = r1.w ? r2.w : 0;
-  } else {
-    r0.w = 0;
-    r1.w = 0;
+  // Convert to color LUT space
+  float3 lutSpaceColor = (enableDrawFix1) ? (color * 1.00006652 - 0.00391646381) : color;
+  lutSpaceColor = lutSpaceColor * 5.55555582 + 0.0479959995;
+
+  // HDR LUT
+  float3 lutCoord = saturate(log2(lutSpaceColor) * 0.0734997839 + 0.386036009);
+  float3 hdrColor = g_tHdrLut.SampleLevel(sampleLinear, lutCoord, 0).rgb;
+
+  // Dramatic HDR LUTs
+  float depth = 0;
+  float height = 0;
+  // because gpu reads this as float (~= 0.f) we need to read as uint
+  if (asuint(g_vDramaticHdrLutInfo0[0].w) != 0) {
+    depth = g_tSceneDepth.SampleLevel(samplePoint, uv, 0).x + g_vP2V.x;
+    depth = g_vP2V.y / depth;
+    bool useDramaticLutWorldPos = (asuint(g_vDramaticHdrLutInfo0[0].w) & 2);
+    float3 viewPos;
+    viewPos.xy = uv * float2(2, -2) + float2(-1, 1);
+    viewPos.xy *= g_vP2V.zw;
+    viewPos.xy *= -depth;
+
+    float worldPosY = g_mV2W._m11 * viewPos.y + g_mV2W._m10 * viewPos.x + g_mV2W._m12 * depth + g_mV2W._m13;
+
+    height = useDramaticLutWorldPos ? worldPosY : 0.0;
   }
-  float3 postLut = r1.rgb;
-  r2.w = cmp(0.f < g_vDramaticHdrLutInfo0[0].x);
-  if (r2.w != 0.f) {
-    r2.w = cmp(0.f < g_vDramaticHdrLutInfo0[0].y);
-    if (r2.w != 0.f) {
-      r2.w = asuint((int)g_vDramaticHdrLutInfo0[0].z) & 0x0000ffff;
-      if (r2.w == 0.f) {
-        // r2.w = g_tDramaticHdrLutMask0.SampleLevel(sampleLinear_s, r2.xz, 0.f).x;  // creates griefed mask
 
-        r2.w = g_vDramaticHdrLutInfo0[0].x * r2.w;
-
+  // Dramatic HDR LUT Sampling
+  float maskIntensity = 0;
+  if (g_vDramaticHdrLutInfo0[0].x > 0) {
+    if (g_vDramaticHdrLutInfo0[0].y > 0) {
+      if ((asuint(g_vDramaticHdrLutInfo0[0].z) & 0x0000ffff) == 0) {
+        maskIntensity = g_tDramaticHdrLutMask0.SampleLevel(sampleLinear, uv, 0).x * g_vDramaticHdrLutInfo0[0].x;
       } else {
-        if (8 == 0)
-          r3.x = 0;
-        else if (8 + 16 < 32) {
-          r3.x = (uint)g_vDramaticHdrLutInfo0[0].z << (32 - (8 + 16));
-          r3.x = (uint)r3.x >> (32 - 8);
-        } else
-          r3.x = (uint)g_vDramaticHdrLutInfo0[0].z >> 16;
-        if (r3.x != 0.f) {
-          r3.y = -r0.w * g_vDramaticHdrLutInfo0[1].x + g_vDramaticHdrLutInfo0[1].y;
-          r3.z = cmp(r3.y >= 0);
-          r3.w = cmp(1 >= r3.y);
-          r3.z = r3.w ? r3.z : 0;
-          r3.z = r3.z ? 1.000000 : 0;
-          r3.w = saturate(r3.y);
-          r4.x = -1.44269502 * r3.w;
-          r4.x = exp2(r4.x);
-          r4.x = 1 + -r4.x;
-          r5.xyzw = cmp((int4)r3.xxxx == int4(1, 2, 3, 4));
-          r3.x = r3.w * r3.w;
-          r3.x = -1.44269502 * r3.x;
-          r3.x = exp2(r3.x);
-          r3.x = 1 + -r3.x;
-          r3.x = r5.w ? r3.x : r3.y;
-          r3.x = r5.z ? r4.x : r3.x;
-          r3.x = r5.y ? r3.w : r3.x;
-          r3.x = r5.x ? r3.z : r3.x;
-          r2.w = g_vDramaticHdrLutInfo0[0].x * r3.x;
+        uint dramaticLutMode0 = ((asuint(g_vDramaticHdrLutInfo0[0].z) >> 16) & 0x000000ff);
+        if (dramaticLutMode0) {
+          float depthNormalized = -depth * g_vDramaticHdrLutInfo0[1].x + g_vDramaticHdrLutInfo0[1].y;
+          float depthIntensity = (depthNormalized >= 0 && depthNormalized <= 1) ? 1.0 : 0.0;
+
+          float saturatedepthNormalized = saturate(depthNormalized);
+          float2 dramaticLutMode0Intensity;
+          dramaticLutMode0Intensity.y = 1 - exp2(-1.44269502 * saturatedepthNormalized);
+          dramaticLutMode0Intensity.x = 1 - exp2(-1.44269502 * saturatedepthNormalized * saturatedepthNormalized);
+
+          depthIntensity = (dramaticLutMode0 == 1) ? depthIntensity : depthNormalized;
+          depthIntensity = (dramaticLutMode0 == 2) ? saturatedepthNormalized : depthIntensity;
+          depthIntensity = (dramaticLutMode0 == 3) ? dramaticLutMode0Intensity.y : depthIntensity;
+          depthIntensity = (dramaticLutMode0 == 4) ? dramaticLutMode0Intensity.x : depthIntensity;
+          maskIntensity = g_vDramaticHdrLutInfo0[0].x * depthIntensity;
         } else {
-          r2.w = g_vDramaticHdrLutInfo0[0].x;
+          maskIntensity = g_vDramaticHdrLutInfo0[0].x;
         }
-        r3.x = (uint)g_vDramaticHdrLutInfo0[0].z >> 24;
-        if (r3.x != 0.f) {
-          r3.y = r1.w * g_vDramaticHdrLutInfo0[1].z + g_vDramaticHdrLutInfo0[1].w;
-          r3.z = cmp(r3.y >= 0);
-          r3.w = cmp(1 >= r3.y);
-          r3.z = r3.w ? r3.z : 0;
-          r3.z = r3.z ? 1.000000 : 0;
-          r3.w = saturate(r3.y);
-          r4.x = -1.44269502 * r3.w;
-          r4.x = exp2(r4.x);
-          r4.x = 1 + -r4.x;
-          r5.xyzw = cmp((int4)r3.xxxx == int4(1, 2, 3, 4));
-          r3.x = r3.w * r3.w;
-          r3.x = -1.44269502 * r3.x;
-          r3.x = exp2(r3.x);
-          r3.x = 1 + -r3.x;
-          r3.x = r5.w ? r3.x : r3.y;
-          r3.x = r5.z ? r4.x : r3.x;
-          r3.x = r5.y ? r3.w : r3.x;
-          r3.x = r5.x ? r3.z : r3.x;
-          r2.w = r3.x * r2.w;
+        uint dramaticLutMode2 = ((asuint(g_vDramaticHdrLutInfo0[0].z) >> 24) & 0x000000ff);
+        if (dramaticLutMode2) {
+          float heightNormalized = height * g_vDramaticHdrLutInfo0[1].z + g_vDramaticHdrLutInfo0[1].w;
+          float heightIntensity = (heightNormalized >= 0 && heightNormalized <= 1) ? 1.0 : 0.0;
+
+          float saturatedheightNormalized = saturate(heightNormalized);
+          float2 dramaticLutMode2Intensity;
+          dramaticLutMode2Intensity.y = 1 - exp2(-1.44269502 * saturatedheightNormalized);
+          dramaticLutMode2Intensity.x = 1 - exp2(-1.44269502 * saturatedheightNormalized * saturatedheightNormalized);
+
+          heightIntensity = (dramaticLutMode2 == 1) ? heightIntensity : heightNormalized;
+          heightIntensity = (dramaticLutMode2 == 2) ? saturatedheightNormalized : heightIntensity;
+          heightIntensity = (dramaticLutMode2 == 3) ? dramaticLutMode2Intensity.y : heightIntensity;
+          heightIntensity = (dramaticLutMode2 == 4) ? dramaticLutMode2Intensity.x : heightIntensity;
+          maskIntensity *= heightIntensity;
         }
       }
-      r2.w = -g_vDramaticHdrLutInfo0[0].x + r2.w;
-      r2.w = g_vDramaticHdrLutInfo0[0].y * r2.w + g_vDramaticHdrLutInfo0[0].x;
+      maskIntensity = g_vDramaticHdrLutInfo0[0].y * (maskIntensity - g_vDramaticHdrLutInfo0[0].x) + g_vDramaticHdrLutInfo0[0].x;
     } else {
-      r2.w = g_vDramaticHdrLutInfo0[0].x;
+      maskIntensity = g_vDramaticHdrLutInfo0[0].x;
     }
-    r3.xyz = g_tDramaticHdrLut0.SampleLevel(sampleLinear_s, r0.xyz, 0).xyz;
-    r3.xyz = r3.xyz + -r1.xyz;
-    r1.xyz = r2.www * r3.xyz + r1.xyz;
+    float3 dramaticColor0 = g_tDramaticHdrLut0.SampleLevel(sampleLinear, lutCoord, 0).rgb;
+    hdrColor = lerp(hdrColor, dramaticColor0, maskIntensity);
   }
 
-  r2.w = cmp(0 < g_vDramaticHdrLutInfo1[0].x);
-  if (r2.w != 0.f) {
-    r2.w = cmp(0 < g_vDramaticHdrLutInfo1[0].y);
-    if (r2.w != 0.f) {
-      r2.w = (int)g_vDramaticHdrLutInfo1[0].z & 0x0000ffff;
-      if (r2.w == 0) {
-        r2.x = g_tDramaticHdrLutMask1.SampleLevel(sampleLinear_s, r2.xz, 0).x;
-        r2.x = g_vDramaticHdrLutInfo1[0].x * r2.x;
+  if (g_vDramaticHdrLutInfo1[0].x > 0) {
+    if (g_vDramaticHdrLutInfo1[0].y > 0) {
+      if ((asuint(g_vDramaticHdrLutInfo1[0].z) & 0x0000ffff) == 0) {
+        maskIntensity = g_tDramaticHdrLutMask1.SampleLevel(sampleLinear, uv, 0).x * g_vDramaticHdrLutInfo1[0].x;
       } else {
-        if (8 == 0)
-          r2.z = 0;
-        else if (8 + 16 < 32) {
-          r2.z = (uint)g_vDramaticHdrLutInfo1[0].z << (32 - (8 + 16));
-          r2.z = (uint)r2.z >> (32 - 8);
-        } else
-          r2.z = (uint)g_vDramaticHdrLutInfo1[0].z >> 16;
-        if (r2.z != 0.f) {
-          r0.w = -r0.w * g_vDramaticHdrLutInfo1[1].x + g_vDramaticHdrLutInfo1[1].y;
-          r2.w = cmp(r0.w >= 0);
-          r3.x = cmp(1 >= r0.w);
-          r2.w = r2.w ? r3.x : 0;
-          r2.w = r2.w ? 1.000000 : 0;
-          r3.x = saturate(r0.w);
-          r3.y = -1.44269502 * r3.x;
-          r3.y = exp2(r3.y);
-          r3.y = 1 + -r3.y;
-          r4.xyzw = cmp((int4)r2.zzzz == int4(1, 2, 3, 4));
-          r2.z = r3.x * r3.x;
-          r2.z = -1.44269502 * r2.z;
-          r2.z = exp2(r2.z);
-          r2.z = 1 + -r2.z;
-          r0.w = r4.w ? r2.z : r0.w;
-          r0.w = r4.z ? r3.y : r0.w;
-          r0.w = r4.y ? r3.x : r0.w;
-          r0.w = r4.x ? r2.w : r0.w;
-          r2.x = g_vDramaticHdrLutInfo1[0].x * r0.w;
+        uint dramaticLutMode0 = ((asuint(g_vDramaticHdrLutInfo1[0].z) >> 16) & 0x000000ff);
+        if (dramaticLutMode0) {
+          float depthNormalized = -depth * g_vDramaticHdrLutInfo1[1].x + g_vDramaticHdrLutInfo1[1].y;
+          float depthIntensity = (depthNormalized >= 0 && depthNormalized <= 1) ? 1.0 : 0.0;
+
+          float saturatedepthNormalized = saturate(depthNormalized);
+          float2 dramaticLutMode0Intensity;
+          dramaticLutMode0Intensity.y = 1 - exp2(-1.44269502 * saturatedepthNormalized);
+          dramaticLutMode0Intensity.x = 1 - exp2(-1.44269502 * saturatedepthNormalized * saturatedepthNormalized);
+
+          depthIntensity = (dramaticLutMode0 == 1) ? depthIntensity : depthNormalized;
+          depthIntensity = (dramaticLutMode0 == 2) ? saturatedepthNormalized : depthIntensity;
+          depthIntensity = (dramaticLutMode0 == 3) ? dramaticLutMode0Intensity.y : depthIntensity;
+          depthIntensity = (dramaticLutMode0 == 4) ? dramaticLutMode0Intensity.x : depthIntensity;
+          maskIntensity = g_vDramaticHdrLutInfo1[0].x * depthIntensity;
         } else {
-          r2.x = g_vDramaticHdrLutInfo1[0].x;
+          maskIntensity = g_vDramaticHdrLutInfo1[0].x;
         }
-        r0.w = (uint)g_vDramaticHdrLutInfo1[0].z >> 24;
-        if (r0.w != 0.f) {
-          r1.w = r1.w * g_vDramaticHdrLutInfo1[1].z + g_vDramaticHdrLutInfo1[1].w;
-          r2.z = cmp(r1.w >= 0);
-          r2.w = cmp(1 >= r1.w);
-          r2.z = r2.w ? r2.z : 0;
-          r2.z = r2.z ? 1.000000 : 0;
-          r2.w = saturate(r1.w);
-          r3.x = -1.44269502 * r2.w;
-          r3.x = exp2(r3.x);
-          r3.x = 1 + -r3.x;
-          r4.xyzw = cmp((int4)r0.wwww == int4(1, 2, 3, 4));
-          r0.w = r2.w * r2.w;
-          r0.w = -1.44269502 * r0.w;
-          r0.w = exp2(r0.w);
-          r0.w = 1 + -r0.w;
-          r0.w = r4.w ? r0.w : r1.w;
-          r0.w = r4.z ? r3.x : r0.w;
-          r0.w = r4.y ? r2.w : r0.w;
-          r0.w = r4.x ? r2.z : r0.w;
-          r2.x = r2.x * r0.w;
+        uint dramaticLutMode2 = ((asuint(g_vDramaticHdrLutInfo1[0].z) >> 24) & 0x000000ff);
+        if (dramaticLutMode2) {
+          float heightNormalized = height * g_vDramaticHdrLutInfo1[1].z + g_vDramaticHdrLutInfo1[1].w;
+          float heightIntensity = (heightNormalized >= 0 && heightNormalized <= 1) ? 1.0 : 0.0;
+
+          float saturatedheightNormalized = saturate(heightNormalized);
+          float2 dramaticLutMode2Intensity;
+          dramaticLutMode2Intensity.y = 1 - exp2(-1.44269502 * saturatedheightNormalized);
+          dramaticLutMode2Intensity.x = 1 - exp2(-1.44269502 * saturatedheightNormalized * saturatedheightNormalized);
+
+          heightIntensity = (dramaticLutMode2 == 1) ? heightIntensity : heightNormalized;
+          heightIntensity = (dramaticLutMode2 == 2) ? saturatedheightNormalized : heightIntensity;
+          heightIntensity = (dramaticLutMode2 == 3) ? dramaticLutMode2Intensity.y : heightIntensity;
+          heightIntensity = (dramaticLutMode2 == 4) ? dramaticLutMode2Intensity.x : heightIntensity;
+          maskIntensity *= heightIntensity;
         }
       }
-      r0.w = -g_vDramaticHdrLutInfo1[0].x + r2.x;
-      r0.w = g_vDramaticHdrLutInfo1[0].y * r0.w + g_vDramaticHdrLutInfo1[0].x;
+      maskIntensity = g_vDramaticHdrLutInfo1[0].y * (maskIntensity - g_vDramaticHdrLutInfo1[0].x) + g_vDramaticHdrLutInfo1[0].x;
     } else {
-      r0.w = g_vDramaticHdrLutInfo1[0].x;
+      maskIntensity = g_vDramaticHdrLutInfo1[0].x;
     }
-    r0.xyz = g_tDramaticHdrLut1.SampleLevel(sampleLinear_s, r0.xyz, 0).xyz;
-    r0.xyz = r0.xyz + -r1.xyz;
-    r1.xyz = r0.www * r0.xyz + r1.xyz;
+    float3 dramaticColor1 = g_tDramaticHdrLut1.SampleLevel(sampleLinear, lutCoord, 0).rgb;
+    hdrColor = lerp(hdrColor, dramaticColor1, maskIntensity);
   }
 
-  if (r2.y != 0.f) {
-    r0.xyz = saturate(r1.xyz);
-    r0.xyz = log2(r0.xyz);
-    r0.xyz = float3(0.454545468, 0.454545468, 0.454545468) * r0.xyz;
-    r0.xyz = exp2(r0.xyz);
-    r0.xyz = g_tLdrLut.SampleLevel(sampleLinear_s, r0.xyz, 0).xyz;
-    r0.xyz = r0.xyz + -r1.xyz;
-    r1.xyz = g_vCompositeInfo.yyy * r0.xyz + r1.xyz;
-  }
-  r0.x = cmp(g_vGammaCorrection.x != 1.000000);
-  r0.yzw = log2(abs(r1.xyz));
-  r0.yzw = g_vGammaCorrection.xxx * r0.yzw;
-  r0.yzw = exp2(r0.yzw);
-  r0.xyz = r0.xxx ? r0.yzw : r1.xyz;
-  o0.xyz = g_vRadialBlurCenter.zzz * r0.xyz;
-  o0.w = 1;
-
-  float3 postGamma = o0.rgb;
-
-  if (RENODX_TONE_MAP_TYPE != 0.f) {
-    float3 linearUntonemapped = renodx::math::PowSafe(untonemapped, 2.2f);
-    float3 linearpostGamma = renodx::math::PowSafe(postGamma, 2.2f);
-    o0.rgb = renodx::color::correct::GammaSafe(o0.rgb);
-    o0.rgb = renodx::draw::ToneMapPass(untonemapped, postGamma);
-    o0.rgb *= RENODX_GAME_NITS / RENODX_UI_NITS;
-    o0.rgb = renodx::color::correct::GammaSafe(o0.rgb, true);
-
-    o0.w = 1.f;
-    return;
+  // LDR LUT
+  if (g_vCompositeInfo.y > 0) {
+    float3 ldrCoord = pow(saturate(hdrColor), 1 / 2.2);
+    float3 ldrColor = g_tLdrLut.SampleLevel(sampleLinear, ldrCoord, 0).rgb;
+    hdrColor = lerp(hdrColor, ldrColor, g_vCompositeInfo.y);
   }
 
-  o0.rgb = postGamma;
-  o0.rgb = renodx::color::correct::GammaSafe(o0.rgb);
-  o0.rgb *= RENODX_GAME_NITS / RENODX_UI_NITS;
-  o0.rgb = renodx::color::correct::GammaSafe(o0.rgb, true);
+  // Gamma correction
+  if (g_vGammaCorrection.x != 1.0) {
+    hdrColor = pow(abs(hdrColor), g_vGammaCorrection.x);
+  }
 
-  return;
+  // Final output
+  output.Color.rgb = hdrColor * g_vRadialBlurCenter.z;
+  output.Color.a = 1.0;
+
+  float3 postGamma = output.Color.rgb;
+
+  output.Color = ProcessColor(untonemapped, postGamma);
+
+  return output;
 }

@@ -62,9 +62,6 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Sets the value of peak white in nits",
         .min = 48.f,
         .max = 4000.f,
-        .is_visible = []() {
-          return settings[0]->GetValue() >= 1;
-        },
     },
     new renodx::utils::settings::Setting{
         .key = "ToneMapGameNits",
@@ -210,6 +207,7 @@ renodx::utils::settings::Settings settings = {
         .max = 100.f,
         .is_enabled = []() { return shader_injection.toneMapType == 3; },
         .parse = [](float value) { return value * 0.02f; },
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
     new renodx::utils::settings::Setting{
         .key = "ColorGradeSaturation",
@@ -220,6 +218,7 @@ renodx::utils::settings::Settings settings = {
         .max = 100.f,
         .is_enabled = []() { return shader_injection.toneMapType == 3; },
         .parse = [](float value) { return value * 0.02f; },
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
     new renodx::utils::settings::Setting{
         .key = "ColorGradeHighlightSaturation",
@@ -255,6 +254,7 @@ renodx::utils::settings::Settings settings = {
         .max = 100.f,
         .is_enabled = []() { return shader_injection.toneMapType == 3; },
         .parse = [](float value) { return value * 0.01f; },
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
     new renodx::utils::settings::Setting{
         .key = "ColorGradeStrength",
@@ -290,7 +290,7 @@ renodx::utils::settings::Settings settings = {
 
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
-        .label = " - Make sure XeSS is off, or the game will crash! \r\n - Please report bugs, this mod was based on the demo! \r\n \r\n - Join the HDR Den discord for help!",
+        .label = " - Make sure XeSS is off, or update the XeSS dll to the latest version -- or else the game will crash! \r\n - Please report bugs, this mod was based on the demo! \r\n \r\n - Join the HDR Den discord for help!",
         .section = "Instructions",
     },
 
@@ -316,6 +316,19 @@ renodx::utils::settings::Settings settings = {
           system("start https://github.com/clshortfuse/renodx/wiki/Mods");
         },
     },
+
+    // new renodx::utils::settings::Setting{
+    //     .key = "midGray",
+    //     .binding = &shader_injection.midGray,
+    //     .default_value = 0.18f,
+    //     .label = "Midgray",
+    //     .section = "DEBUG",
+    //     .max = 2.f,
+    //     .format = "%.2f",
+    //     .is_enabled = []() { return shader_injection.toneMapType == 3; },
+    //     .is_visible = []() { return settings[0]->GetValue() >= 1; },
+    // },
+
 };
 
 void OnPresetOff() {

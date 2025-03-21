@@ -22,6 +22,8 @@ float4 main(float4 vpos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
 
   color.rgb /= 80.f;
 
+  color.rgb = renodx::color::bt709::clamp::BT2020(color.rgb); // clamp to bt2020
+
   color.a = 1.f;
   return color;
 }

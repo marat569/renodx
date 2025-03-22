@@ -130,12 +130,7 @@ void main(
     }
     r3.xyz = r8.xyz / r9.xyz;
   }
-  r3.xyz = r3.xyz * r1.zzz;  // Auto Exposure/untonemapped
-
-  //     o0.rgb = r3.rgb;
-  // o0.a = 1.f;
-  // o0.rgb = sign(o0.rgb) * pow(abs(o0.rgb), 2.2f);
-  // return;
+  r3.xyz = r3.xyz * r1.zzz;
 
   if (r0.z != 0) {
     r0.z = dot(v0.xy, float2(171, 231));

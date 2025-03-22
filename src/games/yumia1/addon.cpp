@@ -23,6 +23,7 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     // CustomDirectXShaders
     CustomShaderEntry(0x7FC9B7B2),  // Tonemap, Ingame -- Starter area/cave
     CustomShaderEntry(0x2C4C70E8),  // Tonemap, Open World
+    CustomShaderEntry(0x1141AEF9), // Glow shader, clamps some cutscenes
 };
 
 ShaderInjectData shader_injection;

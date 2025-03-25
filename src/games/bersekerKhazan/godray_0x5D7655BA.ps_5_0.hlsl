@@ -42,14 +42,17 @@ void main(
   r0.xy = r0.xy * cb0[38].zw + float2(-0.5, -0.5);
   r0.xy = r0.xy * float2(2, 2) + float2(-0, 3);
   r0.x = dot(r0.xy, r0.xy);
-  r0.x = sqrt(r0.x);
+  r0.x = renodx::math::SqrtSafe(r0.x);
   r0.yz = r0.zw * cb0[5].xy + cb0[4].xy;
   r0.yzw = t0.Sample(s0_s, r0.yz).xyz;
   float3 untonemapped = r0.yzw;
   r0.yzw = saturate(untonemapped);
-  r0.yzw = log2(r0.yzw);
-  r0.yzw = cb3[5].www * r0.yzw;
-  r0.yzw = exp2(r0.yzw);
+
+  // r0.yzw = log2(r0.yzw);
+  // r0.yzw = cb3[5].www * r0.yzw;
+  // r0.yzw = exp2(r0.yzw);
+  r0.yzw = renodx::math::PowSafe(r0.yzw, cb3[5].w);
+
   r0.yzw = float3(-0.00999999978, -0.00999999978, -0.00999999978) + r0.yzw;
   r0.yzw = cb3[5].zzz * r0.yzw + float3(0.00999999978, 0.00999999978, 0.00999999978);
   r1.x = dot(r0.yzw, cb3[3].xyz);
@@ -132,8 +135,9 @@ void main(
   r0.xyz = r1.xyz * r0.xxx + r0.yzw;
   r1.xyz = cb3[4].xyz + -r0.xyz;
   r0.xyz = cb3[8].yyy * r1.xyz + r0.xyz;
-  o0.xyz = max(float3(0, 0, 0), r0.xyz);
-  o0.w = 1;
+  // o0.xyz = max(float3(0, 0, 0), r0.xyz);
+  o0.rgb = RENODX_TONE_MAP_TYPE ? r0.rgb : max(0, r0.rgb);
+  o0.w = 1.f;
   if (RENODX_TONE_MAP_TYPE != 0.f) {
     o0.rgb = renodx::draw::UpgradeToneMapByLuminance(
         untonemapped,

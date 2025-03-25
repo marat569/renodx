@@ -131,7 +131,9 @@ void main(
   r0.xyz = cb2[4].www * r0.xyz + r2.xyz;
   r1.xyz = cb2[3].xyz + -r0.xyz;
   r0.xyz = cb2[5].xxx * r1.xyz + r0.xyz;
-  o0.xyz = max(float3(0, 0, 0), r0.xyz);
+  // o0.xyz = max(float3(0, 0, 0), r0.xyz);
+  o0.rgb = RENODX_TONE_MAP_TYPE ? r0.rgb : max(0, r0.rgb);
+
   o0.w = 1;
   return;
 }

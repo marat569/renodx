@@ -103,8 +103,9 @@ void main(
   r0.xyz = r0.xxx * r0.yzw + r1.xyz;
   r1.xyz = cb2[1].xyz + -r0.xyz;
   r0.xyz = cb2[2].xxx * r1.xyz + r0.xyz;
-  o0.xyz = max(float3(0, 0, 0), r0.xyz);
-  o0.w = 1;
+  // o0.xyz = max(float3(0, 0, 0), r0.xyz);
+  o0.rgb = RENODX_TONE_MAP_TYPE ? r0.rgb : max(0, r0.rgb);
+  o0.w = 1.f;
 
   if (RENODX_TONE_MAP_TYPE != 0.f) {
     o0.rgb = renodx::draw::UpgradeToneMapByLuminance(

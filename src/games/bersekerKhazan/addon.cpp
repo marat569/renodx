@@ -25,6 +25,7 @@ renodx::mods::shader::CustomShaders custom_shaders = {
 
     // Etc shaders
     CustomShaderEntry(0x5D7655BA),  // God Ray
+    CustomShaderEntry(0x2AF479D0),  // Post Process full screen effect
     CustomShaderEntry(0xC3126A03),  // UI Fix
 };
 

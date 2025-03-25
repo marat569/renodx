@@ -109,7 +109,7 @@ void main(
   r3.y = r1.y * r2.x + r1.z;
   r1.x = r1.x * r2.x + r2.y;
   r3.z = r1.y * r1.w + r1.x;
-  r1.xyz = sqrt(r3.xyz);
+  r1.xyz = renodx::math::SignSqrt(r3.xyz);
   r1.xyz = r1.xyz + -r3.xyz;
   r1.w = dot(r3.xyz, cb3[3].xyz);
   r2.x = r1.w * 2 + -1;
@@ -118,7 +118,9 @@ void main(
   r2.yzw = -r3.xyz * r3.xyz + r3.xyz;
   r2.xyz = r2.xxx * r2.yzw + r3.xyz;
   r1.xyz = r1.www ? r2.xyz : r1.xyz;
-  r1.xyz = max(float3(0, 0, 0), r1.xyz);
+  // r1.xyz = max(float3(0, 0, 0), r1.xyz);
+  r1.rgb = RENODX_TONE_MAP_TYPE ? r1.rgb : max(0, r1.rgb);
+
   r1.xyz = log2(r1.xyz);
   r1.w = 1 / cb3[5].w;
   r1.xyz = r1.www * r1.xyz;

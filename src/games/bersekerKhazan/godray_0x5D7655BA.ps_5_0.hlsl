@@ -74,7 +74,8 @@ void main(
   r1.y = exp2(r1.y);
   r1.z = r1.y * 2 + -1;
   r1.y = cmp(r1.y < 0.5);
-  r2.xyz = sqrt(abs(r0.yzw));
+  // r2.xyz = sqrt(abs(r0.yzw));
+  r2.xyz = renodx::math::SignSqrt(r0.yzw);
   r2.xyz = r2.xyz + -abs(r0.yzw);
   r1.w = r1.z * r2.x + abs(r0.y);
   r3.xyz = -abs(r0.yzw) * abs(r0.yzw) + abs(r0.yzw);
@@ -118,8 +119,8 @@ void main(
   r2.yzw = -r3.xyz * r3.xyz + r3.xyz;
   r2.xyz = r2.xxx * r2.yzw + r3.xyz;
   r1.xyz = r1.www ? r2.xyz : r1.xyz;
-  // r1.xyz = max(float3(0, 0, 0), r1.xyz);
-  r1.rgb = RENODX_TONE_MAP_TYPE ? r1.rgb : max(0, r1.rgb);
+  r1.xyz = max(float3(0, 0, 0), r1.xyz);
+  // r1.rgb = RENODX_TONE_MAP_TYPE ? r1.rgb : max(0, r1.rgb);  // We need the above max(0 -- or else death screens artifact
 
   r1.xyz = log2(r1.xyz);
   r1.w = 1 / cb3[5].w;

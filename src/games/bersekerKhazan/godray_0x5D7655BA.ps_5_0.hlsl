@@ -2,6 +2,7 @@
 // Provided by Ritsu
 // Blood effect that gets drawn over the game, gets rendered after the lutbuilder/sample shader
 // Clamps the game, so needs a smol fix
+// This also controls the vignette
 
 #include "./common.hlsl"
 
@@ -45,8 +46,10 @@ void main(
   r0.x = renodx::math::SqrtSafe(r0.x);
   r0.yz = r0.zw * cb0[5].xy + cb0[4].xy;
   r0.yzw = t0.Sample(s0_s, r0.yz).xyz;
+  r0.yzw = RestoreLuminance(r0.yzw);
   float3 untonemapped = r0.yzw;
   r0.yzw = saturate(untonemapped);
+ 
 
   // r0.yzw = log2(r0.yzw);
   // r0.yzw = cb3[5].www * r0.yzw;
@@ -148,5 +151,8 @@ void main(
         o0.rgb,
         1.f);
   }
+
+  o0.rgb = ScaleLuminance(o0.rgb);
+
   return;
 }

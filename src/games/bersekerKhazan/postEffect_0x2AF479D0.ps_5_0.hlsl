@@ -47,19 +47,30 @@ void main(
   r2.xyzw = max(cb0[6].xyxy, r2.xyzw);
   r2.xyzw = min(cb0[6].zwzw, r2.xyzw);
   r0.yzw = t0.Sample(s0_s, r2.xy).xyz;
-  r2.xyz = t0.Sample(s0_s, r2.zw).xyz;
-  float3 untonemapped = r0.yzw;
+  r0.yzw = RestoreLuminance(r0.yzw);
+  float3 untonemapped = r0.yzw;  // no AA?
+
+  r2.xyz = t0.Sample(s0_s, r2.zw).xyz;  // Blurs the game?
+  r2.xyz = RestoreLuminance(r2.xyz);
+
   r0.yz = float2(0.212599993, 0.715200007) * r0.yz;
   r0.y = r0.y + r0.z;
   r0.y = r0.w * 0.0722000003 + r0.y;
   r1.xy = cb1[135].wz * float2(1.25, 1.25) + r1.wz;
   r3.xyzw = r1.zxyw * cb0[5].xyxy + cb0[4].xyxy;
   r0.zw = r1.zw * cb0[5].xy + cb0[4].xy;
+  
   r1.xyz = t0.Sample(s0_s, r0.zw).xyz;
+  r1.xyz = RestoreLuminance(r1.xyz);
   r3.xyzw = max(cb0[6].xyxy, r3.xyzw);
   r3.xyzw = min(cb0[6].zwzw, r3.xyzw);
+  
   r4.xyz = t0.Sample(s0_s, r3.xy).xyz;
+  r4.xyz = RestoreLuminance(r4.xyz);
+  
   r3.xyz = t0.Sample(s0_s, r3.zw).xyz;
+  r3.xyz = RestoreLuminance(r3.xyz);
+
   r0.zw = float2(0.212599993, 0.715200007) * r4.xy;
   r0.z = r0.z + r0.w;
   r0.z = r4.z * 0.0722000003 + r0.z;
@@ -116,6 +127,8 @@ void main(
         o0.rgb,
         1.f);
   }
+
+  o0.rgb = ScaleLuminance(o0.rgb);
 
   return;
 }

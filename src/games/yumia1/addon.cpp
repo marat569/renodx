@@ -291,7 +291,7 @@ renodx::utils::settings::Settings settings = {
 
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
-        .label = " - Make sure XeSS is off, or update the XeSS dll to the latest version -- or else the game will crash! \r\n - Please report bugs, this mod was based on the demo! \r\n \r\n - Join the HDR Den discord for help!",
+        .label = " - NVIDIA GPUs only -- AMD/Intel are unsupported and probably will not work! \r\n - Make sure XeSS is off, or update the XeSS dll to the latest version -- or else the game will crash! \r\n - Please report bugs! \r\n \r\n - Join the HDR Den discord for help!",
         .section = "Instructions",
     },
 

@@ -49,6 +49,8 @@ void main(
   r0.yzw = t0.Sample(s0_s, r2.xy).xyz;
   r0.yzw = RestoreLuminance(r0.yzw);
   float3 untonemapped = r0.yzw;  // no AA?
+  float3 sdr = RENODX_TONE_MAP_TYPE ? saturate(renodx::tonemap::renodrt::NeutralSDR(max(0, untonemapped))) : saturate(untonemapped);
+  r0.yzw = sdr;
 
   r2.xyz = t0.Sample(s0_s, r2.zw).xyz;  // Blurs the game?
   r2.xyz = RestoreLuminance(r2.xyz);
@@ -121,11 +123,10 @@ void main(
   o0.w = 1.f;
 
   if (RENODX_TONE_MAP_TYPE != 0.f) {
-    o0.rgb = renodx::draw::UpgradeToneMapByLuminance(
+    o0.rgb = renodx::tonemap::UpgradeToneMap(
         untonemapped,
-        // RenoDRTSmoothClamp(untonemapped, 1.f),
-        // RenoDRTSmoothClamp(untonemapped, RENODX_PEAK_NITS / RENODX_GAME_NITS),
-        saturate(untonemapped),
+        sdr,
+        // saturate(untonemapped),
         o0.rgb,
         1.f);
   }

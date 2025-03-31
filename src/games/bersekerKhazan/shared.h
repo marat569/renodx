@@ -32,6 +32,7 @@
 // 0 = HDR10, 1 = scRGB
 #define RENODX_SWAP_CHAIN_ENCODING_COLOR_SPACE (color::convert::COLOR_SPACE_BT2020 - 1)  // BT709 = BT2020 - 1
 #define RENODX_SWAP_CHAIN_ENCODING             (ENCODING_PQ + 1)                         // SCRGB = PQ + 1
+// #define RENODX_SWAP_CHAIN_CLAMP_NITS           10000.f
 
 // Must be 32bit aligned
 // Should be 4x32

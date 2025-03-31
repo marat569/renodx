@@ -49,7 +49,6 @@ void main(
   r0.yzw = RestoreLuminance(r0.yzw);
   float3 untonemapped = r0.yzw;
   r0.yzw = saturate(untonemapped);
- 
 
   // r0.yzw = log2(r0.yzw);
   // r0.yzw = cb3[5].www * r0.yzw;
@@ -147,6 +146,8 @@ void main(
   if (RENODX_TONE_MAP_TYPE != 0.f) {
     o0.rgb = renodx::draw::UpgradeToneMapByLuminance(
         untonemapped,
+        // RenoDRTSmoothClamp(untonemapped, 1.f),
+        // RenoDRTSmoothClamp(untonemapped, RENODX_PEAK_NITS / RENODX_GAME_NITS),
         saturate(untonemapped),
         o0.rgb,
         1.f);

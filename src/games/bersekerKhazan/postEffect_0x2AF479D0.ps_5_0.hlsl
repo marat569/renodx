@@ -59,15 +59,15 @@ void main(
   r1.xy = cb1[135].wz * float2(1.25, 1.25) + r1.wz;
   r3.xyzw = r1.zxyw * cb0[5].xyxy + cb0[4].xyxy;
   r0.zw = r1.zw * cb0[5].xy + cb0[4].xy;
-  
+
   r1.xyz = t0.Sample(s0_s, r0.zw).xyz;
   r1.xyz = RestoreLuminance(r1.xyz);
   r3.xyzw = max(cb0[6].xyxy, r3.xyzw);
   r3.xyzw = min(cb0[6].zwzw, r3.xyzw);
-  
+
   r4.xyz = t0.Sample(s0_s, r3.xy).xyz;
   r4.xyz = RestoreLuminance(r4.xyz);
-  
+
   r3.xyz = t0.Sample(s0_s, r3.zw).xyz;
   r3.xyz = RestoreLuminance(r3.xyz);
 
@@ -123,6 +123,8 @@ void main(
   if (RENODX_TONE_MAP_TYPE != 0.f) {
     o0.rgb = renodx::draw::UpgradeToneMapByLuminance(
         untonemapped,
+        // RenoDRTSmoothClamp(untonemapped, 1.f),
+        // RenoDRTSmoothClamp(untonemapped, RENODX_PEAK_NITS / RENODX_GAME_NITS),
         saturate(untonemapped),
         o0.rgb,
         1.f);

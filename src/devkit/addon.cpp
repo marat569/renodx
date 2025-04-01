@@ -530,6 +530,8 @@ void OnBindPipeline(
         } catch (const std::exception& e) {
           reshade::log::message(reshade::log::level::error, e.what());
         }
+      } else if (device->get_api() == reshade::api::device_api::opengl) {
+        // noop
       }
     }
 
@@ -1483,6 +1485,41 @@ void RenderCapturePane(reshade::api::device* device, DeviceData* data) {
               }
             }
 
+            if (render_target.resource_desc.texture.format != reshade::api::format::unknown) {
+              row_index++;
+              ImGui::TableNextRow();
+
+              if ((ImGui::TableSetColumnIndex(CAPTURE_PANE_COLUMN_TYPE))) {
+                auto bullet_flags = tree_node_flags | ImGuiTreeNodeFlags_Leaf
+                                    | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen
+                                    | selection.GetTreeNodeFlags();
+                ImGui::PushID(row_index);
+                ImGui::TreeNodeEx("", bullet_flags, "Dimensions");
+                ImGui::PopID();
+                if (ImGui::IsItemClicked()) {
+                  MakeSelectionCurrent(selection);
+                  ImGui::SetItemDefaultFocus();
+                }
+              }
+
+              if ((ImGui::TableSetColumnIndex(CAPTURE_PANE_COLUMN_REF))) {
+                ImGui::Text("0x%016llX", render_target.resource.handle);
+              }
+
+              if ((ImGui::TableSetColumnIndex(CAPTURE_PANE_COLUMN_INFO))) {
+                if (render_target.resource_desc.type == reshade::api::resource_type::texture_3d) {
+                  ImGui::Text("%dx%dx%d",
+                              render_target.resource_desc.texture.width,
+                              render_target.resource_desc.texture.height,
+                              render_target.resource_desc.texture.depth_or_layers);
+                } else {
+                  ImGui::Text("%dx%d",
+                              render_target.resource_desc.texture.width,
+                              render_target.resource_desc.texture.height);
+                }
+              }
+            }
+
             ImGui::TreePop();
           }
         }
@@ -1930,6 +1967,10 @@ void RenderShaderViewDisassembly(reshade::api::device* device, DeviceData* data,
       }
       if (renodx::utils::device::IsDirectX(device)) {
         shader_details->disassembly = renodx::utils::shader::compiler::directx::DisassembleShader(shader_details->shader_data);
+      } else if (device->get_api() == reshade::api::device_api::opengl) {
+        shader_details->disassembly = std::string(
+            shader_details->shader_data.data(),
+            shader_details->shader_data.data() + shader_details->shader_data.size());
       }
     } catch (std::exception& e) {
       shader_details->disassembly = e;
@@ -2019,6 +2060,10 @@ void RenderShaderViewDecompilation(reshade::api::device* device, DeviceData* dat
             {
                 .flatten = true,
             });
+      } else if (device->get_api() == reshade::api::device_api::opengl) {
+        shader_details->disassembly = std::string(
+            shader_details->shader_data.data(),
+            shader_details->shader_data.data() + shader_details->shader_data.size());
       }
     } catch (std::exception& e) {
       shader_details->decompilation = e;

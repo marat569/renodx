@@ -49,7 +49,9 @@ void main(
   r0.yzw = t0.Sample(s0_s, r2.xy).xyz;
   r0.yzw = RestoreLuminance(r0.yzw);
   float3 untonemapped = r0.yzw;  // no AA?
-  float3 sdr = RENODX_TONE_MAP_TYPE ? saturate(renodx::tonemap::renodrt::NeutralSDR(max(0, untonemapped))) : saturate(untonemapped);
+
+  float3 sdrInput = DEBUG_SDR_INPUT ? saturate(renodx::tonemap::renodrt::NeutralSDR(max(0, untonemapped))) : saturate(untonemapped);
+  float3 sdr = RENODX_TONE_MAP_TYPE ? sdrInput : saturate(untonemapped);
   r0.yzw = sdr;
 
   r2.xyz = t0.Sample(s0_s, r2.zw).xyz;  // Blurs the game?

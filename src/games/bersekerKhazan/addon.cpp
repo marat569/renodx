@@ -27,6 +27,10 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0x5D7655BA),  // God Ray
     CustomShaderEntry(0x2AF479D0),  // Post Process full screen effect
     CustomShaderEntry(0xC3126A03),  // UI Fix
+
+    // skip drawing the version number
+    BypassShaderEntry(0x9Df67A35),
+
 };
 
 ShaderInjectData shader_injection;
@@ -287,6 +291,19 @@ renodx::utils::settings::Settings settings = {
             "US CRT",
             "JPN CRT",
         },
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
+    },
+
+    new renodx::utils::settings::Setting{
+        .key = "SDRInput",
+        .binding = &shader_injection.sdrInputDebug,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0,
+        .can_reset = true,
+        .label = "Post Process Input",
+        .section = "DEBUG",
+        .tooltip = "Configures the input color for UpgradeToneMap",
+        .labels = {"Saturate", "RenoDRT NeutralSDR"},
         .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
 

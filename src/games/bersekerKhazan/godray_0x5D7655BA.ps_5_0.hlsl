@@ -48,7 +48,9 @@ void main(
   r0.yzw = t0.Sample(s0_s, r0.yz).xyz;
   r0.yzw = RestoreLuminance(r0.yzw);
   float3 untonemapped = r0.yzw;
-  float3 sdr = RENODX_TONE_MAP_TYPE ? saturate(renodx::tonemap::renodrt::NeutralSDR(max(0, untonemapped))) : saturate(untonemapped);
+
+  float3 sdrInput = DEBUG_SDR_INPUT ? saturate(renodx::tonemap::renodrt::NeutralSDR(max(0, untonemapped))) : saturate(untonemapped);
+  float3 sdr = RENODX_TONE_MAP_TYPE ? sdrInput : saturate(untonemapped);
   r0.yzw = sdr;
 
   // r0.yzw = log2(r0.yzw);
@@ -129,6 +131,7 @@ void main(
   r1.w = 1 / cb3[5].w;
   r1.xyz = r1.www * r1.xyz;
   r1.xyz = exp2(r1.xyz);
+
   r1.xyz = r1.xyz + -abs(r0.yzw);
   r0.yzw = cb3[5].xxx * r1.xyz + abs(r0.yzw);
   r1.x = cb3[8].x * 0.300000012 + -0.200000003;

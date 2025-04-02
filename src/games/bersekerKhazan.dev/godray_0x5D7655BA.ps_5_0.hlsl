@@ -52,9 +52,11 @@ void main(
   float3 gamma_color = renodx::color::srgb::Encode(sdr_color);
   r0.yzw = gamma_color;
 
-  r0.yzw = log2(r0.yzw);
-  r0.yzw = cb3[5].www * r0.yzw;
-  r0.yzw = exp2(r0.yzw);
+  // r0.yzw = log2(r0.yzw);
+  // r0.yzw = cb3[5].www * r0.yzw;
+  // r0.yzw = exp2(r0.yzw);
+  r0.yzw = renodx::math::PowSafe(r0.yzw, cb3[5].w);  // Make the above pow safe, gamma decode
+
   r0.yzw = float3(-0.00999999978, -0.00999999978, -0.00999999978) + r0.yzw;
   r0.yzw = cb3[5].zzz * r0.yzw + float3(0.00999999978, 0.00999999978, 0.00999999978);
   r1.x = dot(r0.yzw, cb3[3].xyz);
@@ -76,7 +78,7 @@ void main(
   r1.y = exp2(r1.y);
   r1.z = r1.y * 2 + -1;
   r1.y = cmp(r1.y < 0.5);
-  r2.xyz = sqrt(abs(r0.yzw));
+  r2.xyz = renodx::math::SignSqrt(abs(r0.yzw));
   r2.xyz = r2.xyz + -abs(r0.yzw);
   r1.w = r1.z * r2.x + abs(r0.y);
   r3.xyz = -abs(r0.yzw) * abs(r0.yzw) + abs(r0.yzw);
@@ -111,7 +113,7 @@ void main(
   r3.y = r1.y * r2.x + r1.z;
   r1.x = r1.x * r2.x + r2.y;
   r3.z = r1.y * r1.w + r1.x;
-  r1.xyz = sqrt(r3.xyz);
+  r1.xyz = renodx::math::SignSqrt(r3.xyz);
   r1.xyz = r1.xyz + -r3.xyz;
   r1.w = dot(r3.xyz, cb3[3].xyz);
   r2.x = r1.w * 2 + -1;
@@ -121,10 +123,13 @@ void main(
   r2.xyz = r2.xxx * r2.yzw + r3.xyz;
   r1.xyz = r1.www ? r2.xyz : r1.xyz;
   r1.xyz = max(float3(0, 0, 0), r1.xyz);
-  r1.xyz = log2(r1.xyz);
-  r1.w = 1 / cb3[5].w;
-  r1.xyz = r1.www * r1.xyz;
-  r1.xyz = exp2(r1.xyz);
+
+  // r1.xyz = log2(r1.xyz);
+  // r1.w = 1 / cb3[5].w;
+  // r1.xyz = r1.www * r1.xyz;
+  // r1.xyz = exp2(r1.xyz);
+  r1.rgb = renodx::math::PowSafe(r1.rgb, 1.f / cb3[5].w);  // Make the above pow safe -- Gamma Encode
+
   r1.xyz = r1.xyz + -abs(r0.yzw);
   r0.yzw = cb3[5].xxx * r1.xyz + abs(r0.yzw);
   r1.x = cb3[8].x * 0.300000012 + -0.200000003;
@@ -137,7 +142,8 @@ void main(
   r0.xyz = r1.xyz * r0.xxx + r0.yzw;
   r1.xyz = cb3[4].xyz + -r0.xyz;
   r0.xyz = cb3[8].yyy * r1.xyz + r0.xyz;
-  o0.xyz = max(float3(0, 0, 0), r0.xyz);
+  // o0.xyz = max(float3(0, 0, 0), r0.xyz);
+  o0.rgb = RENODX_TONE_MAP_TYPE ? r0.rgb : max(0, r0.rgb);  // We need the above max(0 -- or else death screens artifact
   o0.w = 1;
 
   if (RENODX_TONE_MAP_TYPE) {

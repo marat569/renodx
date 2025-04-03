@@ -20,8 +20,9 @@
 namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
-     CustomShaderEntry(0xE363E5C8),  // Uberpost
-     CustomShaderEntry(0x27812EF8), // HDR Final
+    CustomShaderEntry(0xE363E5C8),  // Uberpost
+    CustomShaderEntry(0xECEF72F5),  // Uberpost
+    CustomShaderEntry(0x27812EF8),  // HDR Final
 
 };
 
@@ -290,7 +291,7 @@ renodx::utils::settings::Settings settings = {
 
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
-        .label = " - NVIDIA GPUs only -- AMD/Intel are unsupported and probably will not work! \r\n - Make sure XeSS is off, or update the XeSS dll to the latest version -- or else the game will crash! \r\n - Please report bugs! \r\n \r\n - Join the HDR Den discord for help!",
+        .label = " - THIS IS A BETA! The game has per-zone shaders, and I might've not added them all to the mod! - Please report bugs! \r\n \r\n - Join the HDR Den discord for help!",
         .section = "Instructions",
     },
 
@@ -366,8 +367,8 @@ void OnPresetOff() {
 
 // NOLINTBEGIN(readability-identifier-naming)
 
-extern "C" __declspec(dllexport) const char* NAME = "RenoDX for Atelier Yumia: The Alchemist of Memories & the Envisioned Land";
-extern "C" __declspec(dllexport) const char* DESCRIPTION = "RenoDX for Atelier Yumia: The Alchemist of Memories & the Envisioned Land";
+extern "C" __declspec(dllexport) const char* NAME = "RenoDX for AI: Limit";
+extern "C" __declspec(dllexport) const char* DESCRIPTION = "RenoDX for AI: Limit";
 
 // NOLINTEND(readability-identifier-naming)
 
@@ -376,17 +377,17 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
     case DLL_PROCESS_ATTACH:
       if (!reshade::register_addon(h_module)) return FALSE;
 
-      renodx::mods::shader::on_init_pipeline_layout = [](reshade::api::device* device, auto, auto) {
-        return device->get_api() == reshade::api::device_api::d3d12;  // So overlays dont kill the game
-      };
+      // renodx::mods::shader::on_init_pipeline_layout = [](reshade::api::device* device, auto, auto) {
+      //   return device->get_api() == reshade::api::device_api::d3d12;  // So overlays dont kill the game
+      // };
 
       // renodx::mods::swapchain::SetUseHDR10(true);
-      //renodx::mods::shader::expected_constant_buffer_space = 50;
-      //renodx::mods::shader::expected_constant_buffer_index = 13;
+      // renodx::mods::shader::expected_constant_buffer_space = 50;
+      // renodx::mods::shader::expected_constant_buffer_index = 13;
       renodx::mods::shader::allow_multiple_push_constants = true;
 
-      //renodx::mods::swapchain::expected_constant_buffer_space = 50;
-      //renodx::mods::swapchain::expected_constant_buffer_index = 13;
+      // renodx::mods::swapchain::expected_constant_buffer_space = 50;
+      // renodx::mods::swapchain::expected_constant_buffer_index = 13;
 
       renodx::mods::shader::force_pipeline_cloning = true;   // So the mod works with the toolkit
       renodx::mods::swapchain::force_borderless = false;     // needed for stability

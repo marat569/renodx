@@ -172,11 +172,8 @@ void main(uint3 vThreadID: SV_DispatchThreadID) {
   float3 graded = r0.rgb;
   // No code for instruction (needs manual fix):
   // store_uav_typed u0.xyzw, vThreadID.xyzz, r0.xyzx
-  u0[vThreadID] = r0;  // vanilla, works; returns tonemapped sdr
-  // u0[vThreadID] = float4(untonemapped.rgb, 1.f);
-  // u0[vThreadID] = float4(renodx::draw::ToneMapPass(untonemapped, graded), 1.f);  // black screen
-  // u0[vThreadID] = float4(untonemapped, 1.f); // Works, returns untonemapped
-  // u0[vThreadID] = float4(renodx::tonemap::renodrt::BT709(graded), 1.f);  // works
+  // u0[vThreadID] = r0;  // vanilla, works; returns tonemapped sdr
+  u0[vThreadID] = ProcessColor(untonemapped, graded);
 
   return;
 }

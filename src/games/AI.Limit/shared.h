@@ -1,6 +1,6 @@
 
-#ifndef SRC_YUMIA1_SHARED_H_
-#define SRC_YUMIA1_SHARED_H_
+#ifndef SRC_AILIMIT_SHARED_H_
+#define SRC_AILIMIT_SHARED_H_
 
 #define RENODX_TONE_MAP_TYPE                 shader_injection.toneMapType
 #define RENODX_PEAK_NITS                     shader_injection.toneMapPeakNits

@@ -41,7 +41,7 @@ void main(
   r0.xy = r0.xy * cb0[38].zw + float2(-0.5, -0.5);
   r0.xy = r0.xy * float2(2, 2) + float2(-0, 3);
   r0.x = dot(r0.xy, r0.xy);
-  r0.x = sqrt(r0.x);
+  r0.x = renodx::math::SignSqrt(r0.x);
   r0.yz = r0.zw * cb0[5].xy + cb0[4].xy;
   r0.yzw = t0.Sample(s0_s, r0.yz).xyz;
 
@@ -78,7 +78,7 @@ void main(
   r1.y = exp2(r1.y);
   r1.z = r1.y * 2 + -1;
   r1.y = cmp(r1.y < 0.5);
-  r2.xyz = renodx::math::SignSqrt(abs(r0.yzw));
+  r2.xyz = renodx::math::SignSqrt((r0.yzw));
   r2.xyz = r2.xyz + -abs(r0.yzw);
   r1.w = r1.z * r2.x + abs(r0.y);
   r3.xyz = -abs(r0.yzw) * abs(r0.yzw) + abs(r0.yzw);

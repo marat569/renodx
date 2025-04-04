@@ -386,7 +386,7 @@ void main(uint3 vThreadID: SV_DispatchThreadID) {
   r3.xyz = exp2(r2.xyz);
   float3 tonemapped = r3.rgb;
 
-  if (RENODX_GAME_NITS >= 203.f) {
+  if (RENODX_TONE_MAP_TYPE != 0.f) {
     u0[vThreadID.xyz] = LutBuilderToneMap(untonemapped_ap1, r3.xyz);
     return;
   }

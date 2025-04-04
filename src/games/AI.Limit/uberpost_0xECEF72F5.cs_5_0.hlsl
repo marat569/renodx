@@ -113,7 +113,7 @@ void main(uint3 vThreadID: SV_DispatchThreadID) {
   r0.x = cmp(0 != cb1[12].x);
   if (r0.x != 0) {
     r0.xyz = r2.xyz * float3(5.55555582, 5.55555582, 5.55555582) + float3(0.0479959995, 0.0479959995, 0.0479959995);
-    r0.xyz = max(float3(0, 0, 0), r0.xyz);
+    // r0.xyz = max(float3(0, 0, 0), r0.xyz);
     r0.xyz = log2(r0.xyz);
     r2.xyz = saturate(r0.xyz * float3(0.0734997839, 0.0734997839, 0.0734997839) + float3(0.386036009, 0.386036009, 0.386036009));
   } else {
@@ -121,7 +121,7 @@ void main(uint3 vThreadID: SV_DispatchThreadID) {
     if (r0.x != 0) {
       r0.xyz = cb1[6].zzz * r2.xyz;
       r0.xyz = r0.xyz * float3(5.55555582, 5.55555582, 5.55555582) + float3(0.0479959995, 0.0479959995, 0.0479959995);
-      r0.xyz = max(float3(0, 0, 0), r0.xyz);
+      // r0.xyz = max(float3(0, 0, 0), r0.xyz);
       r0.xyz = log2(r0.xyz);
       r0.xyz = saturate(r0.xyz * float3(0.0734997839, 0.0734997839, 0.0734997839) + float3(0.386036009, 0.386036009, 0.386036009));
       r0.xyz = cb1[6].yyy * r0.xyz;

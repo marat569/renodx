@@ -20,9 +20,12 @@
 namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
+    // Uber_Post
     CustomShaderEntry(0xE363E5C8),  // Uberpost
     CustomShaderEntry(0xECEF72F5),  // Uberpost
-    CustomShaderEntry(0x27812EF8),  // HDR Final
+    // Etc
+    CustomShaderEntry(0x27812EF8),  // HDR Final // (AA OFF, TAA, SMAA, FSR3 AA)
+    CustomShaderEntry(0xAE7EE10F),  // HDR Final (DLAA)
 
 };
 

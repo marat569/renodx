@@ -1,6 +1,5 @@
 // ---- Created with 3Dmigoto v1.3.16 on Mon Mar 24 17:25:55 2025
 // Etc shader that draws after lutbuilder/sample
-// Idr what it is or whereit drew
 
 #include "./common.hlsl"
 

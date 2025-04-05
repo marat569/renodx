@@ -1,8 +1,6 @@
-// ---- Created with 3Dmigoto v1.4.1 on Fri Jan 17 15:00:34 2025
-// Provided by Ritsu
-// Blood effect that gets drawn over the game, gets rendered after the lutbuilder/sample shader
-// Clamps the game, so needs a smol fix
-// This also controls the vignette
+// ---- Created with 3Dmigoto v1.3.16 on Mon Mar 24 17:25:11 2025
+// Godray shader that draws after sample, and before postEffect
+// Thank you to Shortfuse for fixing it up
 
 #include "./common.hlsl"
 
@@ -43,20 +41,21 @@ void main(
   r0.xy = r0.xy * cb0[38].zw + float2(-0.5, -0.5);
   r0.xy = r0.xy * float2(2, 2) + float2(-0, 3);
   r0.x = dot(r0.xy, r0.xy);
-  r0.x = renodx::math::SqrtSafe(r0.x);
+  r0.x = renodx::math::SignSqrt(r0.x);
   r0.yz = r0.zw * cb0[5].xy + cb0[4].xy;
   r0.yzw = t0.Sample(s0_s, r0.yz).xyz;
-  r0.yzw = RestoreLuminance(r0.yzw);
-  float3 untonemapped = r0.yzw;
 
-  float3 sdrInput = DEBUG_SDR_INPUT ? saturate(renodx::tonemap::renodrt::NeutralSDR(max(0, untonemapped))) : saturate(untonemapped);
-  float3 sdr = RENODX_TONE_MAP_TYPE ? sdrInput : saturate(untonemapped);
-  r0.yzw = sdr;
+  float3 input_color = r0.yzw;
+  float3 linear_color = renodx::draw::InvertIntermediatePass(input_color);
+  float3 signs = sign(linear_color);
+  float3 sdr_color = saturate(renodx::tonemap::renodrt::NeutralSDR(abs(linear_color)));
+  float3 gamma_color = renodx::color::srgb::Encode(sdr_color);
+  r0.yzw = gamma_color;
 
   // r0.yzw = log2(r0.yzw);
   // r0.yzw = cb3[5].www * r0.yzw;
   // r0.yzw = exp2(r0.yzw);
-  r0.yzw = renodx::math::PowSafe(r0.yzw, cb3[5].w);
+  r0.yzw = renodx::math::PowSafe(r0.yzw, cb3[5].w);  // Make the above pow safe, gamma decode
 
   r0.yzw = float3(-0.00999999978, -0.00999999978, -0.00999999978) + r0.yzw;
   r0.yzw = cb3[5].zzz * r0.yzw + float3(0.00999999978, 0.00999999978, 0.00999999978);
@@ -79,8 +78,7 @@ void main(
   r1.y = exp2(r1.y);
   r1.z = r1.y * 2 + -1;
   r1.y = cmp(r1.y < 0.5);
-  // r2.xyz = sqrt(abs(r0.yzw));
-  r2.xyz = renodx::math::SignSqrt(r0.yzw);
+  r2.xyz = renodx::math::SignSqrt((r0.yzw));
   r2.xyz = r2.xyz + -abs(r0.yzw);
   r1.w = r1.z * r2.x + abs(r0.y);
   r3.xyz = -abs(r0.yzw) * abs(r0.yzw) + abs(r0.yzw);
@@ -125,12 +123,12 @@ void main(
   r2.xyz = r2.xxx * r2.yzw + r3.xyz;
   r1.xyz = r1.www ? r2.xyz : r1.xyz;
   r1.xyz = max(float3(0, 0, 0), r1.xyz);
-  // r1.rgb = RENODX_TONE_MAP_TYPE ? r1.rgb : max(0, r1.rgb);  // We need the above max(0 -- or else death screens artifact
 
-  r1.xyz = log2(r1.xyz);
-  r1.w = 1 / cb3[5].w;
-  r1.xyz = r1.www * r1.xyz;
-  r1.xyz = exp2(r1.xyz);
+  // r1.xyz = log2(r1.xyz);
+  // r1.w = 1 / cb3[5].w;
+  // r1.xyz = r1.www * r1.xyz;
+  // r1.xyz = exp2(r1.xyz);
+  r1.rgb = renodx::math::PowSafe(r1.rgb, 1.f / cb3[5].w);  // Make the above pow safe -- Gamma Encode
 
   r1.xyz = r1.xyz + -abs(r0.yzw);
   r0.yzw = cb3[5].xxx * r1.xyz + abs(r0.yzw);
@@ -145,18 +143,16 @@ void main(
   r1.xyz = cb3[4].xyz + -r0.xyz;
   r0.xyz = cb3[8].yyy * r1.xyz + r0.xyz;
   // o0.xyz = max(float3(0, 0, 0), r0.xyz);
-  o0.rgb = RENODX_TONE_MAP_TYPE ? r0.rgb : max(0, r0.rgb);
-  o0.w = 1.f;
-  if (RENODX_TONE_MAP_TYPE != 0.f) {
-    o0.rgb = renodx::tonemap::UpgradeToneMap(
-        untonemapped,
-        sdr,
-        // saturate(untonemapped),
-        o0.rgb,
-        1.f);
-  }
+  o0.rgb = RENODX_TONE_MAP_TYPE ? r0.rgb : max(0, r0.rgb);  // We need the above max(0 -- or else death screens artifact
+  o0.w = 1;
 
-  o0.rgb = ScaleLuminance(o0.rgb);
+  if (RENODX_TONE_MAP_TYPE) {
+    float3 processed_sdr = signs * renodx::color::srgb::Decode(o0.rgb);
+
+    float3 upgraded_hdr = renodx::tonemap::UpgradeToneMap(linear_color, signs * sdr_color, processed_sdr, 1.f);
+
+    o0.rgb = renodx::draw::RenderIntermediatePass(upgraded_hdr);
+  }
 
   return;
 }

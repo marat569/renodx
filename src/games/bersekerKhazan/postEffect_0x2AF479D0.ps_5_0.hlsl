@@ -47,15 +47,17 @@ void main(
   r2.xyzw = max(cb0[6].xyxy, r2.xyzw);
   r2.xyzw = min(cb0[6].zwzw, r2.xyzw);
   r0.yzw = t0.Sample(s0_s, r2.xy).xyz;
-  r0.yzw = RestoreLuminance(r0.yzw);
+  // r0.yzw = RestoreLuminance(r0.yzw);
+  r0.yzw = ToGamma(r0.yzw);
   float3 untonemapped = r0.yzw;  // no AA?
 
-  float3 sdrInput = DEBUG_SDR_INPUT ? saturate(renodx::tonemap::renodrt::NeutralSDR(max(0, untonemapped))) : saturate(untonemapped);
-  float3 sdr = RENODX_TONE_MAP_TYPE ? sdrInput : saturate(untonemapped);
-  r0.yzw = sdr;
+  // float3 sdrInput = DEBUG_SDR_INPUT ? saturate(renodx::tonemap::renodrt::NeutralSDR(max(0, untonemapped))) : saturate(untonemapped);
+  // float3 sdr = RENODX_TONE_MAP_TYPE ? sdrInput : saturate(untonemapped);
+  // r0.yzw = sdr;
 
   r2.xyz = t0.Sample(s0_s, r2.zw).xyz;  // Blurs the game?
-  r2.xyz = RestoreLuminance(r2.xyz);
+  // r2.xyz = RestoreLuminance(r2.xyz);
+  r2.xyz = ToGamma(r2.xyz);
 
   r0.yz = float2(0.212599993, 0.715200007) * r0.yz;
   r0.y = r0.y + r0.z;
@@ -65,15 +67,23 @@ void main(
   r0.zw = r1.zw * cb0[5].xy + cb0[4].xy;
 
   r1.xyz = t0.Sample(s0_s, r0.zw).xyz;
-  r1.xyz = RestoreLuminance(r1.xyz);
+  float3 input_color = r1.xyz;
+  float3 linear_color = renodx::draw::InvertIntermediatePass(input_color);
+  float3 signs = sign(linear_color);
+  float3 sdr_color = saturate(renodx::tonemap::renodrt::NeutralSDR(abs(linear_color)));
+  float3 gamma_color = renodx::color::srgb::Encode(sdr_color);
+  r1.xyz = gamma_color;
+
+  // r1.xyz = RestoreLuminance(r1.xyz);
+
   r3.xyzw = max(cb0[6].xyxy, r3.xyzw);
   r3.xyzw = min(cb0[6].zwzw, r3.xyzw);
 
   r4.xyz = t0.Sample(s0_s, r3.xy).xyz;
-  r4.xyz = RestoreLuminance(r4.xyz);
+  r4.xyz = ToGamma(r4.xyz);
 
   r3.xyz = t0.Sample(s0_s, r3.zw).xyz;
-  r3.xyz = RestoreLuminance(r3.xyz);
+  r3.xyz = ToGamma(r3.xyz);
 
   r0.zw = float2(0.212599993, 0.715200007) * r4.xy;
   r0.z = r0.z + r0.w;
@@ -124,16 +134,24 @@ void main(
   o0.rgb = RENODX_TONE_MAP_TYPE ? r0.rgb : max(0, r0.rgb);
   o0.w = 1.f;
 
-  if (RENODX_TONE_MAP_TYPE != 0.f) {
-    o0.rgb = renodx::tonemap::UpgradeToneMap(
-        untonemapped,
-        sdr,
-        // saturate(untonemapped),
-        o0.rgb,
-        1.f);
-  }
+  // if (RENODX_TONE_MAP_TYPE != 0.f) {
+  //   o0.rgb = renodx::tonemap::UpgradeToneMap(
+  //       untonemapped,
+  //       sdr,
+  //       // saturate(untonemapped),
+  //       o0.rgb,
+  //       1.f);
+  // }
 
-  o0.rgb = ScaleLuminance(o0.rgb);
+  // o0.rgb = ScaleLuminance(o0.rgb);
+
+  if (RENODX_TONE_MAP_TYPE) {
+    float3 processed_sdr = signs * renodx::color::srgb::Decode(o0.rgb);
+
+    float3 upgraded_hdr = renodx::tonemap::UpgradeToneMap(linear_color, signs * sdr_color, processed_sdr, 1.f);
+
+    o0.rgb = renodx::draw::RenderIntermediatePass(upgraded_hdr);
+  }
 
   return;
 }

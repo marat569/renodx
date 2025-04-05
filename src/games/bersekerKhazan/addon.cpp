@@ -294,18 +294,18 @@ renodx::utils::settings::Settings settings = {
         .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
 
-    new renodx::utils::settings::Setting{
-        .key = "SDRInput",
-        .binding = &shader_injection.sdrInputDebug,
-        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 0,
-        .can_reset = true,
-        .label = "Post Process Input",
-        .section = "DEBUG",
-        .tooltip = "Configures the input color for UpgradeToneMap",
-        .labels = {"Saturate", "RenoDRT NeutralSDR"},
-        .is_visible = []() { return settings[0]->GetValue() >= 1; },
-    },
+    // new renodx::utils::settings::Setting{
+    //     .key = "SDRInput",
+    //     .binding = &shader_injection.sdrInputDebug,
+    //     .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+    //     .default_value = 0,
+    //     .can_reset = true,
+    //     .label = "Post Process Input",
+    //     .section = "DEBUG",
+    //     .tooltip = "Configures the input color for UpgradeToneMap",
+    //     .labels = {"Saturate", "RenoDRT NeutralSDR"},
+    //     .is_visible = []() { return settings[0]->GetValue() >= 1; },
+    // },
 
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,

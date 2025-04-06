@@ -72,7 +72,8 @@ void main(
   float3 signs = sign(linear_color);
   float3 sdr_color = saturate(renodx::tonemap::renodrt::NeutralSDR(abs(linear_color)));
   float3 gamma_color = renodx::color::srgb::Encode(sdr_color);
-  r1.xyz = gamma_color;
+  // r1.xyz = gamma_color;
+  r1.xyz = RENODX_TONE_MAP_TYPE ? gamma_color : r1.xyz;  // Fix vanilla
 
   // r1.xyz = RestoreLuminance(r1.xyz);
 

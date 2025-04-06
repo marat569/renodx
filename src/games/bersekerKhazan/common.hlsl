@@ -61,12 +61,15 @@ float3 RestoreLuminance(float3 color) {
 }
 
 float3 ToGamma(float3 color) {
-  float3 input_color = color;
-  float3 linear_color = renodx::draw::InvertIntermediatePass(input_color);
-  float3 sdr_color = saturate(renodx::tonemap::renodrt::NeutralSDR(abs(linear_color)));
-  float3 gamma_color = renodx::color::srgb::Encode(sdr_color);
+  if (RENODX_TONE_MAP_TYPE) {
+    float3 input_color = color;
+    float3 linear_color = renodx::draw::InvertIntermediatePass(input_color);
+    float3 sdr_color = saturate(renodx::tonemap::renodrt::NeutralSDR(abs(linear_color)));
+    float3 gamma_color = renodx::color::srgb::Encode(sdr_color);
 
-  color = gamma_color;
-
+    color = gamma_color;
+  } else {
+    color = color;
+  }
   return color;
 }

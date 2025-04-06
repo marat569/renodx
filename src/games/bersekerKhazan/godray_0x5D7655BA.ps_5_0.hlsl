@@ -50,7 +50,8 @@ void main(
   float3 signs = sign(linear_color);
   float3 sdr_color = saturate(renodx::tonemap::renodrt::NeutralSDR(abs(linear_color)));
   float3 gamma_color = renodx::color::srgb::Encode(sdr_color);
-  r0.yzw = gamma_color;
+  // r0.yzw = gamma_color;
+  r0.yzw = RENODX_TONE_MAP_TYPE ? gamma_color : r0.yzw;  // Fix vanilla
 
   // r0.yzw = log2(r0.yzw);
   // r0.yzw = cb3[5].www * r0.yzw;

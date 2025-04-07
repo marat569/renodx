@@ -110,6 +110,11 @@ void main(uint3 vThreadID: SV_DispatchThreadID) {
   }
 
   float3 untonemapped = r2.rgb;
+  // // testing Adrian's highlight saturation workaround
+  // if (RENODX_PEAK_NITS == 999.f) {
+  //   r2.xyz = renodx::tonemap::dice::BT709(untonemapped, 2.f, 0.5f);
+  // }
+
   r0.x = cmp(0 != cb1[12].x);
   if (r0.x != 0) {
     r0.xyz = r2.xyz * float3(5.55555582, 5.55555582, 5.55555582) + float3(0.0479959995, 0.0479959995, 0.0479959995);

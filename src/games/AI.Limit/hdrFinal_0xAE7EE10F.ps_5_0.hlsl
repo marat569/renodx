@@ -46,7 +46,7 @@ void main(
   r1.xy = (uint2)r1.xy;
   r1.zw = float2(0, 0);
   r1.xyz = t0.Load(r1.xyzw).xyz;
-  r1.xyz = (r1.xyz); // Removed saturate to unclamp the game
+  r1.xyz = (r1.xyz);  // Removed saturate to unclamp the game
   r2.xyz = r1.xyz * r0.zzz;
   r2.xyz = cb0[0].xxx * r2.xyz;
   r0.z = dot(r1.xyz, float3(0.212672904, 0.715152204, 0.0721750036));
@@ -76,10 +76,10 @@ void main(
   r1.w = 1 + -r1.w;
   r0.w = r1.w * r0.w;
   r1.xyz = r0.www * float3(0.00392156886, 0.00392156886, 0.00392156886) + r1.xyz;
-  r2.xyz = float3(0.0549999997, 0.0549999997, 0.0549999997) + r1.xyz;
-  r2.xyz = float3(0.947867334, 0.947867334, 0.947867334) * r2.xyz;
 
   // sRGB Decode
+  // r2.xyz = float3(0.0549999997, 0.0549999997, 0.0549999997) + r1.xyz;
+  // r2.xyz = float3(0.947867334, 0.947867334, 0.947867334) * r2.xyz;
   // r2.xyz = log2(abs(r2.xyz));
   // r2.xyz = float3(2.4000001, 2.4000001, 2.4000001) * r2.xyz;
   // r2.xyz = exp2(r2.xyz);

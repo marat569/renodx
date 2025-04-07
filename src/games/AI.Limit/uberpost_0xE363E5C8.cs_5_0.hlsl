@@ -146,6 +146,10 @@ void main(uint3 vThreadID: SV_DispatchThreadID) {
   }
 
   float3 untonemapped = r0.rgb;
+  // // testing Adrian's highlight saturation workaround
+  // if (RENODX_TONE_MAP_TYPE != 0.f) {
+  //   r0.xyz = renodx::tonemap::dice::BT709(untonemapped, 2.f, 0.5f);
+  // }
 
   // Sample Lut, Arii 1000
   r0.w = cmp(0 != cb1[12].x);

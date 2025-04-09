@@ -986,70 +986,70 @@ static void OnDestroyCommandList(reshade::api::command_list* cmd_list) {
 
 // Before CreatePipelineState
 static bool OnCreateSwapchain(reshade::api::swapchain_desc& desc, void* hwnd) {
-  if (renodx::utils::platform::IsToolWindow(static_cast<HWND>(hwnd))) return false;
-  if (bypass_dummy_windows) {
-    if (renodx::utils::platform::IsDummyWindow(static_cast<HWND>(hwnd))) return false;
-  }
-
-  auto old_format = desc.back_buffer.texture.format;
-  auto old_present_mode = desc.present_mode;
-  auto old_present_flags = desc.present_flags;
-  auto old_buffer_count = desc.back_buffer_count;
-
-  if (!use_resize_buffer) {
-    desc.back_buffer.texture.format = target_format;
-
-    if (desc.back_buffer_count == 1) {
-      // 0 is only for resize, so if game uses more than 2 buffers, that will be retained
-      desc.back_buffer_count = 2;
-    }
-  }
-
-  if (!is_vulkan) {
-    switch (desc.present_mode) {
-      case static_cast<uint32_t>(DXGI_SWAP_EFFECT_SEQUENTIAL):
-        desc.present_mode = static_cast<uint32_t>(DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL);
-        break;
-      case static_cast<uint32_t>(DXGI_SWAP_EFFECT_DISCARD):
-        desc.present_mode = static_cast<uint32_t>(DXGI_SWAP_EFFECT_FLIP_DISCARD);
-        break;
-    }
+  bool changed = false;
+  if (!renodx::utils::platform::IsToolWindow(static_cast<HWND>(hwnd))
+      && (!bypass_dummy_windows || !renodx::utils::platform::IsDummyWindow(static_cast<HWND>(hwnd)))) {
+    auto old_format = desc.back_buffer.texture.format;
+    auto old_present_mode = desc.present_mode;
+    auto old_present_flags = desc.present_flags;
+    auto old_buffer_count = desc.back_buffer_count;
 
     if (!use_resize_buffer) {
-      if (prevent_full_screen) {
-        desc.present_flags &= ~DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+      desc.back_buffer.texture.format = target_format;
+
+      if (desc.back_buffer_count == 1) {
+        // 0 is only for resize, so if game uses more than 2 buffers, that will be retained
+        desc.back_buffer_count = 2;
       }
-      desc.present_flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
     }
+
+    if (!is_vulkan) {
+      switch (desc.present_mode) {
+        case static_cast<uint32_t>(DXGI_SWAP_EFFECT_SEQUENTIAL):
+          desc.present_mode = static_cast<uint32_t>(DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL);
+          break;
+        case static_cast<uint32_t>(DXGI_SWAP_EFFECT_DISCARD):
+          desc.present_mode = static_cast<uint32_t>(DXGI_SWAP_EFFECT_FLIP_DISCARD);
+          break;
+      }
+
+      if (!use_resize_buffer) {
+        if (prevent_full_screen) {
+          desc.present_flags &= ~DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+        }
+        desc.present_flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+      }
+    }
+
+    std::stringstream s;
+    s << "mods::swapchain::OnCreateSwapchain(";
+    s << "swap: " << old_format << " => " << desc.back_buffer.texture.format;
+    s << ", present mode:";
+    s << "0x" << std::hex << old_present_mode << std::dec;
+    s << " => ";
+    s << "0x" << std::hex << desc.present_mode << std::dec;
+    s << ", present flag:";
+    s << "0x" << std::hex << old_present_flags << std::dec;
+    s << " => ";
+    s << "0x" << std::hex << desc.present_flags << std::dec;
+    s << ", buffers:";
+    s << old_buffer_count;
+    s << " => ";
+    s << desc.back_buffer_count;
+    s << ")";
+    reshade::log::message(reshade::log::level::info, s.str().c_str());
+
+    changed = (old_format != desc.back_buffer.texture.format)
+              || (old_present_mode != desc.present_mode)
+              || (old_present_flags != desc.present_flags);
   }
-
-  std::stringstream s;
-  s << "mods::swapchain::OnCreateSwapchain(";
-  s << "swap: " << old_format << " => " << desc.back_buffer.texture.format;
-  s << ", present mode:";
-  s << "0x" << std::hex << old_present_mode << std::dec;
-  s << " => ";
-  s << "0x" << std::hex << desc.present_mode << std::dec;
-  s << ", present flag:";
-  s << "0x" << std::hex << old_present_flags << std::dec;
-  s << " => ";
-  s << "0x" << std::hex << desc.present_flags << std::dec;
-  s << ", buffers:";
-  s << old_buffer_count;
-  s << " => ";
-  s << desc.back_buffer_count;
-  s << ")";
-  reshade::log::message(reshade::log::level::info, s.str().c_str());
-
-  bool changed = (old_format != desc.back_buffer.texture.format)
-                 || (old_present_mode != desc.present_mode)
-                 || (old_present_flags != desc.present_flags);
+  
   if (changed) {
     upgraded_swapchain_desc = desc;
   } else {
     upgraded_swapchain_desc.reset();
   }
-  return true;
+  return changed;
 }
 
 static void OnPresentForResizeBuffer(
@@ -1120,10 +1120,6 @@ static void OnInitSwapchain(reshade::api::swapchain* swapchain, bool resize) {
 }
 
 static void OnDestroySwapchain(reshade::api::swapchain* swapchain, bool resize) {
-  if (resize) {
-    reshade::log::message(reshade::log::level::debug, "mods::swapchain::OnDestroySwapchain(Resize)");
-    return;  // Not actually destroyed
-  }
   auto* device = swapchain->get_device();
   auto* data = renodx::utils::data::Get<DeviceData>(device);
   if (data == nullptr) return;
@@ -1301,23 +1297,6 @@ inline bool OnCreateResource(
 }
 
 inline void OnInitResourceInfo(renodx::utils::resource::ResourceInfo* resource_info) {
-  if (resource_info->is_swap_chain) {
-    if (UsingSwapchainProxy()) {
-      if (!UsingSwapchainCompatibilityMode()) {
-        {
-          std::stringstream s;
-          s << "mods::swapchain::OnInitResourceInfo(Marking swapchain buffer for cloning: ";
-          s << PRINT_PTR(resource_info->resource.handle);
-          s << ")";
-          reshade::log::message(reshade::log::level::debug, s.str().c_str());
-        }
-        resource_info->clone_enabled = true;
-      }
-      resource_info->clone_target = &swap_chain_proxy_upgrade_target;
-    }
-    return;
-  }
-
   auto* device = resource_info->device;
   auto& desc = resource_info->desc;
 
@@ -1360,6 +1339,24 @@ inline void OnInitResourceInfo(renodx::utils::resource::ResourceInfo* resource_i
   } else if (use_resource_cloning) {
     auto* private_data = renodx::utils::data::Get<DeviceData>(device);
     if (private_data == nullptr) return;
+
+    if (resource_info->is_swap_chain) {
+      if (UsingSwapchainProxy()) {
+        if (!UsingSwapchainCompatibilityMode()) {
+          {
+            std::stringstream s;
+            s << "mods::swapchain::OnInitResourceInfo(Marking swapchain buffer for cloning: ";
+            s << PRINT_PTR(resource_info->resource.handle);
+            s << ")";
+            reshade::log::message(reshade::log::level::debug, s.str().c_str());
+          }
+          resource_info->clone_enabled = true;
+        }
+        resource_info->clone_target = &swap_chain_proxy_upgrade_target;
+      }
+      return;
+    }
+
     if (private_data->resource_upgrade_finished) return;
     auto& device_back_buffer_desc = private_data->primary_swapchain_desc;
     if (device_back_buffer_desc.type == reshade::api::resource_type::unknown) {
@@ -1516,8 +1513,8 @@ inline void OnDestroyResourceInfo(utils::resource::ResourceInfo* info) {
     s << ", -vram: " << info->extra_vram;
     s << ")";
     reshade::log::message(reshade::log::level::debug, s.str().c_str());
-    info->extra_vram = 0;
 #endif
+    info->extra_vram = 0;
   }
 }
 

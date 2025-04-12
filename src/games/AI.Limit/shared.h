@@ -16,9 +16,9 @@
 #define RENODX_TONE_MAP_BLOWOUT              shader_injection.colorGradeBlowout
 #define RENODX_TONE_MAP_FLARE                shader_injection.colorGradeFlare
 #define RENODX_COLOR_GRADE_SPACE             shader_injection.colorGradeColorSpace
-#define DISPLAY_MAP_TYPE shader_injection.displayMapType
-#define DISPLAY_MAP_PEAK shader_injection.displayMapPeak
-#define DISPLAY_MAP_SHOULDER shader_injection.displayMapShoulder
+#define DISPLAY_MAP_TYPE                     shader_injection.displayMapType
+#define DISPLAY_MAP_PEAK                     shader_injection.displayMapPeak
+#define DISPLAY_MAP_SHOULDER                 shader_injection.displayMapShoulder
 // #define RENODX_TONE_MAP_WORKING_COLOR_SPACE  color::convert::COLOR_SPACE_AP1
 #define RENODX_TONE_MAP_PER_CHANNEL       shader_injection.toneMapPerChannel
 #define RENODX_TONE_MAP_HUE_PROCESSOR     shader_injection.toneMapHueProcessor

@@ -23,9 +23,11 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     // Uber_Post
     CustomShaderEntry(0xE363E5C8),  // Uberpost
     CustomShaderEntry(0xECEF72F5),  // Uberpost
-    // Etc
+    // hdrFinal
     CustomShaderEntry(0x27812EF8),  // HDR Final // (AA OFF, TAA, SMAA, FSR3 AA)
     CustomShaderEntry(0xAE7EE10F),  // HDR Final (DLAA)
+    CustomShaderEntry(0x73F01A45),  // HDR Final 2 (AA OFF, TAA, SMAA, FSR3 AA)
+    CustomShaderEntry(0xDD2F76F2),  // HDR Final 2 (DLAA)
 
 };
 
@@ -291,50 +293,50 @@ renodx::utils::settings::Settings settings = {
           return settings[0]->GetValue() >= 1;
         },
     },
-    
+
     // Display map settings for Highlight Saturation
 
     new renodx::utils::settings::Setting{
-      .key = "DisplayMapType",
-      .binding = &shader_injection.displayMapType,
-      .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-      .default_value = 0.f,
-      .can_reset = true,
-      .label = "Display Map Type",
-      .section = "Highlight Saturation Restoration",
-      .tooltip = "Sets the Display mapper used",
-      .labels = {"None", "DICE", "Frostbite"},
-      .is_visible = []() { return settings[0]->GetValue() >= 1; },
+        .key = "DisplayMapType",
+        .binding = &shader_injection.displayMapType,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .can_reset = true,
+        .label = "Display Map Type",
+        .section = "Highlight Saturation Restoration",
+        .tooltip = "Sets the Display mapper used",
+        .labels = {"None", "DICE", "Frostbite"},
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
 
     new renodx::utils::settings::Setting{
-      .key = "DisplayMapPeak",
-      .binding = &shader_injection.displayMapPeak,
-      .value_type = renodx::utils::settings::SettingValueType::FLOAT,
-      .default_value = 2.f,
-      .can_reset = true,
-      .label = "Display Map Peak",
-      .section = "Highlight Saturation Restoration",
-      .tooltip = "What nit value we want to display map down to -- 2.f is solid",
-      .max = 5.f,
-      .is_visible = []() { return settings[0]->GetValue() >= 1; },
+        .key = "DisplayMapPeak",
+        .binding = &shader_injection.displayMapPeak,
+        .value_type = renodx::utils::settings::SettingValueType::FLOAT,
+        .default_value = 2.f,
+        .can_reset = true,
+        .label = "Display Map Peak",
+        .section = "Highlight Saturation Restoration",
+        .tooltip = "What nit value we want to display map down to -- 2.f is solid",
+        .max = 5.f,
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
 
     new renodx::utils::settings::Setting{
-      .key = "DisplayMapShoulder",
-      .binding = &shader_injection.displayMapShoulder,
-      .value_type = renodx::utils::settings::SettingValueType::FLOAT,
-      .default_value = 0.25f,
-      .can_reset = true,
-      .label = "Display Map Shoulder",
-      .section = "Highlight Saturation Restoration",
-      .tooltip = "Determines where the highlights curve (shoulder) starts in the display mapper.",
-      .max = 1.f,
-      .format = "%.2f",
-      .is_visible = []() { return settings[0]->GetValue() >= 1; },
-  },
+        .key = "DisplayMapShoulder",
+        .binding = &shader_injection.displayMapShoulder,
+        .value_type = renodx::utils::settings::SettingValueType::FLOAT,
+        .default_value = 0.25f,
+        .can_reset = true,
+        .label = "Display Map Shoulder",
+        .section = "Highlight Saturation Restoration",
+        .tooltip = "Determines where the highlights curve (shoulder) starts in the display mapper.",
+        .max = 1.f,
+        .format = "%.2f",
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
+    },
 
-  // Display map end
+    // Display map end
 
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
@@ -397,7 +399,6 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("ColorGradeColorSpace", 0.f);
   renodx::utils::settings::UpdateSetting("ToneMapHueShiftMethod", 0.f);
   renodx::utils::settings::UpdateSetting("DisplayMapType", 0.f);
-  
 }
 
 // bool fired_on_init_swapchain = false;

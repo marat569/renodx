@@ -39,7 +39,7 @@ float3 RenoDRTSmoothClamp(float3 untonemapped, float peak = 100.f, float whitecl
   renodrt_config.saturation = 1.f;
   renodrt_config.dechroma = 0.f;
   renodrt_config.flare = 0.f;
-  renodrt_config.blowout = -1.f * (highlightSaturation - 1.f); // Highlight saturation
+  renodrt_config.blowout = -1.f * (highlightSaturation - 1.f);  // Highlight saturation
   renodrt_config.hue_correction_strength = 0.f;
   renodrt_config.tone_map_method =
       renodx::tonemap::renodrt::config::tone_map_method::REINHARD;
@@ -66,8 +66,8 @@ float3 RestoreHighlightSaturation(float3 color) {
       float frostbitePeak = DISPLAY_MAP_PEAK;     // 2.f default
       float diceShoulder = DISPLAY_MAP_SHOULDER;  // 0.25f default
       float diceSaturation = 1.f;                 // Hardcode to 1.f
-      // color = renodx::tonemap::frostbite::BT709(color, frostbitePeak, diceShoulder, diceSaturation);
-      color = RenoDRTSmoothClamp(color, 10000.f, 100.f, 5.f);
+      color = renodx::tonemap::frostbite::BT709(color, frostbitePeak, diceShoulder, diceSaturation);
+      // color = RenoDRTSmoothClamp(color, 10000.f, 100.f, 5.f); // Testing smoothclamp
     }
   } else {
     // We dont want to Display Map if the tonemapper is vanilla/preset off or display map is none
@@ -76,4 +76,3 @@ float3 RestoreHighlightSaturation(float3 color) {
 
   return color;
 }
-

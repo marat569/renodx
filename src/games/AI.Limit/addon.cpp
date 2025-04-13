@@ -23,6 +23,7 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     // Uber_Post
     CustomShaderEntry(0xE363E5C8),  // Uberpost
     CustomShaderEntry(0xECEF72F5),  // Uberpost
+    CustomShaderEntry(0x6983BFA7),  // Uberpost
     // hdrFinal
     CustomShaderEntry(0x27812EF8),  // HDR Final // (AA OFF, TAA, SMAA, FSR3 AA)
     CustomShaderEntry(0xAE7EE10F),  // HDR Final (DLAA)
@@ -452,6 +453,7 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::r8g8b8a8_unorm,
           .new_format = reshade::api::format::r16g16b16a16_float,
+          //.ignore_size = true,
           .use_resource_view_cloning = true,
           .aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
           //.usage_include = reshade::api::resource_usage::render_target,
@@ -460,6 +462,7 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::r8g8b8a8_typeless,
           .new_format = reshade::api::format::r16g16b16a16_float,
+          //.ignore_size = true,
           .use_resource_view_cloning = true,
           .aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
           //.usage_include = reshade::api::resource_usage::render_target,
@@ -468,6 +471,7 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::r8g8b8a8_unorm_srgb,
           .new_format = reshade::api::format::r16g16b16a16_float,
+          //.ignore_size = true,
           .use_resource_view_cloning = true,
           .aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
           //.usage_include = reshade::api::resource_usage::render_target,

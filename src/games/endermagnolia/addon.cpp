@@ -245,6 +245,44 @@ renodx::utils::settings::Settings settings = {
         .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
     new renodx::utils::settings::Setting{
+        .key = "ColorGradeHueCorrection",
+        .binding = &shader_injection.color_grade_hue_correction,
+        .default_value = 100.f,
+        .label = "Hue Correction",
+        .section = "Scene Grading",
+        .tooltip = "Corrects per-channel hue shifts from per-channel grading.",
+        .min = 0.f,
+        .max = 100.f,
+        .is_enabled = []() { return shader_injection.toneMapType >= 1; },
+        .parse = [](float value) { return value * 0.01f; },
+        .is_visible = []() { return settings[0]->GetValue() >= 2; },
+    },
+    new renodx::utils::settings::Setting{
+        .key = "ColorGradeSaturationCorrection",
+        .binding = &shader_injection.color_grade_saturation_correction,
+        .default_value = 100.f,
+        .label = "Saturation Correction",
+        .section = "Scene Grading",
+        .tooltip = "Corrects unbalanced saturation from per-channel grading.",
+        .min = 0.f,
+        .max = 100.f,
+        .is_enabled = []() { return shader_injection.toneMapType >= 1; },
+        .parse = [](float value) { return value * 0.01f; },
+        .is_visible = []() { return settings[0]->GetValue() >= 2; },
+    },
+    new renodx::utils::settings::Setting{
+        .key = "ColorGradeBlowoutRestoration",
+        .binding = &shader_injection.color_grade_blowout_restoration,
+        .default_value = 50.f,
+        .label = "Blowout Restoration",
+        .section = "Scene Grading",
+        .tooltip = "Restores color from blowout from per-channel grading.",
+        .min = 0.f,
+        .max = 100.f,
+        .is_enabled = []() { return shader_injection.toneMapType >= 1; },
+        .parse = [](float value) { return value * 0.01f; },
+    },
+    new renodx::utils::settings::Setting{
         .key = "ColorGradeColorSpace",
         .binding = &shader_injection.colorGradeColorSpace,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
@@ -267,35 +305,33 @@ renodx::utils::settings::Settings settings = {
     },
 
     new renodx::utils::settings::Setting{
-      .value_type = renodx::utils::settings::SettingValueType::TEXT,
-      .label = " - Please make sure the game's brightness is set to default! \r\n \r\n - Join the HDR Den discord for help!",
-      .section = "Instructions",
-  },
+        .value_type = renodx::utils::settings::SettingValueType::TEXT,
+        .label = " - Please make sure the game's brightness is set to default! \r\n \r\n - Join the HDR Den discord for help!",
+        .section = "Instructions",
+    },
 
-  new renodx::utils::settings::Setting{
-      .value_type = renodx::utils::settings::SettingValueType::BUTTON,
-      .label = "HDR Den Discord",
-      .section = "About",
-      .group = "button-line-1",
-      .tint = 0x5865F2,
-      .on_change = []() {
-        static const std::string obfuscated_link = std::string("start https://discord.gg/5WZX") + std::string("DpmbpP");
-        system(obfuscated_link.c_str());
-      },
-  },
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
+        .label = "HDR Den Discord",
+        .section = "About",
+        .group = "button-line-1",
+        .tint = 0x5865F2,
+        .on_change = []() {
+          static const std::string obfuscated_link = std::string("start https://discord.gg/5WZX") + std::string("DpmbpP");
+          system(obfuscated_link.c_str());
+        },
+    },
 
-  new renodx::utils::settings::Setting{
-      .value_type = renodx::utils::settings::SettingValueType::BUTTON,
-      .label = "Get more RenoDX mods!",
-      .section = "About",
-      .group = "button-line-1",
-      .tint = 0x5865F2,
-      .on_change = []() {
-        system("start https://github.com/clshortfuse/renodx/wiki/Mods");
-      },
-  },
-
-
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
+        .label = "Get more RenoDX mods!",
+        .section = "About",
+        .group = "button-line-1",
+        .tint = 0x5865F2,
+        .on_change = []() {
+          system("start https://github.com/clshortfuse/renodx/wiki/Mods");
+        },
+    },
 
 };
 

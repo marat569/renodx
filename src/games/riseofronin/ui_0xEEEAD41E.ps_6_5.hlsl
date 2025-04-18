@@ -31,7 +31,7 @@ float4 main(noperspective float4 SV_Position: SV_Position,
   float _100;
   float _101;
   float _102;
-  if (!(Gamma == 1.0f)) {
+  if (!(Gamma == 1.0f) && false) {
     _32 = exp2(log2(abs(_10.x)) * Gamma);
     _33 = exp2(log2(abs(_10.y)) * Gamma);
     _34 = exp2(log2(abs(_10.z)) * Gamma);
@@ -81,13 +81,6 @@ float4 main(noperspective float4 SV_Position: SV_Position,
   SV_Target.y = _101;
   SV_Target.z = _102;
   SV_Target.w = _85;
-
-  // Neutralsdr to 1
-  if (RENODX_TONE_MAP_TYPE != 0.f) {
-    float3 color = _10.rgb;
-    color = renodx::tonemap::renodrt::NeutralSDR(color);  // tonemap to 1
-    SV_Target.rgb = color.rgb;
-  }
 
   return SV_Target;
 }

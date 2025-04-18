@@ -22,7 +22,10 @@ namespace {
 
 renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0xC34BA2F1),  // Lut
+    CustomShaderEntry(0xB829A45E),
     CustomShaderEntry(0x5D256E1B),  // Final Shader
+    CustomShaderEntry(0xEEEAD41E),  // UI
+
 };
 
 ShaderInjectData shader_injection;
@@ -370,10 +373,10 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       // renodx::mods::swapchain::SetUseHDR10(true);
       renodx::mods::shader::expected_constant_buffer_space = 50;
       renodx::mods::shader::expected_constant_buffer_index = 13;
-      renodx::mods::shader::allow_multiple_push_constants = true;
+      // renodx::mods::shader::allow_multiple_push_constants = true;
 
-      renodx::mods::swapchain::expected_constant_buffer_space = 50;
-      renodx::mods::swapchain::expected_constant_buffer_index = 13;
+      // renodx::mods::swapchain::expected_constant_buffer_space = 50;
+      // renodx::mods::swapchain::expected_constant_buffer_index = 13;
 
       renodx::mods::shader::force_pipeline_cloning = true;   // So the mod works with the toolkit
       renodx::mods::swapchain::force_borderless = false;     // needed for stability

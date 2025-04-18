@@ -21,6 +21,7 @@ float4 main(noperspective float4 SV_Position: SV_Position,
 
   if (RENODX_TONE_MAP_TYPE != 0.f) {
     float3 color = _8.rgb;
+
     color.rgb = renodx::color::bt2020::from::BT709(color.rgb);
     color.rgb = renodx::draw::SwapChainPass(color.rgb);
     SV_Target.rgb = color.rgb;

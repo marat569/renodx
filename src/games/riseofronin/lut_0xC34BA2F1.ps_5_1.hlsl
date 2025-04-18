@@ -239,18 +239,19 @@ void main(
     r0.xyz = g_vCompositeInfo.yyy * r1.xyz + r0.xyz;
   }
 
-  r0.w = cmp(g_vGammaCorrection.x != 1.000000);
+  /* r0.w = cmp(g_vGammaCorrection.x != 1.000000);
   r1.xyz = log2(abs(r0.xyz));
   r1.xyz = g_vGammaCorrection.xxx * r1.xyz;
   r1.xyz = exp2(r1.xyz);
-  r0.xyz = r0.www ? r1.xyz : r0.xyz;
+  r0.xyz = r0.www ? r1.xyz : r0.xyz; */
   o0.xyz = g_vRadialBlurCenter.zzz * r0.xyz;
 
   o0.w = 1.f;
 
-  float3 graded = o0.rgb;
+  if (RENODX_TONE_MAP_TYPE) {
+    o0.rgb = renodx::draw::ToneMapPass(untonemapped, o0.rgb);
+  }
 
-  o0.rgb = ProcessColor(untonemapped, graded);
-
+  o0 = renodx::draw::RenderIntermediatePass(o0);
   return;
 }

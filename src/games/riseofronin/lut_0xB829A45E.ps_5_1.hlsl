@@ -31,14 +31,14 @@ cbuffer cbComposite : register(b2) {
 
 SamplerState sampleLinear_s : register(s7);
 SamplerState samplePoint_s : register(s8);
-Texture2D<float4> g_tSceneMap : register(t0);
+Texture2D<float4> g_tSceneMap : register(t0);  // rg11b10
 Texture2D<float4> g_tLensFlareMap : register(t1);
 Texture2D<float4> g_tExposureScaleInfo : register(t2);
-Texture3D<float4> g_tHdrLut : register(t3);
-Texture3D<float4> g_tLdrLut : register(t4);
-Texture3D<float4> g_tDramaticHdrLut0 : register(t5);
+Texture3D<float4> g_tHdrLut : register(t3);           // 32
+Texture3D<float4> g_tLdrLut : register(t4);           // 16
+Texture3D<float4> g_tDramaticHdrLut0 : register(t5);  // 32
 Texture2D<float4> g_tDramaticHdrLutMask0 : register(t6);
-Texture3D<float4> g_tDramaticHdrLut1 : register(t9);
+Texture3D<float4> g_tDramaticHdrLut1 : register(t9);  // 32 But it's black in main menu
 Texture2D<float4> g_tDramaticHdrLutMask1 : register(t10);
 Texture2D<float4> g_tSceneDepth : register(t11);
 
@@ -89,8 +89,10 @@ void main(
   r3.xy = r3.xz * g_vDistortionParams.zz + float2(0.5, 0.5);
   r2.xz = r1.ww ? r3.xy : r2.xz;
   r3.xyz = g_tSceneMap.SampleLevel(sampleLinear_s, r2.xz, 0).xyz;
-  r3.xyz = min(float3(65024, 65024, 65024), r3.xyz);
+  r3.xyz = min(float3(65024, 65024, 65024), r3.xyz);  // arri clips at 65024
   r1.w = cmp(0 < g_vEtcEffect.x);
+
+  // Additional effects check?
   if (r1.w != 0) {
     r1.w = (uint)g_vEtcEffect.y;
     r4.xy = r2.xz * float2(2, 2) + float2(-1, -1);
@@ -141,6 +143,7 @@ void main(
   r3.xyz = r3.xyz * r1.zzz;  // Exposure multiplied here
 
   if (r0.z != 0) {
+    // Noise I think?
     r0.z = dot(v0.xy, float2(171, 231));
     r4.xyz = float3(0.00970873795, 0.0140845068, 0.010309278) * r0.zzz;
     r4.xyz = frac(r4.xyz);
@@ -149,6 +152,7 @@ void main(
     r3.xyz = max(float3(0, 0, 0), r4.xyz);
   }
   if (r0.x != 0) {
+    // Lens flare?
     r4.xyz = g_tSceneMap.SampleLevel(sampleLinear_s, g_vSun2dInfo.xy, 0).xyz;
     r4.xyz = min(float3(65024, 65024, 65024), r4.xyz);
     r4.xyz = r4.xyz * r1.zzz;
@@ -161,6 +165,7 @@ void main(
     r3.xyz = r4.xyz * r0.xxx + r3.xyz;
   }
   if (r0.y != 0) {
+    // Limb darkening, whatever that is
     r0.xz = float2(-0.5, -0.5) + v1.xy;
     r0.y = g_vCompositeInfo.x * r0.x;
     r0.x = dot(r0.yz, r0.yz);
@@ -180,6 +185,7 @@ void main(
     r3.xyz = r3.xyz * r0.xxx;
   }
   if (r1.x != 0) {
+    // Vertical limb darkening, whatever that is
     r0.x = 1 + -r2.z;
     r0.x = -g_vVerticalLimbDarkenningTopInfo.y + r0.x;
     r0.x = g_vVerticalLimbDarkenningTopInfo.z * r0.x;
@@ -201,6 +207,7 @@ void main(
     r3.xyz = r3.xyz * r0.yyy;
   }
   if (r1.y != 0) {
+    // Vertical limb darkening, whatever that is
     r0.x = -g_vVerticalLimbDarkenningBottomInfo.y + r2.z;
     r0.x = g_vVerticalLimbDarkenningBottomInfo.z * r0.x;
     r0.y = cmp(r0.x >= 1);
@@ -223,12 +230,19 @@ void main(
 
   float3 untonemapped = r3.rgb;
 
+  /*
+    Game applies multiple luts to different parts of the image (similar to Metaphor),
+    depending on multiple depth maps
+   */
+  // Ready color for lut
+  // Arri encode?
   r0.xyz = r3.xyz * float3(1.00006652, 1.00006652, 1.00006652) + float3(-0.00391646381, -0.00391646381, -0.00391646381);
   r0.xyz = r0.www ? r0.xyz : r3.xyz;
   r0.xyz = r0.xyz * float3(5.55555582, 5.55555582, 5.55555582) + float3(0.0479959995, 0.0479959995, 0.0479959995);
   r0.xyz = log2(r0.xyz);
   r0.xyz = saturate(r0.xyz * float3(0.0734997839, 0.0734997839, 0.0734997839) + float3(0.386036009, 0.386036009, 0.386036009));
   r1.xyz = g_tHdrLut.SampleLevel(sampleLinear_s, r0.xyz, 0).xyz;
+
   if (asuint(g_vDramaticHdrLutInfo0[0].w) != 0) {
     r0.w = g_tSceneDepth.SampleLevel(samplePoint_s, r2.xz, 0).x;
     r0.w = g_vP2V.x + r0.w;
@@ -317,7 +331,10 @@ void main(
     } else {
       r2.w = g_vDramaticHdrLutInfo0[0].x;
     }
+    // All calculations above are to get the lerp value (r2.w)
     r3.xyz = g_tDramaticHdrLut0.SampleLevel(sampleLinear_s, r0.xyz, 0).xyz;
+
+    // ((b-a) * t) + a = lerp(a, b, t)
     r3.xyz = r3.xyz + -r1.xyz;
     r1.xyz = r2.www * r3.xyz + r1.xyz;
   }
@@ -391,10 +408,17 @@ void main(
     } else {
       r0.w = g_vDramaticHdrLutInfo1[0].x;
     }
+    // All calculations above are to get the lerp value (r0.w)
+    // Not used in menu
+    /* In the both dramatic luts they use original arri encoded(?) color, in
+    the 2nd lut here they just override r0.xyz */
     r0.xyz = g_tDramaticHdrLut1.SampleLevel(sampleLinear_s, r0.xyz, 0).xyz;
+    // ((b-a) * t) + a = lerp(a, b, t)
     r0.xyz = r0.xyz + -r1.xyz;
     r1.xyz = r0.www * r0.xyz + r1.xyz;
   }
+  // Blur is in gamma 2.2
+  // They have a special LUT for blur I think, lol
   if (r2.y != 0) {
     r0.xyz = saturate(g_vRadialBlurCenter.zzz * r1.xyz);
     r0.xyz = log2(r0.xyz);
@@ -406,21 +430,28 @@ void main(
     r0.xyz = r0.xyz * r0.www;
     r0.xyz = r2.xyz ? r0.xyz : r1.xyz;
     r0.xyz = r0.xyz + -r1.xyz;
-    r1.xyz = g_vCompositeInfo.yyy * r0.xyz + r1.xyz;
+    r1.xyz = g_vCompositeInfo.yyy * r0.xyz + r1.xyz;  // lerp value is g_vCompositeInfo.yyy
   }
+  r0.rgb = r1.rgb;
 
-  r0.x = cmp(g_vGammaCorrection.x != 1.000000);
+  /* r0.x = cmp(g_vGammaCorrection.x != 1.000000);
   r0.yzw = log2(abs(r1.xyz));
   r0.yzw = g_vGammaCorrection.xxx * r0.yzw;
   r0.yzw = exp2(r0.yzw);
-  r0.xyz = r0.xxx ? r0.yzw : r1.xyz;
+  r0.xyz = r0.xxx ? r0.yzw : r1.xyz; */
+
   o0.xyz = g_vRadialBlurCenter.zzz * r0.xyz;
 
   o0.w = 1;
 
-  float3 graded = o0.rgb;
+  /* float3 graded = o0.rgb;
 
-  o0.rgb = ProcessColor(untonemapped, graded);
+  o0.rgb = ProcessColor(untonemapped, graded); */
 
+  if (RENODX_TONE_MAP_TYPE) {
+    o0.rgb = renodx::draw::ToneMapPass(untonemapped, o0.rgb);
+  }
+  
+  o0 = renodx::draw::RenderIntermediatePass(o0);
   return;
 }

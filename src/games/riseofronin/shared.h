@@ -21,17 +21,22 @@
 #define RENODX_TONE_MAP_HUE_CORRECTION       shader_injection.toneMapHueCorrection
 #define RENODX_TONE_MAP_HUE_SHIFT            shader_injection.toneMapHueShift
 #define RENODX_TONE_MAP_HUE_SHIFT_METHOD     shader_injection.toneMapHueShiftMethod
+// new highlight restoration is a bit griefed in ths game
+// #define RENODX_PER_CHANNEL_HUE_CORRECTION         shader_injection.color_grade_hue_correction
+// #define RENODX_PER_CHANNEL_CHROMINANCE_CORRECTION shader_injection.color_grade_saturation_correction
+// #define RENODX_PER_CHANNEL_BLOWOUT_RESTORATION    shader_injection.color_grade_blowout_restoration
 #define RENODX_TONE_MAP_CLAMP_COLOR_SPACE    color::convert::COLOR_SPACE_BT2020
 #define RENODX_RENO_DRT_TONE_MAP_METHOD      renodx::tonemap::renodrt::config::tone_map_method::REINHARD
 #define RENODX_RENO_DRT_WHITE_CLIP           65.f  // Cause they're using arri
 #define RENODX_SWAP_CHAIN_CUSTOM_COLOR_SPACE shader_injection.colorGradeColorSpace
 #define RENODX_SWAP_CHAIN_CLAMP_COLOR_SPACE  color::convert::COLOR_SPACE_BT2020
 // Game's UI and render are linear, so we gamma correct everything at the end
-#define RENODX_SWAP_CHAIN_GAMMA_CORRECTION renodx::draw::GAMMA_CORRECTION_GAMMA_2_2
-#define RENODX_INTERMEDIATE_ENCODING       renodx::draw::GAMMA_CORRECTION_NONE
-#define RENODX_GAMMA_CORRECTION            renodx::draw::GAMMA_CORRECTION_NONE
-/* #define RENODX_SWAP_CHAIN_ENCODING                renodx::draw::ENCODING_PQ
-#define RENODX_SWAP_CHAIN_ENCODING_COLOR_SPACE    renodx::color::convert::COLOR_SPACE_BT2020 */
+#define RENODX_SWAP_CHAIN_GAMMA_CORRECTION 0.f  // renodx::draw::GAMMA_CORRECTION_GAMMA_2_2
+#define RENODX_INTERMEDIATE_ENCODING       0.f  // renodx::draw::GAMMA_CORRECTION_NONE
+#define RENODX_GAMMA_CORRECTION            1.f  // renodx::draw::GAMMA_CORRECTION_NONE
+// Use HDR10
+// #define RENODX_SWAP_CHAIN_ENCODING_COLOR_SPACE color::convert::COLOR_SPACE_BT2020
+// #define RENODX_SWAP_CHAIN_ENCODING             ENCODING_PQ + 0
 
 // Must be 32bit aligned
 // Should be 4x32
@@ -60,6 +65,10 @@ struct ShaderInjectData {
   float colorGradeColorSpace;
   float colorGradeRestorationMethod;
   float colorGradeStrength;
+
+  float color_grade_hue_correction;
+  float color_grade_saturation_correction;
+  float color_grade_blowout_restoration;
 };
 
 #ifndef __cplusplus

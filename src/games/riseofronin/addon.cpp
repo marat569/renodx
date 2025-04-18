@@ -251,6 +251,46 @@ renodx::utils::settings::Settings settings = {
         .parse = [](float value) { return value * 0.01f; },
         .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
+
+    // new renodx::utils::settings::Setting{
+    //     .key = "ColorGradeHueCorrection",
+    //     .binding = &shader_injection.color_grade_hue_correction,
+    //     .default_value = 100.f,
+    //     .label = "Hue Correction",
+    //     .section = "Scene Grading",
+    //     .tooltip = "Corrects per-channel hue shifts from per-channel grading.",
+    //     .min = 0.f,
+    //     .max = 100.f,
+    //     .is_enabled = []() { return shader_injection.toneMapType >= 1; },
+    //     .parse = [](float value) { return value * 0.01f; },
+    //     .is_visible = []() { return settings[0]->GetValue() >= 2; },
+    // },
+    // new renodx::utils::settings::Setting{
+    //     .key = "ColorGradeSaturationCorrection",
+    //     .binding = &shader_injection.color_grade_saturation_correction,
+    //     .default_value = 100.f,
+    //     .label = "Saturation Correction",
+    //     .section = "Scene Grading",
+    //     .tooltip = "Corrects unbalanced saturation from per-channel grading.",
+    //     .min = 0.f,
+    //     .max = 100.f,
+    //     .is_enabled = []() { return shader_injection.toneMapType >= 1; },
+    //     .parse = [](float value) { return value * 0.01f; },
+    //     .is_visible = []() { return settings[0]->GetValue() >= 2; },
+    // },
+    // new renodx::utils::settings::Setting{
+    //     .key = "ColorGradeBlowoutRestoration",
+    //     .binding = &shader_injection.color_grade_blowout_restoration,
+    //     .default_value = 50.f,
+    //     .label = "Blowout Restoration",
+    //     .section = "Scene Grading",
+    //     .tooltip = "Restores color from blowout from per-channel grading.",
+    //     .min = 0.f,
+    //     .max = 100.f,
+    //     .is_enabled = []() { return shader_injection.toneMapType >= 1; },
+    //     .parse = [](float value) { return value * 0.01f; },
+    // },
+
     new renodx::utils::settings::Setting{
         .key = "ColorGradeColorSpace",
         .binding = &shader_injection.colorGradeColorSpace,
@@ -275,7 +315,7 @@ renodx::utils::settings::Settings settings = {
 
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
-        .label = " - Please make sure the game's brightness is set to default! \r\n \r\n - Join the HDR Den discord for help!",
+        .label = " - Please make sure Native HDR is OFF in game! \r\n - Thank you Ritsu for helping out! \r\n \r\n - Join the HDR Den discord for help!",
         .section = "Instructions",
     },
 
@@ -360,7 +400,7 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       renodx::mods::swapchain::expected_constant_buffer_space = 50;
       renodx::mods::swapchain::expected_constant_buffer_index = 13;
 
-      renodx::mods::shader::force_pipeline_cloning = false;
+      // renodx::mods::shader::force_pipeline_cloning = false;
       renodx::mods::shader::force_pipeline_cloning = true;   // So the mod works with the toolkit
       renodx::mods::swapchain::force_borderless = false;     // needed for stability
       renodx::mods::swapchain::prevent_full_screen = false;  // needed for stability
@@ -371,22 +411,24 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       renodx::mods::swapchain::swapchain_proxy_compatibility_mode = true;
       renodx::mods::swapchain::swapchain_proxy_revert_state = false;
 
-      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
-          .old_format = reshade::api::format::r11g11b10_float,
-          .new_format = reshade::api::format::r16g16b16a16_float,
-          .use_resource_view_cloning = true,
-      });
+      // renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      //     .old_format = reshade::api::format::r11g11b10_float,
+      //     .new_format = reshade::api::format::r16g16b16a16_float,
+      //     .use_resource_view_cloning = true,
+      // });
 
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::b8g8r8a8_unorm_srgb,
           .new_format = reshade::api::format::r16g16b16a16_float,
           .use_resource_view_cloning = true,
+
       });
 
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::b8g8r8a8_unorm,
           .new_format = reshade::api::format::r16g16b16a16_float,
           .use_resource_view_cloning = true,
+
       });
 
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
@@ -400,8 +442,16 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
           .new_format = reshade::api::format::r16g16b16a16_float,
           .use_resource_view_cloning = true,
           .aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
-          .usage_include = reshade::api::resource_usage::render_target | reshade::api::resource_usage::copy_dest,
+          // .usage_include = reshade::api::resource_usage::render_target | reshade::api::resource_usage::copy_dest,
       });
+
+      // RGB10A2_UNORM outputsize for framegen
+      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+          .old_format = reshade::api::format::r10g10b10a2_unorm,
+          .new_format = reshade::api::format::r16g16b16a16_float,
+          .use_resource_view_cloning = true,
+      });
+
       break;
     case DLL_PROCESS_DETACH:
       reshade::unregister_addon(h_module);

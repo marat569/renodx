@@ -451,7 +451,7 @@ void main(
   if (RENODX_TONE_MAP_TYPE) {
     o0.rgb = renodx::draw::ToneMapPass(untonemapped, o0.rgb);
   }
-  
+
   o0 = renodx::draw::RenderIntermediatePass(o0);
   return;
 }

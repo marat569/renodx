@@ -307,8 +307,6 @@ renodx::utils::settings::Settings settings = {
         .labels = {
             "US Modern",
             "JPN Modern",
-            "US CRT",
-            "JPN CRT",
         },
         .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },

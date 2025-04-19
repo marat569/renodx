@@ -421,9 +421,10 @@ void main(
   // They have a special LUT for blur I think, lol
   if (r2.y != 0) {
     r0.xyz = saturate(g_vRadialBlurCenter.zzz * r1.xyz);
-    r0.xyz = log2(r0.xyz);
-    r0.xyz = float3(0.454545468, 0.454545468, 0.454545468) * r0.xyz;
-    r0.xyz = exp2(r0.xyz);
+    // r0.xyz = log2(r0.xyz);
+    // r0.xyz = float3(0.454545468, 0.454545468, 0.454545468) * r0.xyz;
+    // r0.xyz = exp2(r0.xyz);
+    r0.rgb = renodx::math::PowSafe(r0.rgb, 1.f / 2.2f);
     r0.xyz = g_tLdrLut.SampleLevel(sampleLinear_s, r0.xyz, 0).xyz;
     r0.w = 1 / g_vRadialBlurCenter.z;
     r2.xyz = cmp(r0.www >= r1.xyz);
@@ -444,14 +445,9 @@ void main(
 
   o0.w = 1;
 
-  /* float3 graded = o0.rgb;
+  float3 graded = o0.rgb;
 
-  o0.rgb = ProcessColor(untonemapped, graded); */
+  o0 = ProcessColor(untonemapped, graded);
 
-  if (RENODX_TONE_MAP_TYPE) {
-    o0.rgb = renodx::draw::ToneMapPass(untonemapped, o0.rgb);
-  }
-
-  o0 = renodx::draw::RenderIntermediatePass(o0);
   return;
 }

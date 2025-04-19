@@ -248,10 +248,9 @@ void main(
 
   o0.w = 1.f;
 
-  if (RENODX_TONE_MAP_TYPE) {
-    o0.rgb = renodx::draw::ToneMapPass(untonemapped, o0.rgb);
-  }
+  float3 graded = o0.rgb;
 
-  o0 = renodx::draw::RenderIntermediatePass(o0);
+  o0 = ProcessColor(untonemapped, graded);
+  
   return;
 }

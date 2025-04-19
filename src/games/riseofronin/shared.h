@@ -33,7 +33,7 @@
 // Game's UI and render are linear, so we gamma correct everything at the end
 #define RENODX_SWAP_CHAIN_GAMMA_CORRECTION 0.f  // renodx::draw::GAMMA_CORRECTION_GAMMA_2_2
 #define RENODX_INTERMEDIATE_ENCODING       0.f  // renodx::draw::GAMMA_CORRECTION_NONE
-#define RENODX_GAMMA_CORRECTION            1.f  // renodx::draw::GAMMA_CORRECTION_NONE
+#define RENODX_GAMMA_CORRECTION            0.f  // renodx::draw::GAMMA_CORRECTION_NONE -- 1.f makes the game too dark
 // Use HDR10
 // #define RENODX_SWAP_CHAIN_ENCODING_COLOR_SPACE color::convert::COLOR_SPACE_BT2020
 // #define RENODX_SWAP_CHAIN_ENCODING             ENCODING_PQ + 0

@@ -227,9 +227,10 @@ void main(
   r0.xyz = g_tHdrLut.SampleLevel(sampleLinear_s, r0.xyz, 0).xyz;
   if (r2.y != 0) {
     r1.xyz = saturate(g_vRadialBlurCenter.zzz * r0.xyz);
-    r1.xyz = log2(r1.xyz);
-    r1.xyz = float3(0.454545468, 0.454545468, 0.454545468) * r1.xyz;
-    r1.xyz = exp2(r1.xyz);
+    // r1.xyz = log2(r1.xyz);
+    // r1.xyz = float3(0.454545468, 0.454545468, 0.454545468) * r1.xyz;
+    // r1.xyz = exp2(r1.xyz);
+    r1.rgb = renodx::math::PowSafe(r1.rgb, 1.f / 2.2f);
     r1.xyz = g_tLdrLut.SampleLevel(sampleLinear_s, r1.xyz, 0).xyz;
     r0.w = 1 / g_vRadialBlurCenter.z;
     r2.xyz = cmp(r0.www >= r0.xyz);
@@ -251,6 +252,6 @@ void main(
   float3 graded = o0.rgb;
 
   o0 = ProcessColor(untonemapped, graded);
-  
+
   return;
 }

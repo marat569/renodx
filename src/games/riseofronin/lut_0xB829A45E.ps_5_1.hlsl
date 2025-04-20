@@ -433,6 +433,7 @@ void main(
     r0.xyz = r0.xyz + -r1.xyz;
     r1.xyz = g_vCompositeInfo.yyy * r0.xyz + r1.xyz;  // lerp value is g_vCompositeInfo.yyy
   }
+
   r0.rgb = r1.rgb;
 
   /* r0.x = cmp(g_vGammaCorrection.x != 1.000000);

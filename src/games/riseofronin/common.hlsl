@@ -26,10 +26,10 @@ float3 RenoDRTSmoothClamp(float3 untonemapped, float peak = 100.f, float whitecl
 
 float4 ProcessColor(float3 untonemapped, float3 graded) {
   float4 color;
-  float midGray = 0.18f;
+  // float midGray = midGray;
 
   if (RENODX_TONE_MAP_TYPE != 0.f) {
-    // untonemapped.rgb *= midGray / 0.18f; // Adjust midgray, RenoDRT except 0.18f
+    //untonemapped.rgb *= midGray / 0.18f;  // Adjust midgray, RenoDRT except 0.18f
 
     color.rgb = renodx::draw::ToneMapPass(untonemapped, graded);
     color.rgb = renodx::draw::RenderIntermediatePass(color.rgb);
@@ -38,7 +38,7 @@ float4 ProcessColor(float3 untonemapped, float3 graded) {
     color.rgb = renodx::draw::RenderIntermediatePass(color.rgb);
   }
 
-  color.w = 1.f;
+  color.a = 1.f;
 
   return color;
 }

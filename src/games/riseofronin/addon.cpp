@@ -81,6 +81,21 @@ renodx::utils::settings::Settings settings = {
         .min = 48.f,
         .max = 500.f,
     },
+
+    // Gamma slider is mostly for debugging
+    new renodx::utils::settings::Setting{
+        .key = "ToneMapGammaCorrection",
+        .binding = &shader_injection.toneMapGammaCorrection,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .can_reset = true,
+        .label = "Gamma Correction",
+        .section = "Tone Mapping",
+        .tooltip = "Emulates a display EOTF.",
+        .labels = {"Off", "2.2"},
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
+    },
+
     new renodx::utils::settings::Setting{
         .key = "ToneMapHueProcessor",
         .binding = &shader_injection.toneMapHueProcessor,
@@ -347,6 +362,7 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("ToneMapPeakNits", 203.f);
   renodx::utils::settings::UpdateSetting("ToneMapGameNits", 203.f);
   renodx::utils::settings::UpdateSetting("ToneMapUINits", 203.f);
+  renodx::utils::settings::UpdateSetting("ToneMapGammaCorrection", 0.f);
   renodx::utils::settings::UpdateSetting("ToneMapHueCorrection", 0.f);
   renodx::utils::settings::UpdateSetting("ColorGradeExposure", 1.f);
   renodx::utils::settings::UpdateSetting("ColorGradeHighlights", 50.f);
@@ -398,7 +414,6 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       renodx::mods::swapchain::expected_constant_buffer_space = 50;
       renodx::mods::swapchain::expected_constant_buffer_index = 13;
 
-      // renodx::mods::shader::force_pipeline_cloning = false;
       renodx::mods::shader::force_pipeline_cloning = true;   // So the mod works with the toolkit
       renodx::mods::swapchain::force_borderless = false;     // needed for stability
       renodx::mods::swapchain::prevent_full_screen = false;  // needed for stability
@@ -409,9 +424,12 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       renodx::mods::swapchain::swapchain_proxy_compatibility_mode = true;
       renodx::mods::swapchain::swapchain_proxy_revert_state = false;
 
+      // Upgrading FP11 causes artifacts on highlights, and breaks the saturation slider
+      // not upgrading until I find a way to unclamp gamut to save resources
       // renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
       //     .old_format = reshade::api::format::r11g11b10_float,
       //     .new_format = reshade::api::format::r16g16b16a16_float,
+      //     .ignore_size = true,
       //     .use_resource_view_cloning = true,
       // });
 

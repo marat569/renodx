@@ -31,9 +31,9 @@
 #define RENODX_SWAP_CHAIN_CUSTOM_COLOR_SPACE shader_injection.colorGradeColorSpace
 #define RENODX_SWAP_CHAIN_CLAMP_COLOR_SPACE  color::convert::COLOR_SPACE_BT2020
 // Game's UI and render are linear, so we gamma correct everything at the end
-#define RENODX_SWAP_CHAIN_GAMMA_CORRECTION 0.f  // renodx::draw::GAMMA_CORRECTION_GAMMA_2_2
-#define RENODX_INTERMEDIATE_ENCODING       0.f  // renodx::draw::GAMMA_CORRECTION_NONE
-#define RENODX_GAMMA_CORRECTION            0.f  // renodx::draw::GAMMA_CORRECTION_NONE -- 1.f makes the game too dark
+#define RENODX_SWAP_CHAIN_GAMMA_CORRECTION 0.f                                      // renodx::draw::GAMMA_CORRECTION_GAMMA_2_2
+#define RENODX_INTERMEDIATE_ENCODING       0.f                                      // renodx::draw::GAMMA_CORRECTION_NONE
+#define RENODX_GAMMA_CORRECTION            shader_injection.toneMapGammaCorrection  // renodx::draw::GAMMA_CORRECTION_NONE -- 1.f makes the game too dark, 0.f default is good; slider exists mostly for testing
 // Use HDR10
 // #define RENODX_SWAP_CHAIN_ENCODING_COLOR_SPACE color::convert::COLOR_SPACE_BT2020
 // #define RENODX_SWAP_CHAIN_ENCODING             ENCODING_PQ + 0
@@ -69,6 +69,8 @@ struct ShaderInjectData {
   float color_grade_hue_correction;
   float color_grade_saturation_correction;
   float color_grade_blowout_restoration;
+
+  float toneMapGammaCorrection;
 };
 
 #ifndef __cplusplus

@@ -6,7 +6,7 @@
 #include <include/reshade_api_resource.hpp>
 #define ImTextureID ImU64
 
-#define DEBUG_LEVEL_0
+// #define DEBUG_LEVEL_0 // Try and hide log spam
 
 #include <embed/shaders.h>
 
@@ -433,12 +433,13 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       //     .use_resource_view_cloning = true,
       // });
 
-      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
-          .old_format = reshade::api::format::b8g8r8a8_unorm_srgb,
-          .new_format = reshade::api::format::r16g16b16a16_float,
-          .use_resource_view_cloning = true,
+      // Upgraded like 5000 times after a cutscene, we might not need this
+      // renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      //     .old_format = reshade::api::format::b8g8r8a8_unorm_srgb,
+      //     .new_format = reshade::api::format::r16g16b16a16_float,
+      //     .use_resource_view_cloning = true,
 
-      });
+      // });
 
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::b8g8r8a8_unorm,

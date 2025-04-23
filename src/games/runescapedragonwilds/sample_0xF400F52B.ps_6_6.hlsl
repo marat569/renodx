@@ -692,6 +692,13 @@ OutputSignature main(
   float _163 = _159.x * 1.0499999523162842f;
   float _164 = _159.y * 1.0499999523162842f;
   float _165 = _159.z * 1.0499999523162842f;
+
+  // if (RENODX_TONE_MAP_TYPE != 0.f) {  // remove *= 1.05 encoding
+  //   float _163 = _159.x;
+  //   float _164 = _159.y;
+  //   float _165 = _159.z;
+  // }
+
   float _166 = dot(float3(_163, _164, _165), float3(0.29899999499320984f, 0.5870000123977661f, 0.11400000005960464f));
   bool _169 = ((uint)(bOutputInHDR) == 0);
   float _240;

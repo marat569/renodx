@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: MIT
  */
 
+#include <include/reshade_api_resource.hpp>
 #define ImTextureID ImU64
 
 #define DEBUG_LEVEL_0
@@ -314,6 +315,17 @@ renodx::utils::settings::Settings settings = {
         },
     },
 
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
+        .label = "Runescape Dragon Wilds Discussion!",
+        .section = "About",
+        .group = "button-line-1",
+        .tint = 0x5865F2,
+        .on_change = []() {
+          system("start https://github.com/clshortfuse/renodx/discussions/180");
+        },
+    },
+
 };
 
 void OnPresetOff() {
@@ -383,19 +395,29 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       renodx::mods::swapchain::swapchain_proxy_compatibility_mode = true;
       renodx::mods::swapchain::swapchain_proxy_revert_state = false;
 
+      // RGB10A2_Unorm -- Fix DLSS
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::r10g10b10a2_unorm,
           .new_format = reshade::api::format::r16g16b16a16_float,
           .use_resource_view_cloning = true,
-          //.usage_include = reshade::api::resource_usage::render_target,
+          // .usage_include = reshade::api::resource_usage::render_target | reshade::api::resource_usage::copy_dest,
       });
 
+      // RGB10A2_aspect ratio -- General Upgrades
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::r10g10b10a2_unorm,
           .new_format = reshade::api::format::r16g16b16a16_float,
           .use_resource_view_cloning = true,
           .aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
           //.usage_include = reshade::api::resource_usage::render_target,
+      });
+
+      // RGB10_A2 32x32x32 lutbuilder
+      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+          .old_format = reshade::api::format::r10g10b10a2_unorm,
+          .new_format = reshade::api::format::r16g16b16a16_float,
+          .use_resource_view_cloning = true,
+          .dimensions = {.width = 32, .height = 32, .depth = 32},
       });
 
       break;

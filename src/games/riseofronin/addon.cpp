@@ -82,20 +82,6 @@ renodx::utils::settings::Settings settings = {
         .max = 500.f,
     },
 
-    // Gamma slider is mostly for debugging
-    new renodx::utils::settings::Setting{
-        .key = "ToneMapGammaCorrection",
-        .binding = &shader_injection.toneMapGammaCorrection,
-        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 1.f,
-        .can_reset = true,
-        .label = "Gamma Correction",
-        .section = "Tone Mapping",
-        .tooltip = "Emulates a display EOTF.",
-        .labels = {"Off", "2.2"},
-        .is_visible = []() { return settings[0]->GetValue() >= 1; },
-    },
-
     new renodx::utils::settings::Setting{
         .key = "ToneMapHueProcessor",
         .binding = &shader_injection.toneMapHueProcessor,
@@ -362,7 +348,6 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("ToneMapPeakNits", 203.f);
   renodx::utils::settings::UpdateSetting("ToneMapGameNits", 203.f);
   renodx::utils::settings::UpdateSetting("ToneMapUINits", 203.f);
-  renodx::utils::settings::UpdateSetting("ToneMapGammaCorrection", 0.f);
   renodx::utils::settings::UpdateSetting("ToneMapHueCorrection", 0.f);
   renodx::utils::settings::UpdateSetting("ColorGradeExposure", 1.f);
   renodx::utils::settings::UpdateSetting("ColorGradeHighlights", 50.f);

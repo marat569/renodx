@@ -603,9 +603,9 @@ void main(
     uint SV_GroupIndex: SV_GroupIndex) {
   float _29 = float((uint)SV_DispatchThreadID.x) + 0.5f;
   float _31 = float((uint)SV_DispatchThreadID.y) + 0.5f;
-  float _427;
-  float _428;
-  float _429;
+  float _451;
+  float _452;
+  float _453;
   if (!(max(abs(((_29 + float((uint)Output_ViewportMin.x)) * Output_ExtentInverse.x) + -0.5f), abs(((_31 + float((uint)Output_ViewportMin.y)) * Output_ExtentInverse.y) + -0.5f)) >= 0.5f)) {
     float _49 = Output_ExtentInverse.x * _29;
     float _50 = Output_ExtentInverse.y * _31;
@@ -650,51 +650,64 @@ void main(
     float _293 = _287 - _258;
     float _303 = (_92 * View_OneOverPreExposure) * (_235 * _235);
     float _304 = _303 * exp2(((_258 - _291) + ((_291 - _287) * LocalExposure_DetailStrength)) + (select((_293 > 0.0f), LocalExposure_HighlightContrastScale, LocalExposure_ShadowContrastScale) * _293));
-    // float4 _346 = ColorGradingLUT.SampleLevel(ColorGradingLUTSampler, float3(((LUTScale * saturate((log2((((((BloomDirtMaskTint.x * _210.x) + 1.0f) * _200.x) * _303) + 0.002667719265446067f) + (((ColorScale0.x * _166.x) * _243) * _304)) * 0.0714285746216774f) + 0.6107269525527954f)) + LUTOffset), ((LUTScale * saturate((log2((((((BloomDirtMaskTint.y * _210.y) + 1.0f) * _200.y) * _303) + 0.002667719265446067f) + (((ColorScale0.y * _172.y) * _244) * _304)) * 0.0714285746216774f) + 0.6107269525527954f)) + LUTOffset), ((LUTScale * saturate((log2((((((BloomDirtMaskTint.z * _210.z) + 1.0f) * _200.z) * _303) + 0.002667719265446067f) + (((ColorScale0.z * _178.z) * _245) * _304)) * 0.0714285746216774f) + 0.6107269525527954f)) + LUTOffset)), 0.0f);
+    // float _329 = exp2(log2(((((ColorScale0.x * _166.x) * _243) * _304) + ((((BloomDirtMaskTint.x * _210.x) + 1.0f) * _200.x) * _303)) * 0.009999999776482582f) * 0.1593017578125f);
+    // float _330 = exp2(log2(((((ColorScale0.y * _172.y) * _244) * _304) + ((((BloomDirtMaskTint.y * _210.y) + 1.0f) * _200.y) * _303)) * 0.009999999776482582f) * 0.1593017578125f);
+    // float _331 = exp2(log2(((((ColorScale0.z * _178.z) * _245) * _304) + ((((BloomDirtMaskTint.z * _210.z) + 1.0f) * _200.z) * _303)) * 0.009999999776482582f) * 0.1593017578125f);
+    // float4 _370 = ColorGradingLUT.SampleLevel(ColorGradingLUTSampler, float3(((LUTScale * exp2(log2((1.0f / ((_329 * 18.6875f) + 1.0f)) * ((_329 * 18.8515625f) + 0.8359375f)) * 78.84375f)) + LUTOffset), ((LUTScale * exp2(log2((1.0f / ((_330 * 18.6875f) + 1.0f)) * ((_330 * 18.8515625f) + 0.8359375f)) * 78.84375f)) + LUTOffset), ((LUTScale * exp2(log2((1.0f / ((_331 * 18.6875f) + 1.0f)) * ((_331 * 18.8515625f) + 0.8359375f)) * 78.84375f)) + LUTOffset)), 0.0f);
 
     float3 untonemapped = float3(_166.x, _172.y, _178.z);
     float3 bloom_extra = ((((BloomDirtMaskTint.rgb * _210.rgb) + 1.0f) * _200.rgb) * _303) * CUSTOM_BLOOM + 0.002667719265446067f;
     _304 = lerp(1.f, _304, CUSTOM_AUTO_EXPOSURE);
     float3 scaled_color = (((ColorScale0.rgb * untonemapped.rgb) * SceneColorApplyParamaters[0].rgb) * _304);
     float3 lut_input_color = bloom_extra + scaled_color;
-    float3 lut_coordinates = float3(((LUTScale * saturate((log2(lut_input_color) * 0.0714285746216774f) + 0.6107269525527954f)) + LUTOffset));
-    float4 _346 = ColorGradingLUT.SampleLevel(ColorGradingLUTSampler, lut_coordinates, 0.0f);
+    float3 lut_coordinates = float3(LUTScale * saturate(renodx::color::pq::Encode(lut_input_color, 100.f)) + LUTOffset);
+    float4 _370 = ColorGradingLUT.SampleLevel(ColorGradingLUTSampler, lut_coordinates, 0.0f);
 
-    float _350 = _346.x * 1.0499999523162842f;
-    float _351 = _346.y * 1.0499999523162842f;
-    float _352 = _346.z * 1.0499999523162842f;
+    float _374 = _370.x * 1.0499999523162842f;
+    float _375 = _370.y * 1.0499999523162842f;
+    float _376 = _370.z * 1.0499999523162842f;
 
     if (RENODX_TONE_MAP_TYPE != 0.f && CUSTOM_PROCESSING_MODE == 1.f) {
       float3 mid_gray = (((ColorScale0.rgb * 0.18f) * SceneColorApplyParamaters[0].rgb) * _304);
       float mid_gray_luminance = renodx::color::y::from::BT709(mid_gray);
-      float3 linear_color = renodx::draw::InvertIntermediatePass(float3(_350, _351, _352));
-      float3 tonemapped = renodx::draw::ToneMapPass(lut_input_color * mid_gray_luminance / 0.18f, linear_color);
-      tonemapped = renodx::draw::RenderIntermediatePass(tonemapped);
-      _350 = tonemapped.r;
-      _351 = tonemapped.g;
-      _352 = tonemapped.b;
+      renodx::draw::Config config = renodx::draw::BuildConfig();
+      config.intermediate_encoding = renodx::draw::ENCODING_PQ;
+      config.intermediate_scaling = RENODX_DIFFUSE_WHITE_NITS;
+      config.intermediate_color_space = renodx::color::convert::COLOR_SPACE_BT2020;
+
+      float3 linear_color = renodx::draw::InvertIntermediatePass(float3(_374, _375, _376), config);
+      float3 tonemapped = renodx::draw::ToneMapPass(lut_input_color * mid_gray_luminance / 0.18f, linear_color, config);
+      tonemapped = renodx::draw::RenderIntermediatePass(tonemapped, config);
+      _374 = tonemapped.r;
+      _375 = tonemapped.g;
+      _376 = tonemapped.b;
     }
 
-    float _353 = dot(float3(_350, _351, _352), float3(0.29899999499320984f, 0.5870000123977661f, 0.11400000005960464f));
+    float _377 = dot(float3(_374, _375, _376), float3(0.29899999499320984f, 0.5870000123977661f, 0.11400000005960464f));
     [branch]
     if (!((uint)(bOutputInHDR) == 0)) {
-      float _364 = (pow(_350, 0.012683313339948654f));
-      float _365 = (pow(_351, 0.012683313339948654f));
-      float _366 = (pow(_352, 0.012683313339948654f));
-      float _399 = max(6.103519990574569e-05f, ((exp2(log2(max(0.0f, (_364 + -0.8359375f)) / (18.8515625f - (_364 * 18.6875f))) * 6.277394771575928f) * 10000.0f) / EditorNITLevel));
-      float _400 = max(6.103519990574569e-05f, ((exp2(log2(max(0.0f, (_365 + -0.8359375f)) / (18.8515625f - (_365 * 18.6875f))) * 6.277394771575928f) * 10000.0f) / EditorNITLevel));
-      float _401 = max(6.103519990574569e-05f, ((exp2(log2(max(0.0f, (_366 + -0.8359375f)) / (18.8515625f - (_366 * 18.6875f))) * 6.277394771575928f) * 10000.0f) / EditorNITLevel));
-      _427 = min((_399 * 12.920000076293945f), ((exp2(log2(max(_399, 0.0031306699384003878f)) * 0.4166666567325592f) * 1.0549999475479126f) + -0.054999999701976776f));
-      _428 = min((_400 * 12.920000076293945f), ((exp2(log2(max(_400, 0.0031306699384003878f)) * 0.4166666567325592f) * 1.0549999475479126f) + -0.054999999701976776f));
-      _429 = min((_401 * 12.920000076293945f), ((exp2(log2(max(_401, 0.0031306699384003878f)) * 0.4166666567325592f) * 1.0549999475479126f) + -0.054999999701976776f));
+      float _388 = (pow(_374, 0.012683313339948654f));
+      float _389 = (pow(_375, 0.012683313339948654f));
+      float _390 = (pow(_376, 0.012683313339948654f));
+      float _423 = max(6.103519990574569e-05f, ((exp2(log2(max(0.0f, (_388 + -0.8359375f)) / (18.8515625f - (_388 * 18.6875f))) * 6.277394771575928f) * 10000.0f) / EditorNITLevel));
+      float _424 = max(6.103519990574569e-05f, ((exp2(log2(max(0.0f, (_389 + -0.8359375f)) / (18.8515625f - (_389 * 18.6875f))) * 6.277394771575928f) * 10000.0f) / EditorNITLevel));
+      float _425 = max(6.103519990574569e-05f, ((exp2(log2(max(0.0f, (_390 + -0.8359375f)) / (18.8515625f - (_390 * 18.6875f))) * 6.277394771575928f) * 10000.0f) / EditorNITLevel));
+      _451 = min((_423 * 12.920000076293945f), ((exp2(log2(max(_423, 0.0031306699384003878f)) * 0.4166666567325592f) * 1.0549999475479126f) + -0.054999999701976776f));
+      _452 = min((_424 * 12.920000076293945f), ((exp2(log2(max(_424, 0.0031306699384003878f)) * 0.4166666567325592f) * 1.0549999475479126f) + -0.054999999701976776f));
+      _453 = min((_425 * 12.920000076293945f), ((exp2(log2(max(_425, 0.0031306699384003878f)) * 0.4166666567325592f) * 1.0549999475479126f) + -0.054999999701976776f));
     } else {
-      _427 = _350;
-      _428 = _351;
-      _429 = _352;
+      _451 = _374;
+      _452 = _375;
+      _453 = _376;
     }
-    float _448 = 0.f;
+
+    float _472 = 0.f;
     if (CUSTOM_GRAIN_TYPE == 1.f) {
-      float3 linear_color = renodx::draw::InvertIntermediatePass(float3(_427, _428, _429));
+      renodx::draw::Config config = renodx::draw::BuildConfig();
+      config.intermediate_encoding = renodx::draw::ENCODING_PQ;
+      config.intermediate_scaling = RENODX_DIFFUSE_WHITE_NITS;
+      config.intermediate_color_space = renodx::color::convert::COLOR_SPACE_BT2020;
+      float3 linear_color = renodx::draw::InvertIntermediatePass(float3(_451, _452, _453), config);
       float3 grained = renodx::effects::ApplyFilmGrain(
           linear_color,
           float2(_49, _50),
@@ -702,18 +715,18 @@ void main(
           CUSTOM_GRAIN_STRENGTH * 0.03f,
           1.f);
 
-      float3 encoded = renodx::draw::RenderIntermediatePass(grained);
-      _427 = encoded.r;
-      _428 = encoded.g;
-      _429 = encoded.b;
+      float3 encoded = renodx::draw::RenderIntermediatePass(grained, config);
+      _451 = encoded.r;
+      _452 = encoded.g;
+      _453 = encoded.b;
     } else {
-      float _436 = (frac(sin((GrainRandomFull.x + _49) + ((GrainRandomFull.y + _50) * 543.3099975585938f)) * 493013.0f) * 2.0f) + -1.0f;
-      float _439 = min(max((_436 * +1.#INF), -1.0f), 1.0f);
-      _448 = (_439 - (sqrt(saturate(1.0f - abs(_436))) * _439)) * BackbufferQuantizationDithering * CUSTOM_GRAIN_STRENGTH;
+      float _460 = (frac(sin((GrainRandomFull.x + _49) + ((GrainRandomFull.y + _50) * 543.3099975585938f)) * 493013.0f) * 2.0f) + -1.0f;
+      float _463 = min(max((_460 * +1.#INF), -1.0f), 1.0f);
+      _472 = (_463 - (sqrt(saturate(1.0f - abs(_460))) * _463)) * BackbufferQuantizationDithering;
     }
-    uint _455 = Output_ViewportMin.x + SV_DispatchThreadID.x;
-    uint _456 = Output_ViewportMin.y + SV_DispatchThreadID.y;
-    RWOutputTexture[int2(_455, _456)] = float4((_448 + _427), (_448 + _428), (_448 + _429), 0.0f);
-    RWOutputLuminance[int2(_455, _456)] = _353;
+    uint _479 = Output_ViewportMin.x + SV_DispatchThreadID.x;
+    uint _480 = Output_ViewportMin.y + SV_DispatchThreadID.y;
+    RWOutputTexture[int2(_479, _480)] = float4((_472 + _451), (_472 + _452), (_472 + _453), 0.0f);
+    RWOutputLuminance[int2(_479, _480)] = _377;
   }
 }

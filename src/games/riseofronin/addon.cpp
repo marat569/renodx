@@ -253,6 +253,7 @@ renodx::utils::settings::Settings settings = {
         .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
 
+    // Per channel restoration
     // new renodx::utils::settings::Setting{
     //     .key = "ColorGradeHueCorrection",
     //     .binding = &shader_injection.color_grade_hue_correction,
@@ -291,6 +292,48 @@ renodx::utils::settings::Settings settings = {
     //     .is_enabled = []() { return shader_injection.toneMapType >= 1; },
     //     .parse = [](float value) { return value * 0.01f; },
     // },
+
+    // Display map settings for Highlight Saturation
+
+    new renodx::utils::settings::Setting{
+        .key = "DisplayMapType",
+        .binding = &shader_injection.displayMapType,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .can_reset = true,
+        .label = "Display Map Type",
+        .section = "Highlight Saturation Restoration",
+        .tooltip = "Sets the Display mapper used",
+        .labels = {"None", "DICE", "Frostbite"},
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
+    },
+
+    new renodx::utils::settings::Setting{
+        .key = "DisplayMapPeak",
+        .binding = &shader_injection.displayMapPeak,
+        .value_type = renodx::utils::settings::SettingValueType::FLOAT,
+        .default_value = 2.f,
+        .can_reset = true,
+        .label = "Display Map Peak",
+        .section = "Highlight Saturation Restoration",
+        .tooltip = "What nit value we want to display map down to -- 2.f is solid",
+        .max = 5.f,
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
+    },
+
+    new renodx::utils::settings::Setting{
+        .key = "DisplayMapShoulder",
+        .binding = &shader_injection.displayMapShoulder,
+        .value_type = renodx::utils::settings::SettingValueType::FLOAT,
+        .default_value = 0.25f,
+        .can_reset = true,
+        .label = "Display Map Shoulder",
+        .section = "Highlight Saturation Restoration",
+        .tooltip = "Determines where the highlights curve (shoulder) starts in the display mapper.",
+        .max = 1.f,
+        .format = "%.2f",
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
+    },
 
     new renodx::utils::settings::Setting{
         .key = "ColorGradeColorSpace",
@@ -366,7 +409,8 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("ColorGradeLUTStrength", 100.f);
   renodx::utils::settings::UpdateSetting("ColorGradeLUTScaling", 0.f);
   renodx::utils::settings::UpdateSetting("ColorGradeColorSpace", 0.f);
-  renodx::utils::settings::UpdateSetting("ToneMapHueShiftMethod", 4.f);
+  renodx::utils::settings::UpdateSetting("ToneMapHueShiftMethod", 0.f);
+  renodx::utils::settings::UpdateSetting("DisplayMapType", 0.f);
 }
 
 // bool fired_on_init_swapchain = false;

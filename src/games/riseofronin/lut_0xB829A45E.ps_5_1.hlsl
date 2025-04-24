@@ -229,6 +229,7 @@ void main(
   }
 
   float3 untonemapped = r3.rgb;
+  r3.rgb = RestoreHighlightSaturation(untonemapped);
 
   /*
     Game applies multiple luts to different parts of the image (similar to Metaphor),

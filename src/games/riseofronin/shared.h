@@ -21,10 +21,15 @@
 #define RENODX_TONE_MAP_HUE_CORRECTION       shader_injection.toneMapHueCorrection
 #define RENODX_TONE_MAP_HUE_SHIFT            shader_injection.toneMapHueShift
 #define RENODX_TONE_MAP_HUE_SHIFT_METHOD     shader_injection.toneMapHueShiftMethod
-// new highlight restoration is a bit griefed in ths game
+// new per-ch highlight restoration is a bit griefed in ths game
 // #define RENODX_PER_CHANNEL_HUE_CORRECTION         shader_injection.color_grade_hue_correction
 // #define RENODX_PER_CHANNEL_CHROMINANCE_CORRECTION shader_injection.color_grade_saturation_correction
 // #define RENODX_PER_CHANNEL_BLOWOUT_RESTORATION    shader_injection.color_grade_blowout_restoration
+// Display map highlight restoration
+#define DISPLAY_MAP_TYPE     shader_injection.displayMapType
+#define DISPLAY_MAP_PEAK     shader_injection.displayMapPeak
+#define DISPLAY_MAP_SHOULDER shader_injection.displayMapShoulder
+//
 #define RENODX_TONE_MAP_CLAMP_COLOR_SPACE    color::convert::COLOR_SPACE_BT2020
 #define RENODX_RENO_DRT_TONE_MAP_METHOD      renodx::tonemap::renodrt::config::tone_map_method::REINHARD
 #define RENODX_RENO_DRT_WHITE_CLIP           65.f  // Cause they're using arri
@@ -66,9 +71,13 @@ struct ShaderInjectData {
   float colorGradeRestorationMethod;
   float colorGradeStrength;
 
-  float color_grade_hue_correction;
-  float color_grade_saturation_correction;
-  float color_grade_blowout_restoration;
+  // float color_grade_hue_correction;
+  // float color_grade_saturation_correction;
+  // float color_grade_blowout_restoration;
+
+  float displayMapType;
+  float displayMapPeak;
+  float displayMapShoulder;
 
   float toneMapGammaCorrection;
 };

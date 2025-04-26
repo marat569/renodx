@@ -42,7 +42,7 @@ float3 LUTCorrectBlack(float3 lut_input_color_bt709, float3 lut_output_color_ap1
     float3 min_black = LogDecodeLUT(ColorRemap0VolumeSampler.SampleLevel(Clamp_s, LogEncodeLUT((0.f).xxx) + (0.5f / 32.f), 0.0f).rgb);
 
     float lut_min_y = (renodx::color::y::from::AP1(max(0, min_black)));
-    if (RENODX_GAMMA_CORRECTION) lut_min_y = renodx::color::correct::Gamma(lut_min_y);
+    if (RENODX_GAMMA_CORRECTION && RENODX_TONE_MAP_TYPE != 0.f) lut_min_y = renodx::color::correct::Gamma(lut_min_y);
     if (lut_min_y > 0) {
       float3 lut_output_color_bt709 = renodx::color::bt709::from::AP1(lut_output_color_ap1);
 
@@ -105,6 +105,12 @@ float3 ApplyVanillaToneMap(float3 untonemapped_ap1) {
   return r0.rgb;
 }
 
+// solves for x
+// (x * (x + 0.0206166003) / (x * (0.983796 * x + 0.433679014) + 0.246179)) = 0.18
+float GetVanillaSDRMidGray() {
+  return 0.269565;
+}
+
 float3 SaturationAP1(float3 color_ap1, float saturation, float blowout = 0.f) {
   float3 color_bt709 = renodx::color::bt709::from::AP1(max(0, color_ap1));
 
@@ -139,11 +145,11 @@ float3 TonemapByLuminance(float3 untonemapped_ap1) {
   float scale = y > 0 ? y_mapped / y : 0;
   float3 tonemapped_ap1 = untonemapped_ap1 * scale;
 
-  tonemapped_ap1 = max(0, SaturationAP1(tonemapped_ap1, 22.f, .99f)); // increase saturation in midtones and shadows
+  tonemapped_ap1 = max(0, SaturationAP1(tonemapped_ap1, 22.f, .99f));  // increase saturation in midtones and shadows
 
-  float blend_brightness_ratio = 0.613478879269;
+  float mid_gray_ratio = 0.18f / GetVanillaSDRMidGray();
   float tonemapped_y = renodx::color::y::from::AP1(tonemapped_ap1);
-  tonemapped_ap1 = lerp(tonemapped_ap1, untonemapped_ap1 * blend_brightness_ratio, saturate(tonemapped_y));
+  tonemapped_ap1 = lerp(tonemapped_ap1, untonemapped_ap1 * mid_gray_ratio, saturate(tonemapped_y));
   tonemapped_ap1 = ApplyUserColorGrading(tonemapped_ap1);
 
   float peak_nits = RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
@@ -162,8 +168,8 @@ float3 TonemapByChannel(float3 untonemapped_ap1) {
   float3 tonemapped = num / denom;
   tonemapped = max(0, HueCorrectAP1(tonemapped, untonemapped_ap1));
 
-  float blend_brightness_ratio = 0.613478879269;
-  tonemapped = lerp(tonemapped, untonemapped_ap1 * blend_brightness_ratio, saturate(tonemapped));
+  float mid_gray_ratio = 0.18f / GetVanillaSDRMidGray();
+  tonemapped = lerp(tonemapped, untonemapped_ap1 * mid_gray_ratio, saturate(tonemapped));
   tonemapped = ApplyUserColorGrading(tonemapped);
 
   tonemapped = renodx::tonemap::ExponentialRollOff(tonemapped, 0.f, RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS);
@@ -171,9 +177,55 @@ float3 TonemapByChannel(float3 untonemapped_ap1) {
   return tonemapped;
 }
 
+float3 ApplyACESToneMap(float3 untonemapped_ap1) {
+  const float ACES_MIN = 0.0001f;
+  float aces_min = ACES_MIN / RENODX_DIFFUSE_WHITE_NITS;
+  float aces_max = (RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS);
+
+  if (RENODX_GAMMA_CORRECTION) {
+    aces_max = renodx::color::correct::Gamma(aces_max, true);
+    aces_min = renodx::color::correct::Gamma(aces_min, true);
+  }
+
+  // exposure, highlights, shadows, contrast
+  if (RENODX_TONE_MAP_EXPOSURE != 1.f || RENODX_TONE_MAP_HIGHLIGHTS != 1.f || RENODX_TONE_MAP_SHADOWS != 1.f || RENODX_TONE_MAP_CONTRAST != 1.f) {
+    untonemapped_ap1 = renodx::color::ap1::from::BT709(
+        renodx::color::grade::UserColorGrading(
+            renodx::color::bt709::from::AP1(untonemapped_ap1),
+            RENODX_TONE_MAP_EXPOSURE,
+            RENODX_TONE_MAP_HIGHLIGHTS,
+            RENODX_TONE_MAP_SHADOWS,
+            RENODX_TONE_MAP_CONTRAST,
+            1.f,
+            0.f,
+            0.f));
+  }
+
+  float3 tonemapped_ap1 = renodx::tonemap::aces::ODT(untonemapped_ap1, aces_min * 48.f, aces_max * 48.f, renodx::color::IDENTITY_MAT) / 48.f;
+
+  // saturation, blowout, hue correction
+  if (RENODX_TONE_MAP_SATURATION != 1.f || RENODX_TONE_MAP_BLOWOUT != 0.f || RENODX_TONE_MAP_HUE_CORRECTION != 0.f) {
+    tonemapped_ap1 = renodx::color::ap1::from::BT709(
+        renodx::color::grade::UserColorGrading(
+            renodx::color::bt709::from::AP1(tonemapped_ap1),
+            1.f,
+            1.f,
+            1.f,
+            1.f,
+            RENODX_TONE_MAP_SATURATION,
+            RENODX_TONE_MAP_BLOWOUT,
+            RENODX_TONE_MAP_HUE_CORRECTION,
+            renodx::color::bt709::from::AP1(untonemapped_ap1)));
+  }
+
+  return tonemapped_ap1;
+}
+
 float3 ApplyUserToneMap(float3 untonemapped_ap1) {
   float3 tonemapped_ap1;
-  if (RENODX_TONE_MAP_TYPE == 2.f) {  // Vanilla+
+  if (RENODX_TONE_MAP_TYPE == 3.f) {
+    tonemapped_ap1 = ApplyACESToneMap(untonemapped_ap1);
+  } else if (RENODX_TONE_MAP_TYPE == 2.f) {  // Vanilla+
     tonemapped_ap1 = TonemapByLuminance(untonemapped_ap1);
   } else if (RENODX_TONE_MAP_TYPE == 1.f) {  // None
     tonemapped_ap1 = ApplyUserColorGrading(untonemapped_ap1);
@@ -193,7 +245,7 @@ float3 ApplyUserToneMap(float3 untonemapped_ap1) {
 
 float3 ApplyUserDisplayMap(float3 untonemapped_ap1) {
   float3 display_mapped_ap1;
-  if (RENODX_TONE_MAP_TYPE == 2.f) {
+  if (RENODX_TONE_MAP_TYPE == 2.f || RENODX_TONE_MAP_TYPE == 3.f) {  // Vanilla+ or ACES
     untonemapped_ap1 = ApplyUserColorGrading(untonemapped_ap1);
     float peak_nits = RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
     if (RENODX_GAMMA_CORRECTION) peak_nits = renodx::color::correct::GammaSafe(peak_nits, true);

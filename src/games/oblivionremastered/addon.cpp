@@ -231,18 +231,23 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0x41DCD632),
 
     // Output
+    CustomShaderEntry(0x12E07ACC),
+    CustomShaderEntry(0x4B58AFCD),
+    CustomShaderEntry(0xA4374A0A),
     CustomShaderEntry(0xEED8F029),
     CustomShaderEntry(0x8E39B831),
     CustomShaderEntry(0x59C7FFCE),
+    CustomShaderEntry(0x440BCDEB),
     CustomShaderEntry(0x1BD60193),
     CustomShaderEntry(0x99B126EC),
     CustomShaderEntry(0x9D0421B9),
     CustomShaderEntry(0xCF3ED7E2),
     CustomShaderEntry(0xCC2B95BB),
     CustomShaderEntry(0xB6EDB152),
-    CustomShaderEntry(0xD1CDE904),
+    CustomShaderEntry(0x2F45593A),
+    CustomShaderEntry(0xDBD0F5E7),
     CustomShaderEntry(0x04C003FD),
-    CustomShaderEntry(0x440BCDEB),
+    CustomShaderEntry(0xD1CDE904),
 
     // FMV
     CustomShaderEntry(0x1FAA96A2),
@@ -362,10 +367,18 @@ renodx::utils::settings::Settings settings = renodx::templates::settings::JoinSe
     }),
     {
         renodx::templates::settings::CreateSetting({
-            .key = "FxAutoExposure",
-            .binding = &shader_injection.custom_auto_exposure,
+            .key = "FxVignette",
+            .binding = &shader_injection.custom_vignette,
+            .default_value = 50.f,
+            .label = "Vignette",
+            .section = "Effects",
+            .parse = [](float value) { return value * 0.02f; },
+        }),
+        renodx::templates::settings::CreateSetting({
+            .key = "FxLocalExposure",
+            .binding = &shader_injection.custom_local_exposure,
             .default_value = 100.f,
-            .label = "Auto Exposure",
+            .label = "Local Exposure",
             .section = "Effects",
             .parse = [](float value) { return value * 0.01f; },
         }),
@@ -444,7 +457,7 @@ renodx::utils::settings::Settings settings = renodx::templates::settings::JoinSe
               renodx::utils::settings::UpdateSettings({
                   {"ToneMapWhiteClip", 15.f},
                   {"ColorGradeShadows", 60.f},
-                  {"ColorGradeContrast", 80.f},
+                  {"ColorGradeContrast", 70.f},
                   {"ColorGradeSaturation", 65.f},
                   {"ColorGradeBlowout", 50.f},
                   {"ColorGradeFlare", 25.f},
@@ -518,11 +531,12 @@ void OnPresetOff() {
       {"ColorGradeBlowout", 0.f},
       {"ColorGradeFlare", 0.f},
       {"FxHDRVideos", 0.f},
-      {"FxAutoExposure", 100.f},
+      {"FxBloom", 50.f},
+      {"FxVignette", 50.f},
+      {"FxLocalExposure", 100.f},
       {"FxChromaticAberration", 100.f},
       {"FxEyeAdaptation", 100.f},
       {"FxCustomGrain", 100.f},
-      {"FxBloom", 0.f},
   });
 }
 

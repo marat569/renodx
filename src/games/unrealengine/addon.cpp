@@ -395,6 +395,43 @@ void OnInitSwapchain(reshade::api::swapchain* swapchain, bool resize) {
   }
 }
 
+// Per game resource upgrades, where we need custom paramaters -- the sliders (output size/ratio/all) don't work
+void AddExpedition33Upgrades() {
+  // Portrait letterboxes screens
+  renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      .old_format = reshade::api::format::r10g10b10a2_unorm,
+      .new_format = reshade::api::format::r16g16b16a16_float,
+      .use_resource_view_cloning = true,
+      .aspect_ratio = 2880.f / 2160.f,
+  });
+
+  renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      .old_format = reshade::api::format::r10g10b10a2_unorm,
+      .new_format = reshade::api::format::r16g16b16a16_float,
+      .use_resource_view_cloning = true,
+      .aspect_ratio = 3840.f / 1608.f,
+  });
+  // DLAA support
+  renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      .old_format = reshade::api::format::r10g10b10a2_unorm,
+      .new_format = reshade::api::format::r16g16b16a16_float,
+      .use_resource_view_cloning = true,
+      .aspect_ratio = 3044.f / 1712.f,
+  });
+}
+
+void AddGamePatches() {
+  auto process_path = renodx::utils::platform::GetCurrentProcessPath();
+  auto filename = process_path.filename().string();
+  auto product_name = renodx::utils::platform::GetProductName(process_path);
+
+  // Clair Obscur Expedition 33
+  if (product_name == "Expedition 33") {
+    AddExpedition33Upgrades();
+    reshade::log::message(reshade::log::level::info, std::format("Applied patches for {} ({}).", filename, product_name).c_str());
+  }
+}
+
 const auto UPGRADE_TYPE_NONE = 0.f;
 const auto UPGRADE_TYPE_OUTPUT_SIZE = 1.f;
 const auto UPGRADE_TYPE_OUTPUT_RATIO = 2.f;
@@ -427,6 +464,14 @@ const std::unordered_map<
         {
             "Wuthering Waves",
             {
+                {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
+            },
+        },
+        {
+            "Expedition 33",
+            {
+                {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
+                {"Upgrade_B8G8R8A8_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
             },
         },
@@ -740,6 +785,7 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   switch (fdw_reason) {
     case DLL_PROCESS_ATTACH:
       if (!reshade::register_addon(h_module)) return FALSE;
+
       reshade::register_event<reshade::addon_event::init_swapchain>(OnInitSwapchain);
 
       renodx::mods::shader::on_create_pipeline_layout = [](auto, auto params) {
@@ -761,6 +807,7 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
         if (product_name == "Eternal Strands") return true;
         if (product_name == "Expedition 33") return true;
         if (product_name == "YKS") return true;  // Slitterhead
+        if (product_name == "Split Fiction") return true;
 
         // UE DX12 has a 4 param root sig that crashes if modified. Track for now
         return std::ranges::any_of(params, [](auto param) {
@@ -807,6 +854,8 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
             .dimensions = {.width = 32, .height = 32, .depth = 32},
             .resource_tag = 1.f,
         });
+
+        AddGamePatches();
 
         initialized = true;
       }

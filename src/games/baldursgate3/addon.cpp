@@ -66,6 +66,28 @@ renodx::utils::settings::Settings settings = {
         .max = 500.f,
     },
     new renodx::utils::settings::Setting{
+        .key = "ToneMapHueCorrection",
+        .binding = &shader_injection.tone_map_hue_correction,
+        .default_value = 0.f,
+        .label = "Hue Correction",
+        .section = "Tone Mapping",
+        .tooltip = "Hue retention strength.",
+        .min = 0.f,
+        .max = 100.f,
+        .parse = [](float value) { return value * 0.01f; },
+    },
+    new renodx::utils::settings::Setting{
+        .key = "ToneMapShoulderStart",
+        .binding = &shader_injection.tone_map_shoulder_start,
+        .default_value = 0.375f,
+        .label = "Shoulder Start",
+        .section = "Tone Mapping",
+        .tooltip = "Sets the starting point for highlight rolloff.",
+        .min = 0.25f,
+        .max = 0.5f,
+        .format = "%.3f",
+    },
+    new renodx::utils::settings::Setting{
         .key = "ToneMapGammaCorrection",
         .binding = &shader_injection.gamma_correction,
         .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
@@ -202,6 +224,8 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("ToneMapPeakNits", 1000.f);
   renodx::utils::settings::UpdateSetting("ToneMapGameNits", 225.f);
   renodx::utils::settings::UpdateSetting("ToneMapUINits", 300.f);
+  renodx::utils::settings::UpdateSetting("ToneMapHueCorrection", 0.f);
+  renodx::utils::settings::UpdateSetting("ToneMapShoulderStart", 0.5f);
   renodx::utils::settings::UpdateSetting("ToneMapGammaCorrection", 0.f);
   renodx::utils::settings::UpdateSetting("ColorGradeExposure", 1.f);
   renodx::utils::settings::UpdateSetting("ColorGradeHighlights", 50.f);

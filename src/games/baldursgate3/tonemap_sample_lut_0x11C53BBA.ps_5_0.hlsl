@@ -83,8 +83,15 @@ void main(
       RENODX_TONE_MAP_BLOWOUT,
       0.f);
   r0.rgb = renodx::color::bt2020::from::BT709(r0.rgb);
-  
-  r0.rgb = renodx::tonemap::ExponentialRollOff(r0.rgb, 0.18f, RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS);
+
+  float shoulder_start = 0.5f;
+  float3 untonemapped = max(0, r0.rgb);
+  r0.rgb = exp2(renodx::tonemap::ExponentialRollOff(log2(untonemapped * RENODX_DIFFUSE_WHITE_NITS), log2(RENODX_PEAK_WHITE_NITS * RENODX_TONE_MAP_SHOULDER_START), log2(RENODX_PEAK_WHITE_NITS))) / RENODX_DIFFUSE_WHITE_NITS;
+  if (RENODX_TONE_MAP_HUE_CORRECTION != 0.f) {
+    r0.rgb = renodx::color::bt709::from::BT2020(r0.rgb);
+    r0.rgb = renodx::color::correct::Hue(r0.rgb, renodx::color::bt709::from::BT2020(untonemapped), RENODX_TONE_MAP_HUE_CORRECTION);
+    r0.rgb = renodx::color::bt2020::from::BT709(r0.rgb);
+  }
   r0.rgb = renodx::color::pq::EncodeSafe(r0.rgb, RENODX_DIFFUSE_WHITE_NITS);
 #endif
 

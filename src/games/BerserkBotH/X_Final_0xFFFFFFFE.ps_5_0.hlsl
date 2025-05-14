@@ -13,7 +13,7 @@ void main(
 
   color.rgb *= injectedData.toneMapUINits;  // Scale luminance -- The tonemapper has a ratio of injectedData.toneMapGameNits / injectedData.toneMapUINits
 
-  // Shortfuse's bandaid
+  // Shortfuse's bandaid -- Random edit to triggger github actions
   if ((injectedData.toneMapType >= 2) && (injectedData.clipPeak)) {  // If tonemapper is not "none" or "Vanilla"
     float y_max = injectedData.toneMapPeakNits;
     float y = renodx::color::y::from::BT709(abs(color.rgb));

@@ -139,14 +139,18 @@ void main(uint3 vThreadID: SV_DispatchThreadID) {
       r0.xyz = cb1[6].zzz * r3.xyz;
       float3 preCG = r0.rgb;
       r0.rgb = lutShaper(r0.rgb);
+      if (injectedData.colorGradeLUTSampling == 0.f) {
       r0.xyz = cb1[6].yyy * r0.xyz;
       r0.w = 0.5 * cb1[6].x;
       r0.xyz = r0.xyz * cb1[6].xxx + r0.www;
       r3.xyz = t4.SampleLevel(s2_s, r0.xyz, 0).xyz;
+      } else {
+        r3.rgb = renodx::lut::SampleTetrahedral(t4, r0.rgb, 1 / cb1[6].x);
+      }
       r3.rgb = lerp(preCG, r3.rgb, injectedData.colorGradeLUTStrength);
     }
   }
-  r3.rgb = applyUserTonemap(r3.rgb);
+  r3.rgb = injectedData.BWCameraEffect ? applyUserTonemapBW(r3.rgb) : applyUserTonemap(r3.rgb);
   r0.x = cmp(cb1[12].w == 0.000000);
   r0.y = saturate(r2.w * cb1[13].x + cb1[13].y);
   r1.xyz = r3.xyz + -r2.xyz;

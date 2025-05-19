@@ -26,7 +26,8 @@ void main(
   float4 fDest;
 
   r0.xyzw = t1.Sample(s1_s, v1.xy).xyzw;
-  r1.xyzw = t0.Sample(s0_s, w1.xy).xyzw;
+  //r1.xyzw = t0.Sample(s0_s, w1.xy).xyzw;
+  r1.rgba = applyCA(t0, s0_s, w1, cb0[32].zw * 2, injectedData.fxCA);
   r1.xyz = r1.xyz * r0.xxx;
   r0.xyzw = float4(1, 1, -1, 0) * cb0[32].xyxy;
   r2.xyzw = saturate(-r0.xywy * cb0[34].xxxx + v1.xyxy);
@@ -71,10 +72,14 @@ void main(
   r0.xyzw = r2.xyzw * r3.xyzw + r0.xyzw;
   r0.xyzw = cb0[36].zzzz * r0.xyzw;
   r0.rgb = lutShaper(r0.rgb);
+  if (injectedData.colorGradeLUTSampling == 0.f) {
   r0.xyz = cb0[36].yyy * r0.xyz;
   r1.x = 0.5 * cb0[36].x;
   r0.xyz = r0.xyz * cb0[36].xxx + r1.xxx;
   r1.xyzw = t4.Sample(s4_s, r0.xyz).wxyz;
+  } else {
+    r1.gba = renodx::lut::SampleTetrahedral(t4, r0.rgb, 1 / cb0[36].x);
+  }
   r0.x = cmp(0.5 < cb0[42].x);
   if (r0.x != 0) {
     r1.x = renodx::color::y::from::BT709(r1.gba);

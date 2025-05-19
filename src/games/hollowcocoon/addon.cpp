@@ -6,7 +6,10 @@
 #define ImTextureID ImU64
 
 #define DEBUG_LEVEL_0
+#define NOMINMAX
 
+#include <chrono>
+#include <random>
 #include <embed/shaders.h>
 
 #include <deps/imgui/imgui.h>
@@ -57,7 +60,7 @@ renodx::utils::settings::Settings settings = {
         .label = "Tone Mapper",
         .section = "Tone Mapping",
         .tooltip = "Sets the tone mapper type",
-        .labels = {"Vanilla", "None", "ACES", "RenoDRT", "Reinhard+"},
+        .labels = {"Vanilla", "None", "ACES", "RenoDRT (Daniele)", "RenoDRT (Reinhard)"},
         .tint = 0xB62E23,
         .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
@@ -117,7 +120,7 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Luminance scales colors consistently while per-channel saturates and blows out sooner",
         .labels = {"Luminance", "Per Channel"},
         .tint = 0xF8CB7C,
-        .is_enabled = []() { return shader_injection.toneMapType == 3.f; },
+        .is_enabled = []() { return shader_injection.toneMapType >= 3.f; },
         .is_visible = []() { return current_settings_mode >= 2; },
     },
     new renodx::utils::settings::Setting{
@@ -136,13 +139,27 @@ renodx::utils::settings::Settings settings = {
         .key = "toneMapHueProcessor",
         .binding = &shader_injection.toneMapHueProcessor,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 1.f,
+        .default_value = 2.f,
         .label = "Hue Processor",
         .section = "Tone Mapping",
         .labels = {"OKLab", "ICtCp", "darktable UCS"},
         .tint = 0xF8CB7C,
         .is_enabled = []() { return shader_injection.toneMapType >= 3.f; },
         .is_visible = []() { return current_settings_mode >= 2; },
+    },
+    new renodx::utils::settings::Setting{
+        .key = "toneMapHueShift",
+        .binding = &shader_injection.toneMapHueShift,
+        .default_value = 100.f,
+        .label = "Hue Shift",
+        .section = "Tone Mapping",
+        .tooltip = "Hue-shift emulation strength.",
+        .tint = 0xF8CB7C,
+        .min = 0.f,
+        .max = 100.f,
+        .is_enabled = []() { return shader_injection.toneMapType >= 3.f && shader_injection.toneMapPerChannel == 0.f; },
+        .parse = [](float value) { return value * 0.01f; },
+        .is_visible = []() { return current_settings_mode >= 1; },
     },
     new renodx::utils::settings::Setting{
         .key = "toneMapHueCorrection",
@@ -225,25 +242,37 @@ renodx::utils::settings::Settings settings = {
     new renodx::utils::settings::Setting{
         .key = "colorGradeDechroma",
         .binding = &shader_injection.colorGradeDechroma,
-        .default_value = 50.f,
+        .default_value = 0.f,
         .label = "Blowout",
         .section = "Color Grading",
         .tooltip = "Controls highlight desaturation due to overexposure.",
         .tint = 0x054135,
         .max = 100.f,
         .is_enabled = []() { return shader_injection.toneMapType >= 3.f; },
-        .parse = [](float value) { return value * 0.01f; },
+        .parse = [](float value) { return fmax(0.00001f, value * 0.01f); },
     },
     new renodx::utils::settings::Setting{
         .key = "colorGradeFlare",
         .binding = &shader_injection.colorGradeFlare,
-        .default_value = 50.f,
+        .default_value = 0.f,
         .label = "Flare",
         .section = "Color Grading",
         .tint = 0x054135,
         .max = 100.f,
-        .parse = [](float value) { return value * 0.02f; },
-        .is_visible = []() { return shader_injection.toneMapType == 3.f; },
+        .is_enabled = []() { return shader_injection.toneMapType >= 3.f; },
+        .parse = [](float value) { return value * 0.01f; },
+    },
+    new renodx::utils::settings::Setting{
+        .key = "colorGradeClip",
+        .binding = &shader_injection.colorGradeClip,
+        .default_value = 100.f,
+        .label = "Clipping",
+        .section = "Color Grading",
+        .tint = 0x054135,
+        .max = 100.f,
+        .is_enabled = []() { return shader_injection.toneMapType == 4.f; },
+        .parse = [](float value) { return value; },
+        .is_visible = []() { return current_settings_mode >= 1; },
     },
     new renodx::utils::settings::Setting{
         .key = "colorGradeLUTStrength",
@@ -263,6 +292,17 @@ renodx::utils::settings::Settings settings = {
         .default_value = 1.f,
         .label = "Internal LUT Sampling",
         .section = "Color Grading",
+        .labels = {"Trilinear", "Tetrahedral"},
+        .tint = 0x054135,
+        .is_visible = []() { return current_settings_mode >= 2; },
+    },
+    new renodx::utils::settings::Setting{
+        .key = "colorGradeLUTShaper",
+        .binding = &shader_injection.colorGradeLUTShaper,
+        .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
+        .default_value = 1.f,
+        .label = "LUT Shaper",
+        .section = "Color Grading",
         .labels = {"Arri C1000", "PQ"},
         .tint = 0x054135,
         .is_visible = []() { return current_settings_mode >= 2; },
@@ -271,7 +311,7 @@ renodx::utils::settings::Settings settings = {
         .key = "colorGradeColorSpace",
         .binding = &shader_injection.colorGradeColorSpace,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 1.f,
+        .default_value = 0.f,
         .label = "Output Color Space",
         .section = "Color Grading",
         .tooltip = "Emulates display color temperature."
@@ -281,7 +321,6 @@ renodx::utils::settings::Settings settings = {
                    "\nJPN CRT 2 for BT.601 ARIB-TR-B9 9300k 27 MPCD.",
         .labels = {"Off", "JPN Modern", "JPN CRT", "JPN CRT 2"},
         .tint = 0x054135,
-        .is_visible = []() { return current_settings_mode >= 1; },
     },
     new renodx::utils::settings::Setting{
         .key = "fxBloom",
@@ -352,9 +391,11 @@ renodx::utils::settings::Settings settings = {
         .group = "button-line-1",
         .tint = 0xB62E23,
         .on_change = []() {
+          renodx::utils::settings::UpdateSetting("toneMapType", 3.f);
           renodx::utils::settings::UpdateSetting("toneMapPerChannel", 1.f);
           renodx::utils::settings::UpdateSetting("toneMapColorSpace", 2.f);
-          renodx::utils::settings::UpdateSetting("toneMapHueProcessor", 1.f);
+          renodx::utils::settings::UpdateSetting("toneMapHueProcessor", 2.f);
+          renodx::utils::settings::UpdateSetting("toneMapHueShift", 100.f);
           renodx::utils::settings::UpdateSetting("toneMapHueCorrection", 100.f);          
           renodx::utils::settings::UpdateSetting("colorGradeExposure", 1.f);
           renodx::utils::settings::UpdateSetting("colorGradeHighlights", 50.f);
@@ -362,81 +403,64 @@ renodx::utils::settings::Settings settings = {
           renodx::utils::settings::UpdateSetting("colorGradeContrast", 50.f);
           renodx::utils::settings::UpdateSetting("colorGradeSaturation", 50.f);
           renodx::utils::settings::UpdateSetting("colorGradeBlowout", 50.f);
-          renodx::utils::settings::UpdateSetting("colorGradeDechroma", 50.f);
-          renodx::utils::settings::UpdateSetting("colorGradeFlare", 50.f);
+          renodx::utils::settings::UpdateSetting("colorGradeDechroma", 0.f);
+          renodx::utils::settings::UpdateSetting("colorGradeFlare", 0.f);
+          renodx::utils::settings::UpdateSetting("colorGradeClip", 100.f);
           renodx::utils::settings::UpdateSetting("colorGradeLUTStrength", 100.f);
           renodx::utils::settings::UpdateSetting("colorGradeLUTSampling", 1.f);
+          renodx::utils::settings::UpdateSetting("colorGradeLUTShaper", 1.f);
         },
     },
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::BUTTON,
-        .label = "RenoDRT HDR Look",
+        .label = "HDR Look",
         .section = "Color Grading Templates",
         .group = "button-line-1",
         .tint = 0xF8CB7C,
         .on_change = []() {
-          renodx::utils::settings::UpdateSetting("toneMapType", 3.f);
-          renodx::utils::settings::UpdateSetting("toneMapPerChannel", 1.f);
-          renodx::utils::settings::UpdateSetting("toneMapColorSpace", 2.f);
-          renodx::utils::settings::UpdateSetting("toneMapHueProcessor", 2.f);
-          renodx::utils::settings::UpdateSetting("toneMapHueCorrection", 80.f);          
-          renodx::utils::settings::UpdateSetting("colorGradeExposure", 1.f);
-          renodx::utils::settings::UpdateSetting("colorGradeHighlights", 50.f);
-          renodx::utils::settings::UpdateSetting("colorGradeShadows", 50.f);
-          renodx::utils::settings::UpdateSetting("colorGradeContrast", 50.f);
-          renodx::utils::settings::UpdateSetting("colorGradeSaturation", 50.f);
-          renodx::utils::settings::UpdateSetting("colorGradeBlowout", 65.f);
-          renodx::utils::settings::UpdateSetting("colorGradeDechroma", 65.f);
-          renodx::utils::settings::UpdateSetting("colorGradeFlare", 80.f);
+            renodx::utils::settings::UpdateSetting("toneMapType", 3.f);
+            renodx::utils::settings::UpdateSetting("toneMapPerChannel", 1.f);
+            renodx::utils::settings::UpdateSetting("toneMapColorSpace", 2.f);
+            renodx::utils::settings::UpdateSetting("toneMapHueProcessor", 1.f);
+            renodx::utils::settings::UpdateSetting("toneMapHueCorrection", 100.f);
+            renodx::utils::settings::UpdateSetting("colorGradeExposure", 1.f);
+            renodx::utils::settings::UpdateSetting("colorGradeHighlights", 50.f);
+            renodx::utils::settings::UpdateSetting("colorGradeShadows", 47.f);
+            renodx::utils::settings::UpdateSetting("colorGradeContrast", 50.f);
+            renodx::utils::settings::UpdateSetting("colorGradeSaturation", 55.f);
+            renodx::utils::settings::UpdateSetting("colorGradeBlowout", 35.f);
+            renodx::utils::settings::UpdateSetting("colorGradeDechroma", 0.f);
+            renodx::utils::settings::UpdateSetting("colorGradeFlare", 50.f);
+            renodx::utils::settings::UpdateSetting("colorGradeClip", 100.f);
           renodx::utils::settings::UpdateSetting("colorGradeLUTStrength", 100.f);
-          renodx::utils::settings::UpdateSetting("colorGradeLUTSampling", 1.f); },
-        .is_visible = []() { return shader_injection.toneMapType == 3.f; },
+          renodx::utils::settings::UpdateSetting("colorGradeLUTSampling", 1.f);
+          renodx::utils::settings::UpdateSetting("colorGradeLUTShaper", 1.f); },
     },
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::BUTTON,
-        .label = "Reinhard+ HDR Look",
+        .label = "HDR Look 2",
         .section = "Color Grading Templates",
         .group = "button-line-1",
         .tint = 0xF8CB7C,
         .on_change = []() {
           renodx::utils::settings::UpdateSetting("toneMapType", 4.f);
+          renodx::utils::settings::UpdateSetting("toneMapPerChannel", 0.f);
           renodx::utils::settings::UpdateSetting("toneMapColorSpace", 2.f);
-          renodx::utils::settings::UpdateSetting("toneMapHueProcessor", 2.f);
+          renodx::utils::settings::UpdateSetting("toneMapHueProcessor", 1.f);
+          renodx::utils::settings::UpdateSetting("toneMapHueShift", 100.f);
           renodx::utils::settings::UpdateSetting("toneMapHueCorrection", 100.f);
           renodx::utils::settings::UpdateSetting("colorGradeExposure", 1.f);
-          renodx::utils::settings::UpdateSetting("colorGradeHighlights", 45.f);
-          renodx::utils::settings::UpdateSetting("colorGradeShadows", 60.f);
-          renodx::utils::settings::UpdateSetting("colorGradeContrast", 60.f);
-          renodx::utils::settings::UpdateSetting("colorGradeSaturation", 65.f);
-          renodx::utils::settings::UpdateSetting("colorGradeBlowout", 35.f);
-          renodx::utils::settings::UpdateSetting("colorGradeDechroma", 65.f);
-          renodx::utils::settings::UpdateSetting("colorGradeLUTStrength", 100.f);
-          renodx::utils::settings::UpdateSetting("colorGradeLUTSampling", 1.f); },
-        .is_visible = []() { return shader_injection.toneMapType == 4.f; },
-    },
-    new renodx::utils::settings::Setting{
-        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
-        .label = "RenoDRT HDR Look 2",
-        .section = "Color Grading Templates",
-        .group = "button-line-1",
-        .tint = 0xF8CB7C,
-        .on_change = []() {
-          renodx::utils::settings::UpdateSetting("toneMapType", 3.f);
-          renodx::utils::settings::UpdateSetting("toneMapPerChannel", 0.f);
-          renodx::utils::settings::UpdateSetting("toneMapColorSpace", 0.f);
-          renodx::utils::settings::UpdateSetting("toneMapHueProcessor", 1.f);
-          renodx::utils::settings::UpdateSetting("toneMapHueCorrection", 100.f);          
-          renodx::utils::settings::UpdateSetting("colorGradeExposure", 1.f);
           renodx::utils::settings::UpdateSetting("colorGradeHighlights", 50.f);
-          renodx::utils::settings::UpdateSetting("colorGradeShadows", 45.f);
-          renodx::utils::settings::UpdateSetting("colorGradeContrast", 70.f);
-          renodx::utils::settings::UpdateSetting("colorGradeSaturation", 80.f);
+          renodx::utils::settings::UpdateSetting("colorGradeShadows", 40.f);
+          renodx::utils::settings::UpdateSetting("colorGradeContrast", 42.f);
+          renodx::utils::settings::UpdateSetting("colorGradeSaturation", 87.f);
           renodx::utils::settings::UpdateSetting("colorGradeBlowout", 35.f);
           renodx::utils::settings::UpdateSetting("colorGradeDechroma", 65.f);
-          renodx::utils::settings::UpdateSetting("colorGradeFlare", 25.f);
+          renodx::utils::settings::UpdateSetting("colorGradeFlare", 50.f);
+          renodx::utils::settings::UpdateSetting("colorGradeClip", 100.f);
           renodx::utils::settings::UpdateSetting("colorGradeLUTStrength", 100.f);
-          renodx::utils::settings::UpdateSetting("colorGradeLUTSampling", 1.f); },
-        .is_visible = []() { return shader_injection.toneMapType == 3.f; },
+          renodx::utils::settings::UpdateSetting("colorGradeLUTSampling", 1.f);
+          renodx::utils::settings::UpdateSetting("colorGradeLUTShaper", 1.f); },
     },
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
@@ -483,6 +507,7 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("colorGradeSaturation", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeLUTStrength", 100.f);
   renodx::utils::settings::UpdateSetting("colorGradeLUTSampling", 0.f);
+  renodx::utils::settings::UpdateSetting("colorGradeLUTShaper", 0.f);
   renodx::utils::settings::UpdateSetting("colorGradeColorSpace", 0.f);
   renodx::utils::settings::UpdateSetting("fxBloom", 50.f);
   renodx::utils::settings::UpdateSetting("fxVignette", 50.f);
@@ -492,7 +517,6 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("fxFilmGrainType", 0.f);
 }
 
-auto start = std::chrono::steady_clock::now();
 bool fired_on_init_swapchain = false;
 
 void OnInitSwapchain(reshade::api::swapchain* swapchain, bool resize) {
@@ -512,8 +536,9 @@ void OnPresent(
     const reshade::api::rect* dest_rect,
     uint32_t dirty_rect_count,
     const reshade::api::rect* dirty_rects) {
-  auto end = std::chrono::steady_clock::now();
-  shader_injection.elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    static std::mt19937 random_generator(std::chrono::system_clock::now().time_since_epoch().count());
+    static auto random_range = static_cast<float>(std::mt19937::max() - std::mt19937::min());
+  shader_injection.random = static_cast<float>(random_generator() + std::mt19937::min()) / random_range;
 }
 
 }  // namespace
@@ -539,20 +564,11 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
           .ignore_size = true,
       });
       //  RG11B10_float
-      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({.old_format = reshade::api::format::r11g11b10_float,
-                                                                     .new_format = reshade::api::format::r16g16b16a16_float,
-                                                                     .ignore_size = true,
-                                                                     .view_upgrades = {
-                                                                         {{reshade::api::resource_usage::shader_resource,
-                                                                           reshade::api::format::r11g11b10_float},
-                                                                          reshade::api::format::r16g16b16a16_float},
-                                                                         {{reshade::api::resource_usage::unordered_access,
-                                                                           reshade::api::format::r11g11b10_float},
-                                                                          reshade::api::format::r16g16b16a16_float},
-                                                                         {{reshade::api::resource_usage::render_target,
-                                                                           reshade::api::format::r11g11b10_float},
-                                                                          reshade::api::format::r16g16b16a16_float},
-                                                                     }});
+      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+          .old_format = reshade::api::format::r11g11b10_float,
+          .new_format = reshade::api::format::r16g16b16a16_float,
+          .ignore_size = true,
+      });
 
       reshade::register_event<reshade::addon_event::init_swapchain>(OnInitSwapchain);
       reshade::register_event<reshade::addon_event::present>(OnPresent);
@@ -560,6 +576,8 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       break;
     case DLL_PROCESS_DETACH:
       reshade::unregister_addon(h_module);
+      reshade::unregister_event<reshade::addon_event::init_swapchain>(OnInitSwapchain);
+      reshade::unregister_event<reshade::addon_event::present>(OnPresent);
       break;
   }
 

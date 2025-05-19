@@ -1,20 +1,20 @@
 #include "./shared.h"
 
 //-----EFFECTS-----//
-/*float3 applyFilmGrain(float3 outputColor, float2 screen){
+float3 applyFilmGrain(float3 outputColor, float2 screen, float intensity){
   float3 grainedColor = renodx::effects::ApplyFilmGrain(
       outputColor,
       screen,
-      frac(injectedData.elapsedTime / 1000.f),
-      injectedData.fxFilmGrain * 0.03f * injectedData.is_not_camera,
+      injectedData.random,
+      intensity * 0.03f,
 			1.f);
     return grainedColor;
 }
 
 float3 applyVignette(float3 inputColor, float2 screen, float slider) {
-  static float intensity = 1.f;	// internal
-  static float roundness = 1.15f;	// parameters
-  static float light = 0.1f;		// for now
+  static float intensity = 0.9f;  // internal
+  static float roundness = 1.15f;  // parameters
+  static float light = 0.15f;      // for now
   
 	float Vintensity = intensity * min(1, slider);	// Slider below 1 to Vintensity
 	float Vroundness = roundness * max(1, slider);	// Slider above 1 to Vroundness
@@ -25,43 +25,90 @@ float3 applyVignette(float3 inputColor, float2 screen, float slider) {
 	v = pow(v, Vroundness);
 	float3 output = inputColor * min(1, v + light);
 	return output;
-}*/
+}
+
+// based on https://github.com/aliasIsolation/aliasIsolation/blob/master/data/shaders/chromaticAberration_ps.hlsl
+float3 applyCA(Texture2D colorBuffer, SamplerState colorSampler, float2 texCoord, float intensity) {
+float3 output;
+uint screenWidth, screenHeight;
+colorBuffer.GetDimensions(screenWidth, screenHeight);
+float ca_amount = 0.018 * intensity;
+float2 center_offset = texCoord - float2(0.5, 0.5);
+ca_amount *= saturate(length(center_offset) * 2);
+int num_colors = max(3, int(max(screenWidth, screenHeight) * 0.075 * sqrt(ca_amount)));
+if (intensity == 0.f) {
+  output = colorBuffer.Sample(colorSampler, texCoord).rgb;
+} else {
+  output.g = colorBuffer.Sample(colorSampler, texCoord).g; // unchanged green
+  float offset = float(7 - num_colors * 0.5) * ca_amount / num_colors;
+  float2 sampleUvR = float2(0.5, 0.5) + center_offset * (1 + offset);
+  float2 sampleUvB = float2(0.5, 0.5) + center_offset * (1 - offset);
+  output.r = colorBuffer.Sample(colorSampler, sampleUvR).r;
+  output.b = colorBuffer.Sample(colorSampler, sampleUvB).b;
+  }
+return output;
+}
 
 //-----SCALING-----//
 float3 PostToneMapScale(float3 color) {
-    if(injectedData.toneMapGammaCorrection == 2.f){
-  color = renodx::color::srgb::EncodeSafe(color);
-  color = renodx::color::gamma::DecodeSafe(color, 2.4f);
-  color *= injectedData.toneMapGameNits / injectedData.toneMapUINits;
-  color = renodx::color::gamma::EncodeSafe(color, 2.4f);
-  } else if(injectedData.toneMapGammaCorrection == 1.f){
-  color = renodx::color::srgb::EncodeSafe(color);
-  color = renodx::color::gamma::DecodeSafe(color, 2.2f);
-  color *= injectedData.toneMapGameNits / injectedData.toneMapUINits;
-  color = renodx::color::gamma::EncodeSafe(color, 2.2f);
+  if (injectedData.toneMapGammaCorrection == 2.f) {
+    color = renodx::color::correct::GammaSafe(color, false, 2.4f);
+    color *= injectedData.toneMapGameNits / 80.f;
+    color = renodx::color::correct::GammaSafe(color, true, 2.4f);
+  } else if (injectedData.toneMapGammaCorrection == 1.f) {
+    color = renodx::color::correct::GammaSafe(color, false, 2.2f);
+    color *= injectedData.toneMapGameNits / 80.f;
+    color = renodx::color::correct::GammaSafe(color, true, 2.2f);
   } else {
-  color *= injectedData.toneMapGameNits / injectedData.toneMapUINits;
-  color = renodx::color::srgb::EncodeSafe(color);
+    color *= injectedData.toneMapGameNits / 80.f;
+  }
+  return color;
+}
+
+float3 InvertToneMapScale(float3 color) {
+  if (injectedData.toneMapGammaCorrection == 2.f) {
+    color = renodx::color::correct::GammaSafe(color, false, 2.4f);
+    color *= 80.f / injectedData.toneMapGameNits;
+    color = renodx::color::correct::GammaSafe(color, true, 2.4f);
+  } else if (injectedData.toneMapGammaCorrection == 1.f) {
+    color = renodx::color::correct::GammaSafe(color, false, 2.2f);
+    color *= 80.f / injectedData.toneMapGameNits;
+    color = renodx::color::correct::GammaSafe(color, true, 2.2f);
+  } else {
+    color *= 80.f / injectedData.toneMapGameNits;
+  }
+  return color;
+}
+
+float3 UIScale(float3 color) {
+  if (injectedData.toneMapGammaCorrection == 2.f) {
+    color = renodx::color::gamma::Decode(color, 2.4f);
+    color *= injectedData.toneMapUINits / 80.f;
+    color = renodx::color::gamma::Encode(color, 2.4f);
+    color = renodx::color::srgb::Decode(color);
+  } else if (injectedData.toneMapGammaCorrection == 1.f) {
+    color = renodx::color::gamma::Decode(color, 2.2f);
+    color *= injectedData.toneMapUINits / 80.f;
+    color = renodx::color::gamma::Encode(color, 2.2f);
+    color = renodx::color::srgb::Decode(color);
+  } else {
+    color = renodx::color::srgb::Decode(color);
+    color *= injectedData.toneMapUINits / 80.f;
   }
   return color;
 }
 
 float3 FinalizeOutput(float3 color) {
-  	if(injectedData.toneMapGammaCorrection == 2.f){
-	color = renodx::color::gamma::DecodeSafe(color, 2.4f);
-  } else if(injectedData.toneMapGammaCorrection == 1.f){
-	color = renodx::color::gamma::DecodeSafe(color, 2.2f);
-  } else {
-	color = renodx::color::srgb::DecodeSafe(color);
+  if (injectedData.toneMapGammaCorrection == 2.f) {
+    color = renodx::color::correct::GammaSafe(color, false, 2.4f);
+  } else if (injectedData.toneMapGammaCorrection == 1.f) {
+    color = renodx::color::correct::GammaSafe(color, false, 2.2f);
   }
-  color *= injectedData.toneMapUINits;
-  color = min(color, injectedData.toneMapPeakNits);
-    if(injectedData.toneMapType == 0.f){
-  color = renodx::color::bt709::clamp::BT709(color);
+  if (injectedData.toneMapType == 0.f) {
+    color = renodx::color::bt709::clamp::BT709(color);
   } else {
-  color = renodx::color::bt709::clamp::BT2020(color);
+    color = renodx::color::bt709::clamp::BT2020(color);
   }
-  color /= 80.f;
   return color;
 }
 
@@ -89,98 +136,6 @@ float3 InverseToneMap(float3 color) {
 }
 
 //-----TONEMAP-----//
-float3 RenoDRTSmoothClamp(float3 untonemapped) {
-  renodx::tonemap::renodrt::Config renodrtSC_config = renodx::tonemap::renodrt::config::Create();
-  renodrtSC_config.nits_peak = 100.f;
-  renodrtSC_config.mid_gray_value = 0.18f;
-  renodrtSC_config.mid_gray_nits = 18.f;
-  renodrtSC_config.exposure = 1.f;
-  renodrtSC_config.highlights = 1.f;
-  renodrtSC_config.shadows = 1.f;
-  renodrtSC_config.contrast = 1.05f;
-  renodrtSC_config.saturation = 1.05f;
-  renodrtSC_config.dechroma = 0.f;
-  renodrtSC_config.flare = 0.f;
-  renodrtSC_config.hue_correction_strength = 0.f;
-  renodrtSC_config.hue_correction_method = renodx::tonemap::renodrt::config::hue_correction_method::ICTCP;
-  renodrtSC_config.tone_map_method = renodx::tonemap::renodrt::config::tone_map_method::DANIELE;
-  renodrtSC_config.hue_correction_type = renodx::tonemap::renodrt::config::hue_correction_type::INPUT;
-  renodrtSC_config.working_color_space = 0u;
-  renodrtSC_config.per_channel = false;
-  float3 renoDRTColor = renodx::tonemap::renodrt::BT709(untonemapped, renodrtSC_config);
-  return renoDRTColor;
-}
-
-float3 applyReinhardPlus(float3 color, renodx::tonemap::Config RhConfig, bool sdr = false) {
-  float RhPeak = sdr ? 1.f : RhConfig.peak_nits / RhConfig.game_nits;
-		if(RhConfig.gamma_correction != 0.f && sdr == false){
-	RhPeak = renodx::color::correct::Gamma(RhPeak, RhConfig.gamma_correction > 0.f, abs(RhConfig.gamma_correction) == 1.f ? 2.2f : 2.4f);
-	}
-
-	color = sdr ? max(0, color) : renodx::color::bt2020::from::BT709(color);
-		float y = sdr ? renodx::color::y::from::BT709(color * RhConfig.exposure) : renodx::color::y::from::BT2020(color * RhConfig.exposure);
-	color = renodx::color::grade::UserColorGrading(color, RhConfig.exposure, RhConfig.highlights, RhConfig.shadows, RhConfig.contrast);
-	color = renodx::tonemap::ReinhardScalable(color, RhPeak, 0.f, 0.18f, RhConfig.mid_gray_value);
-	color = sdr ? color : renodx::color::bt709::from::BT2020(color);
-    if (RhConfig.reno_drt_dechroma != 0.f || RhConfig.saturation != 1.f || RhConfig.reno_drt_blowout != 0.f || RhConfig.hue_correction_strength != 0.f) {
-  float3 perceptual_new;
-
-      if (RhConfig.reno_drt_hue_correction_method == 0u) {
-    perceptual_new = renodx::color::oklab::from::BT709(color);
-    } else if (RhConfig.reno_drt_hue_correction_method == 1u) {
-    perceptual_new = renodx::color::ictcp::from::BT709(color);
-    } else if (RhConfig.reno_drt_hue_correction_method == 2u) {
-    perceptual_new = renodx::color::dtucs::uvY::from::BT709(color).zxy;
-    }
-
-      if (RhConfig.hue_correction_strength != 0.f) {
-    float3 perceptual_old;
-        if(RhConfig.hue_correction_type != renodx::tonemap::config::hue_correction_type::CUSTOM){
-      RhConfig.hue_correction_color = color;
-      }
-
-        if (RhConfig.reno_drt_hue_correction_method == 0u) {
-      perceptual_old = renodx::color::oklab::from::BT709(RhConfig.hue_correction_color);
-      } else if (RhConfig.reno_drt_hue_correction_method == 1u) {
-      perceptual_old = renodx::color::ictcp::from::BT709(RhConfig.hue_correction_color);
-      } else if (RhConfig.reno_drt_hue_correction_method == 2u) {
-      perceptual_old = renodx::color::dtucs::uvY::from::BT709(RhConfig.hue_correction_color).zxy;
-      }
-      // Save chrominance to apply black
-      float chrominance_pre_adjust = distance(perceptual_new.yz, 0);
-      perceptual_new.yz = lerp(perceptual_new.yz, perceptual_old.yz, RhConfig.hue_correction_strength);
-      float chrominance_post_adjust = distance(perceptual_new.yz, 0);
-      // Apply back previous chrominance
-      perceptual_new.yz *= renodx::math::DivideSafe(chrominance_pre_adjust, chrominance_post_adjust, 1.f);
-      }
-      if (RhConfig.reno_drt_dechroma != 0.f) {
-    perceptual_new.yz *= lerp(1.f, 0.f, saturate(pow(y / (10000.f / 100.f), (1.f - RhConfig.reno_drt_dechroma))));
-    }
-
-      if (RhConfig.reno_drt_blowout != 0.f) {
-    float percent_max = saturate(y * 100.f / 10000.f);
-    // positive = 1 to 0, negative = 1 to 2
-    float blowout_strength = 100.f;
-    float blowout_change = pow(1.f - percent_max, blowout_strength * abs(RhConfig.reno_drt_blowout));
-        if (RhConfig.reno_drt_blowout < 0) {
-      blowout_change = (2.f - blowout_change);
-      }
-    perceptual_new.yz *= blowout_change;
-    }
-    perceptual_new.yz *= RhConfig.saturation;
-
-      if (RhConfig.reno_drt_hue_correction_method == 0u) {
-    color = renodx::color::bt709::from::OkLab(perceptual_new);
-    } else if (RhConfig.reno_drt_hue_correction_method == 1u) {
-    color = renodx::color::bt709::from::ICtCp(perceptual_new);
-    } else if (RhConfig.reno_drt_hue_correction_method == 2u) {
-    color = renodx::color::bt709::from::dtucs::uvY(perceptual_new.yzx);
-    }
-  }
-  color = renodx::color::bt709::clamp::AP1(color);
-  return color;
-}
-
 float UpgradeToneMapRatio(float ap1_color_hdr, float ap1_color_sdr, float ap1_post_process_color) {
   if (ap1_color_hdr < ap1_color_sdr) {
     // If substracting (user contrast or paperwhite) scale down instead
@@ -215,62 +170,20 @@ float3 UpgradeToneMapPerChannel(float3 color_hdr, float3 color_sdr, float3 post_
   return lerp(color_hdr, color_scaled, post_process_strength);
 }
 
-float3 UpgradeToneMapByLuminance(float3 color_hdr, float3 color_sdr, float3 post_process_color, float post_process_strength) {
-  // float ratio = 1.f;
-
-  float3 bt2020_hdr = max(0, renodx::color::bt2020::from::BT709(color_hdr));
-  float3 bt2020_sdr = max(0, renodx::color::bt2020::from::BT709(color_sdr));
-  float3 bt2020_post_process = max(0, renodx::color::bt2020::from::BT709(post_process_color));
-
-  float ratio = UpgradeToneMapRatio(
-      renodx::color::y::from::BT2020(bt2020_hdr),
-      renodx::color::y::from::BT2020(bt2020_sdr),
-      renodx::color::y::from::BT2020(bt2020_post_process));
-
-  float3 color_scaled = max(0, bt2020_post_process * ratio);
-  color_scaled = renodx::color::bt709::from::BT2020(color_scaled);
-  color_scaled = renodx::color::correct::Hue(color_scaled, post_process_color);
-  return lerp(color_hdr, color_scaled, post_process_strength);
-}
-
-float3 Apply(float3 inputColor, renodx::tonemap::Config tm_config, renodx::lut::Config lut_config, Texture3D lutTexture, bool perChannel) {
-  if (lut_config.strength == 0.f || tm_config.type == 1.f) {
-    return renodx::tonemap::config::Apply(inputColor, tm_config);
-  } else {
-    renodx::tonemap::config::DualToneMap tone_maps = renodx::tonemap::config::ApplyToneMaps(inputColor, tm_config);
-    float3 color_hdr = tone_maps.color_hdr;
-    float3 color_sdr = tone_maps.color_sdr;
-
-    float previous_lut_config_strength = lut_config.strength;
-    lut_config.strength = 1.f;
-    float3 color_lut = renodx::lut::Sample(lutTexture, lut_config, color_sdr);
-    if (tm_config.type == 0.f) {
-      return lerp(inputColor, color_lut, previous_lut_config_strength);
-    } else if (perChannel == true) {
-      return UpgradeToneMapPerChannel(color_hdr, color_sdr, color_lut, previous_lut_config_strength);
-    } else {
-      return UpgradeToneMapByLuminance(color_hdr, color_sdr, color_lut, previous_lut_config_strength);
-    }
-  }
-}
-
 float3 vanillaTonemap(float3 color, float A, float CB, float DE, float B, float DF, float mEF, float LW){
   float3 numerator = mad(color, mad(A, color, CB), DE);  // x * (a * x + c * b) + d * e
   float3 denominator = mad(color, mad(A, color, B), DF);    // x * (a * x + b) + d * f
-  color = ((numerator / denominator) + mEF) * LW;
-return saturate(color);
+  return (numerator / denominator + mEF) * LW;
 }
 
 float3 applyUserTonemap(float3 untonemapped, Texture3D lutTexture, SamplerState lutSampler, float4 Params0, float3 Params1){
-		
-		float3 outputColor = untonemapped;
+		float3 outputColor;
 		float midGray = renodx::color::y::from::BT709(vanillaTonemap(float3(0.18f,0.18f,0.18f),
 		Params0.x, Params0.y, Params0.z, Params0.w, Params1.x, Params1.y, Params1.z));
-		float3 hueCorrectionColor = vanillaTonemap(outputColor,
+		float3 hueCorrectionColor = vanillaTonemap(untonemapped,
 		Params0.x, Params0.y, Params0.z, Params0.w, Params1.x, Params1.y, Params1.z);
 		  renodx::tonemap::Config config = renodx::tonemap::config::Create();
-
-			config.type = injectedData.toneMapType;
+			config.type = min(3, injectedData.toneMapType);
 			config.peak_nits = injectedData.toneMapPeakNits;
 			config.game_nits = injectedData.toneMapGameNits;
 			config.gamma_correction = injectedData.toneMapGammaCorrection;
@@ -281,22 +194,24 @@ float3 applyUserTonemap(float3 untonemapped, Texture3D lutTexture, SamplerState 
 			config.saturation = injectedData.colorGradeSaturation;
 			config.mid_gray_value = midGray;
 			config.mid_gray_nits = midGray * 100;
-			config.reno_drt_contrast = 1.1f;
-			config.reno_drt_saturation = 1.1f;
+      config.reno_drt_highlights = 1.1f;
+      config.reno_drt_shadows = 1.03f;
+      config.reno_drt_contrast = 1.15f;
 			config.reno_drt_dechroma = injectedData.colorGradeDechroma;
-			config.reno_drt_flare = 0.01 * pow(injectedData.colorGradeFlare, 5.32192809489);
+			config.reno_drt_flare = 0.10f * pow(injectedData.colorGradeFlare, 10.f);
 			config.hue_correction_type = injectedData.toneMapPerChannel != 0.f
       ? renodx::tonemap::config::hue_correction_type::INPUT
       : renodx::tonemap::config::hue_correction_type::CUSTOM;
 			config.hue_correction_strength = injectedData.toneMapPerChannel != 0.f
       ? (1.f - injectedData.toneMapHueCorrection)
       : injectedData.toneMapHueCorrection;
-			config.hue_correction_color = hueCorrectionColor;
-			config.reno_drt_tone_map_method = renodx::tonemap::renodrt::config::tone_map_method::DANIELE;
+			config.hue_correction_color = lerp(untonemapped, hueCorrectionColor, injectedData.toneMapHueShift);
+			config.reno_drt_tone_map_method = injectedData.toneMapType == 4.f ? renodx::tonemap::renodrt::config::tone_map_method::REINHARD
+                                                                    : renodx::tonemap::renodrt::config::tone_map_method::DANIELE;
 			config.reno_drt_hue_correction_method = (uint)injectedData.toneMapHueProcessor;
 			config.reno_drt_per_channel = injectedData.toneMapPerChannel != 0.f;
 			config.reno_drt_blowout = injectedData.colorGradeBlowout;
-
+      config.reno_drt_white_clip = injectedData.colorGradeClip;
   renodx::lut::Config lut_config = renodx::lut::config::Create();
   lut_config.lut_sampler = lutSampler;
   lut_config.strength = injectedData.colorGradeLUTStrength;
@@ -305,24 +220,10 @@ float3 applyUserTonemap(float3 untonemapped, Texture3D lutTexture, SamplerState 
   lut_config.type_output = renodx::lut::config::type::LINEAR;
   lut_config.size = 32;
   lut_config.tetrahedral = injectedData.colorGradeLUTSampling != 0.f;
-
 				if(injectedData.toneMapType == 0.f){
-			outputColor = hueCorrectionColor;
-			}
-				if (injectedData.toneMapType == 4.f){
-			config.contrast *= 1.1f;
-			config.saturation *= 1.2f;
-      config.hue_correction_type = renodx::tonemap::config::hue_correction_type::CUSTOM;
-			config.hue_correction_strength = injectedData.toneMapHueCorrection;
-      			float previous_lut_config_strength = lut_config.strength;
-      		lut_config.strength = 1.f;
-				float3 sdrColor = applyReinhardPlus(outputColor, config, true);
-				float3 hdrColor = applyReinhardPlus(outputColor, config);
-				float3 lutColor = renodx::lut::Sample(lutTexture, lut_config, sdrColor);
-      outputColor = injectedData.upgradePerChannel !=0.f ? UpgradeToneMapPerChannel(hdrColor, sdrColor, lutColor, previous_lut_config_strength)
-      : UpgradeToneMapByLuminance(hdrColor, sdrColor, lutColor, previous_lut_config_strength);
+			outputColor = saturate(hueCorrectionColor);
 			} else {
-			outputColor = Apply(outputColor, config, lut_config, lutTexture, injectedData.upgradePerChannel != 0.f);
-			}
-	return outputColor;
+      outputColor = untonemapped;
+      }
+return renodx::tonemap::config::Apply(outputColor, config, lut_config, lutTexture);
 }

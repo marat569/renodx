@@ -48,11 +48,9 @@ void main(
   r0.xyz = cb0[7].xxx * r0.xyz * injectedData.fxBloom;
   r0.xyz = float3(0.0625,0.0625,0.0625) * r0.xyz;
   r1.xyzw = t0.Sample(s1_s, w1.xy).xyzw;
-  r0.rgb = renodx::color::srgb::DecodeSafe(r1.rgb) + r0.rgb;
-  if (injectedData.fxFilmGrain > 0.f) {
-    r0.rgb = applyFilmGrain(r0.rgb, w1, injectedData.fxFilmGrainType != 0.f);
-  }
+  r1.rgb = renodx::color::srgb::DecodeSafe(r1.rgb);
+  r0.rgb = r1.rgb + r0.rgb;
   o0.w = r1.w;
-  o0.rgb = PostToneMapScale(r0.rgb);
+  o0.rgb = renodx::color::srgb::EncodeSafe(r0.rgb);
   return;
 }

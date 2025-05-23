@@ -30,10 +30,11 @@ cbuffer cbComposite : register(b2) {
 }
 
 static const float3 BlurWeights[12] = {
-    float3(0, 0, 1), float3(0, 1, 0), float3(1, 0, 0),
-    float3(1, 0, 0), float3(0, 1, 0), float3(0, 0, 1),
-    float3(0, 1, 0), float3(1, 0, 0), float3(1, 0, 1),
-    float3(1, 0, 1), float3(1, 0, 0), float3(0, 1, 0)};
+  float3(0, 0, 1), float3(0, 1, 0), float3(1, 0, 0),
+  float3(1, 0, 0), float3(0, 1, 0), float3(0, 0, 1),
+  float3(0, 1, 0), float3(1, 0, 0), float3(1, 0, 1),
+  float3(1, 0, 1), float3(1, 0, 0), float3(0, 1, 0)
+};
 
 // Textures and samplers
 SamplerState sampleLinear : register(s7);
@@ -206,6 +207,7 @@ PS_OUTPUT main(PS_INPUT input) {
   }
 
   float3 untonemapped = color;
+  color = RestoreHighlightSaturation(untonemapped);
 
   // Convert to color LUT space
   float3 lutSpaceColor = (enableDrawFix1) ? (color * 1.00006652 - 0.00391646381) : color;

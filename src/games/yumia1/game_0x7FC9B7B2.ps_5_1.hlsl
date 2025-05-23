@@ -214,6 +214,7 @@ void main(
   }
 
   float3 untonemapped = r3.rgb;
+  r3.rgb = RestoreHighlightSaturation(untonemapped);
 
   r0.xyz = r3.xyz * float3(1.00006652, 1.00006652, 1.00006652) + float3(-0.00391646381, -0.00391646381, -0.00391646381);
   r0.xyz = r0.www ? r0.xyz : r3.xyz;

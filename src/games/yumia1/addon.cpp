@@ -24,6 +24,7 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0x7FC9B7B2),  // Tonemap, Ingame -- Starter area/cave
     CustomShaderEntry(0x2C4C70E8),  // Tonemap, Open World
     CustomShaderEntry(0x1141AEF9),  // Glow shader, clamps some cutscenes
+    CustomShaderEntry(0xAD28448E),  // Sunshaft fix
 };
 
 ShaderInjectData shader_injection;
@@ -289,6 +290,63 @@ renodx::utils::settings::Settings settings = {
         },
     },
 
+    // Display map settings for Highlight Saturation
+
+    new renodx::utils::settings::Setting{
+        .key = "DisplayMapType",
+        .binding = &shader_injection.displayMapType,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 1.f,
+        .can_reset = true,
+        .label = "Display Map Type",
+        .section = "Highlight Saturation Restoration",
+        .tooltip = "Sets the Display mapper used",
+        .labels = {"None", "DICE", "Frostbite"},
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
+    },
+
+    new renodx::utils::settings::Setting{
+        .key = "DisplayMapPeak",
+        .binding = &shader_injection.displayMapPeak,
+        .value_type = renodx::utils::settings::SettingValueType::FLOAT,
+        .default_value = 2.f,
+        .can_reset = true,
+        .label = "Display Map Peak",
+        .section = "Highlight Saturation Restoration",
+        .tooltip = "What nit value we want to display map down to -- 2.f is solid",
+        .max = 5.f,
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
+    },
+
+    new renodx::utils::settings::Setting{
+        .key = "DisplayMapShoulder",
+        .binding = &shader_injection.displayMapShoulder,
+        .value_type = renodx::utils::settings::SettingValueType::FLOAT,
+        .default_value = 0.5f,
+        .can_reset = true,
+        .label = "Display Map Shoulder",
+        .section = "Highlight Saturation Restoration",
+        .tooltip = "Determines where the highlights curve (shoulder) starts in the display mapper.",
+        .max = 1.f,
+        .format = "%.2f",
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
+    },
+
+    // Display map end
+
+    new renodx::utils::settings::Setting{
+        .key = "SunshaftFix",
+        .binding = &shader_injection.sunshaftFix,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 1.f,
+        .can_reset = true,
+        .label = "Fix Sunshafts/Lightrays",
+        .section = "Etc",
+        .tooltip = "Fixs sunshafts, light shafts, god rays, etc. Big thank you to Miru97!",
+        .labels = {"Off", "On"},
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
+    },
+
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
         .label = " - NVIDIA GPUs only -- AMD/Intel are unsupported and probably will not work! \r\n - Make sure XeSS is off, or update the XeSS dll to the latest version -- or else the game will crash! \r\n - Please report bugs! \r\n \r\n - Join the HDR Den discord for help!",
@@ -349,6 +407,8 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("ColorGradeLUTScaling", 0.f);
   renodx::utils::settings::UpdateSetting("ColorGradeColorSpace", 0.f);
   renodx::utils::settings::UpdateSetting("ToneMapHueShiftMethod", 0.f);
+  renodx::utils::settings::UpdateSetting("DisplayMapType", 0.f);
+  renodx::utils::settings::UpdateSetting("SunshaftFix", 0.f);
 }
 
 // bool fired_on_init_swapchain = false;

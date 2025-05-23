@@ -16,16 +16,21 @@
 #define RENODX_TONE_MAP_BLOWOUT              shader_injection.colorGradeBlowout
 #define RENODX_TONE_MAP_FLARE                shader_injection.colorGradeFlare
 #define RENODX_COLOR_GRADE_SPACE             shader_injection.colorGradeColorSpace
+#define DISPLAY_MAP_TYPE                     shader_injection.displayMapType
+#define DISPLAY_MAP_PEAK                     shader_injection.displayMapPeak
+#define DISPLAY_MAP_SHOULDER                 shader_injection.displayMapShoulder
 // #define RENODX_TONE_MAP_WORKING_COLOR_SPACE  color::convert::COLOR_SPACE_AP1
 #define RENODX_TONE_MAP_PER_CHANNEL       shader_injection.toneMapPerChannel
 #define RENODX_TONE_MAP_HUE_PROCESSOR     shader_injection.toneMapHueProcessor
 #define RENODX_TONE_MAP_HUE_CORRECTION    shader_injection.toneMapHueCorrection
 #define RENODX_TONE_MAP_HUE_SHIFT         shader_injection.toneMapHueShift
 #define RENODX_TONE_MAP_HUE_SHIFT_METHOD  shader_injection.toneMapHueShiftMethod
+#define RENODX_RENO_DRT_WHITE_CLIP        65.f  // Arri doesnt go to 10k; need whiteclip
 #define RENODX_TONE_MAP_CLAMP_COLOR_SPACE color::convert::COLOR_SPACE_BT2020
 #define RENODX_RENO_DRT_TONE_MAP_METHOD   renodx::tonemap::renodrt::config::tone_map_method::REINHARD
 #define RENODX_GAMMA_CORRECTION           1.f
 #define DEBUG_MIDGRAY                     shader_injection.midGray
+#define SUNSHAFT_FIX                      shader_injection.sunshaftFix
 // #define RENODX_GAMMA_CORRECTION                shader_injection.toneMapGammaCorrection
 //  #define RENODX_SWAP_CHAIN_ENCODING_COLOR_SPACE (color::convert::COLOR_SPACE_BT2020 - 1.f)  // BT709 = BT2020 - 1
 //  #define RENODX_SWAP_CHAIN_ENCODING             (ENCODING_PQ + 1.f)                         // SCRGB = PQ + 1
@@ -65,6 +70,12 @@ struct ShaderInjectData {
   float colorGradeStrength;
 
   float midGray;
+
+  float displayMapType;
+  float displayMapPeak;
+  float displayMapShoulder;
+
+  float sunshaftFix;
 };
 
 #ifndef __cplusplus

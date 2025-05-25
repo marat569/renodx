@@ -172,9 +172,11 @@ void main(uint3 vThreadID: SV_DispatchThreadID) {
   }
 
   float3 graded = r0.rgb;
+
   // No code for instruction (needs manual fix):
   // store_uav_typed u0.xyzw, vThreadID.xyzz, r0.xyzx
   // u0[vThreadID] = r0;  // vanilla, works; returns tonemapped sdr
+  // u0[vThreadID] = (float3(2.f, 2.f, 2.f), 1.f);
   u0[vThreadID] = ProcessColor(untonemapped, graded);
 
   return;

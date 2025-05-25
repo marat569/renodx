@@ -135,6 +135,7 @@ void main(uint3 vThreadID: SV_DispatchThreadID) {
   }
 
   float3 graded = r2.rgb;
+
   // No code for instruction (needs manual fix):
   // store_uav_typed u0.xyzw, vThreadID.xyzz, r2.xyzx
   // u0[vThreadID] = float4(r2.rgb, 1.f);  // vanilla, works; returns tonemapped sdr

@@ -54,20 +54,27 @@ float3 RenoDRTSmoothClamp(float3 untonemapped, float peak = 100.f, float whitecl
 // That was lost running TonemapPass
 // We run this function right after untonemapped, and display map the rest of the sdr path down to ~2.f
 float3 RestoreHighlightSaturation(float3 color) {
-  if (RENODX_TONE_MAP_TYPE != 0.f || DISPLAY_MAP_TYPE != 0.f) {
+  if (RENODX_TONE_MAP_TYPE != 0.f && DISPLAY_MAP_TYPE != 0.f) {
     if (DISPLAY_MAP_TYPE == 1.f) {  // Dice
 
       float dicePeak = DISPLAY_MAP_PEAK;          // 2.f default
-      float diceShoulder = DISPLAY_MAP_SHOULDER;  // 0.25f default
+      float diceShoulder = DISPLAY_MAP_SHOULDER;  // 0.5f default
       color = renodx::tonemap::dice::BT709(color, dicePeak, diceShoulder);
 
     } else if (DISPLAY_MAP_TYPE == 2.f) {  // Frostbite
 
       float frostbitePeak = DISPLAY_MAP_PEAK;     // 2.f default
-      float diceShoulder = DISPLAY_MAP_SHOULDER;  // 0.25f default
+      float diceShoulder = DISPLAY_MAP_SHOULDER;  // 0.5f default
       float diceSaturation = 1.f;                 // Hardcode to 1.f
       color = renodx::tonemap::frostbite::BT709(color, frostbitePeak, diceShoulder, diceSaturation);
       // color = RenoDRTSmoothClamp(color, 10000.f, 100.f, 5.f); // Testing smoothclamp
+    } else if (DISPLAY_MAP_TYPE == 3.f) {
+      float3 neutral_sdr_color = renodx::tonemap::renodrt::NeutralSDR(color);
+      float color_y = renodx::color::y::from::BT709(color);
+      // Lerp color and NeutralSDR(color) based on luminance
+      // Normally using NeutralSDR alone messes up midtones
+      // But the lerp makes sure it only gets applied to highlights
+      color = lerp(color, neutral_sdr_color, saturate(color_y));
     }
   } else {
     // We dont want to Display Map if the tonemapper is vanilla/preset off or display map is none

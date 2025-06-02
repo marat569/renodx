@@ -1,8 +1,6 @@
-// ---- Created with 3Dmigoto v1.3.16 on Mon Mar 24 17:25:11 2025
+// ---- Created with 3Dmigoto v1.3.16 on Mon Jun  2 18:16:32 2025
 // Godray shader that draws after sample, and before postEffect
-// Thank you to Shortfuse for fixing it up
-// Used in an older version of the game
-// Keeping the shader incase people are on an older update for w/e reason
+// Game update created a new hash
 
 #include "./common.hlsl"
 
@@ -15,7 +13,7 @@ cbuffer cb3 : register(b3) {
 }
 
 cbuffer cb2 : register(b2) {
-  float4 cb2[2];
+  float4 cb2[3];
 }
 
 cbuffer cb1 : register(b1) {
@@ -81,7 +79,7 @@ void main(
   r1.y = exp2(r1.y);
   r1.z = r1.y * 2 + -1;
   r1.y = cmp(r1.y < 0.5);
-  r2.xyz = renodx::math::SignSqrt((r0.yzw));
+  r2.xyz = renodx::math::SignSqrt(r0.yzw);
   r2.xyz = r2.xyz + -abs(r0.yzw);
   r1.w = r1.z * r2.x + abs(r0.y);
   r3.xyz = -abs(r0.yzw) * abs(r0.yzw) + abs(r0.yzw);
@@ -126,13 +124,11 @@ void main(
   r2.xyz = r2.xxx * r2.yzw + r3.xyz;
   r1.xyz = r1.www ? r2.xyz : r1.xyz;
   r1.xyz = max(float3(0, 0, 0), r1.xyz);
-
   // r1.xyz = log2(r1.xyz);
   // r1.w = 1 / cb3[5].w;
   // r1.xyz = r1.www * r1.xyz;
   // r1.xyz = exp2(r1.xyz);
   r1.rgb = renodx::math::PowSafe(r1.rgb, 1.f / cb3[5].w);  // Make the above pow safe -- Gamma Encode
-
   r1.xyz = r1.xyz + -abs(r0.yzw);
   r0.yzw = cb3[5].xxx * r1.xyz + abs(r0.yzw);
   r1.x = cb3[8].x * 0.300000012 + -0.200000003;
@@ -142,12 +138,14 @@ void main(
   r1.xyz = cb1[17].www * r1.xyz;
   r0.x = saturate(cb2[1].y);
   r0.x = 1 + -r0.x;
+  r1.xyz = r1.xyz * r0.xxx;
+  r0.x = saturate(cb2[2].x);
   r0.xyz = r1.xyz * r0.xxx + r0.yzw;
   r1.xyz = cb3[4].xyz + -r0.xyz;
   r0.xyz = cb3[8].yyy * r1.xyz + r0.xyz;
   // o0.xyz = max(float3(0, 0, 0), r0.xyz);
+
   o0.rgb = RENODX_TONE_MAP_TYPE ? r0.rgb : max(0, r0.rgb);  // We need the above max(0 -- or else death screens artifact
-  o0.w = 1;
 
   if (RENODX_TONE_MAP_TYPE) {
     float3 processed_sdr = signs * renodx::color::srgb::Decode(o0.rgb);
@@ -157,5 +155,6 @@ void main(
     o0.rgb = renodx::draw::RenderIntermediatePass(upgraded_hdr);
   }
 
+  o0.w = 1;
   return;
 }

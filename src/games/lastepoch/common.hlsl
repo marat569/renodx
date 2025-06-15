@@ -103,6 +103,21 @@ float3 PostToneMapScale(float3 color) {
   return color;
 }
 
+float3 InvertToneMapScale(float3 color) {
+  if (injectedData.toneMapGammaCorrection == 2.f) {
+    color = renodx::color::correct::GammaSafe(color, false, 2.4f);
+    color *= injectedData.toneMapUINits / injectedData.toneMapGameNits;
+    color = renodx::color::correct::GammaSafe(color, true, 2.4f);
+  } else if (injectedData.toneMapGammaCorrection == 1.f) {
+    color = renodx::color::correct::GammaSafe(color, false, 2.2f);
+    color *= injectedData.toneMapUINits / injectedData.toneMapGameNits;
+    color = renodx::color::correct::GammaSafe(color, true, 2.2f);
+  } else {
+    color *= injectedData.toneMapUINits / injectedData.toneMapGameNits;
+  }
+  return color;
+}
+
 float3 FinalizeOutput(float3 color) {
   if (injectedData.toneMapGammaCorrection == 2.f) {
     color = renodx::color::correct::GammaSafe(color, false, 2.4f);
@@ -221,7 +236,7 @@ float3 vanillaTonemap(float3 color) {
 
 float3 applyUserTonemap(float3 untonemapped) {
   float3 outputColor;
-  float midGray = renodx::color::y::from::BT709(vanillaTonemap(float3(0.18f, 0.18f, 0.18f)));
+  float midGray = vanillaTonemap(float3(0.18f, 0.18f, 0.18f)).x;
   float3 hueCorrectionColor = vanillaTonemap(untonemapped);
   renodx::tonemap::Config config = renodx::tonemap::config::Create();
   config.type = min(3, injectedData.toneMapType);
@@ -242,8 +257,7 @@ float3 applyUserTonemap(float3 untonemapped) {
   config.reno_drt_flare = 0.10f * pow(injectedData.colorGradeFlare, 10.f);
   config.hue_correction_type = injectedData.toneMapPerChannel != 0.f ? renodx::tonemap::config::hue_correction_type::INPUT
                                                                      : renodx::tonemap::config::hue_correction_type::CUSTOM;
-  config.hue_correction_strength = injectedData.toneMapPerChannel != 0.f ? (1.f - injectedData.toneMapHueCorrection)
-                                              : injectedData.toneMapHueCorrection;
+  config.hue_correction_strength = injectedData.toneMapHueCorrection;
   config.hue_correction_color = lerp(untonemapped, hueCorrectionColor, injectedData.toneMapHueShift);
   config.reno_drt_hue_correction_method = (uint)injectedData.toneMapHueProcessor;
   config.reno_drt_tone_map_method = injectedData.toneMapType == 4.f ? renodx::tonemap::renodrt::config::tone_map_method::REINHARD

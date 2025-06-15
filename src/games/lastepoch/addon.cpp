@@ -25,25 +25,20 @@
 
 namespace {
 
+ShaderInjectData shader_injection;
+
 renodx::mods::shader::CustomShaders custom_shaders = {
-    CustomShaderEntry(0x900045BA),  // camera light
-    CustomShaderEntry(0x6EA48EC8),  // LUT3DBaker
-    CustomShaderEntry(0x43621B25),  // uberpost
-    CustomShaderEntry(0xFF4E4EF2),  // uberpost (title menu)
-    CustomShaderEntry(0x366EE13E),  // postfinal
-    CustomShaderEntry(0xCC8B6ACF),  // postfinal (FXAA)
-    CustomShaderEntry(0x15096C7B),  // outline
-    CustomShaderEntry(0x4B83BA2B),  // SMAA 2
-    CustomShaderEntry(0xB5EA3401),  // TAA
-    CustomShaderEntry(0xB11B9B50),  // UI alpha
-    CustomShaderEntry(0xF18BD84B),  // UI effect shiny
-    CustomShaderEntry(0x752CC6FA),  // UI gamepad
-    CustomShaderEntry(0x67B5C47D),  // worldmap
-    CustomShaderEntry(0xD8EECF85),  // time travel
-    CustomShaderEntry(0x20133A8B),  // Final
+    CustomShaderEntryCallback(0x366EE13E, [](reshade::api::command_list* cmd_list) {  // postfinal
+    shader_injection.stateCheck = true;
+    return true;
+    }),
+    CustomShaderEntryCallback(0xCC8B6ACF, [](reshade::api::command_list* cmd_list) {  // postfinal (FXAA)
+    shader_injection.stateCheck = true;
+    return true;
+    }),
+    __ALL_CUSTOM_SHADERS
 };
 
-ShaderInjectData shader_injection;
 float current_settings_mode = 0;
 renodx::utils::settings::Settings settings = {
     new renodx::utils::settings::Setting{
@@ -156,7 +151,7 @@ renodx::utils::settings::Settings settings = {
     new renodx::utils::settings::Setting{
         .key = "toneMapHueShift",
         .binding = &shader_injection.toneMapHueShift,
-        .default_value = 100.f,
+        .default_value = 50.f,
         .label = "Hue Shift",
         .section = "Tone Mapping",
         .tooltip = "Hue-shift emulation strength.",
@@ -170,7 +165,7 @@ renodx::utils::settings::Settings settings = {
     new renodx::utils::settings::Setting{
         .key = "toneMapHueCorrection",
         .binding = &shader_injection.toneMapHueCorrection,
-        .default_value = 100.f,
+        .default_value = 0.f,
         .label = "Hue Correction",
         .section = "Tone Mapping",
         .tint = 0x917450,
@@ -410,8 +405,8 @@ renodx::utils::settings::Settings settings = {
           renodx::utils::settings::UpdateSetting("toneMapPerChannel", 1.f);
           renodx::utils::settings::UpdateSetting("toneMapColorSpace", 2.f);
           renodx::utils::settings::UpdateSetting("toneMapHueProcessor", 2.f);
-          renodx::utils::settings::UpdateSetting("toneMapHueShift", 100.f);
-          renodx::utils::settings::UpdateSetting("toneMapHueCorrection", 100.f);
+          renodx::utils::settings::UpdateSetting("toneMapHueShift", 50.f);
+          renodx::utils::settings::UpdateSetting("toneMapHueCorrection", 0.f);
           renodx::utils::settings::UpdateSetting("colorGradeExposure", 1.f);
           renodx::utils::settings::UpdateSetting("colorGradeHighlights", 50.f);
           renodx::utils::settings::UpdateSetting("colorGradeShadows", 50.f);
@@ -437,7 +432,7 @@ renodx::utils::settings::Settings settings = {
             renodx::utils::settings::UpdateSetting("toneMapPerChannel", 1.f);
             renodx::utils::settings::UpdateSetting("toneMapColorSpace", 2.f);
             renodx::utils::settings::UpdateSetting("toneMapHueProcessor", 1.f);
-            renodx::utils::settings::UpdateSetting("toneMapHueCorrection", 100.f);
+            renodx::utils::settings::UpdateSetting("toneMapHueCorrection", 0.f);
             renodx::utils::settings::UpdateSetting("colorGradeExposure", 1.f);
             renodx::utils::settings::UpdateSetting("colorGradeHighlights", 50.f);
             renodx::utils::settings::UpdateSetting("colorGradeShadows", 47.f);
@@ -551,6 +546,7 @@ void OnPresent(
   shader_injection.random_1 = static_cast<float>(random_generator() + std::mt19937::min()) / random_range;
   shader_injection.random_2 = static_cast<float>(random_generator() + std::mt19937::min()) / random_range;
   shader_injection.random_3 = static_cast<float>(random_generator() + std::mt19937::min()) / random_range;
+  shader_injection.stateCheck = false;
 }
 
 }  // namespace

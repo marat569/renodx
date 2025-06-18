@@ -306,7 +306,7 @@ renodx::utils::settings::Settings settings = {
         .label = "Display Map Type",
         .section = "Highlight Saturation Restoration",
         .tooltip = "Sets the Display mapper used",
-        .labels = {"None", "DICE", "Frostbite", "RenoDRT NeutralSDR"},
+        .labels = {"None", "DICE", "Frostbite", "RenoDRT NeutralSDR", "test"},
         .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
 
@@ -416,12 +416,8 @@ void OnPresetOff() {
 
 }  // namespace
 
-// NOLINTBEGIN(readability-identifier-naming)
-
-extern "C" __declspec(dllexport) const char* NAME = "RenoDX for AI: Limit";
-extern "C" __declspec(dllexport) const char* DESCRIPTION = "RenoDX for AI: Limit";
-
-// NOLINTEND(readability-identifier-naming)
+extern "C" __declspec(dllexport) constexpr const char* NAME = "RenoDX for AI: Limit";
+extern "C" __declspec(dllexport) constexpr const char* DESCRIPTION = "RenoDX for AI: Limit";
 
 BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   switch (fdw_reason) {
@@ -470,6 +466,15 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
 
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::r8g8b8a8_unorm_srgb,
+          .new_format = reshade::api::format::r16g16b16a16_float,
+          //.ignore_size = true,
+          .use_resource_view_cloning = true,
+          .aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
+          //.usage_include = reshade::api::resource_usage::render_target,
+      });
+
+      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+          .old_format = reshade::api::format::r11g11b10_float,
           .new_format = reshade::api::format::r16g16b16a16_float,
           //.ignore_size = true,
           .use_resource_view_cloning = true,

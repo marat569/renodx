@@ -349,12 +349,8 @@ void OnPresetOff() {
 
 }  // namespace
 
-// NOLINTBEGIN(readability-identifier-naming)
-
-extern "C" __declspec(dllexport) const char* NAME = "RenoDX for Enotria: The Last Song";
-extern "C" __declspec(dllexport) const char* DESCRIPTION = "RenoDX for Enotria: The Last Song";
-
-// NOLINTEND(readability-identifier-naming)
+extern "C" __declspec(dllexport) constexpr const char* NAME = "RenoDX for Enotria: The Last Song";
+extern "C" __declspec(dllexport) constexpr const char* DESCRIPTION = "RenoDX for Enotria: The Last Song";
 
 BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   switch (fdw_reason) {

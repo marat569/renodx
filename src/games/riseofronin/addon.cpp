@@ -6,7 +6,7 @@
 #include <include/reshade_api_resource.hpp>
 #define ImTextureID ImU64
 
-// #define DEBUG_LEVEL_0 // Try and hide log spam
+// #define DEBUG_LEVEL_0 // Reduce log spam
 
 #include <embed/shaders.h>
 
@@ -427,12 +427,8 @@ void OnPresetOff() {
 
 }  // namespace
 
-// NOLINTBEGIN(readability-identifier-naming)
-
-extern "C" __declspec(dllexport) const char* NAME = "RenoDX for Rise of the Ronin";
-extern "C" __declspec(dllexport) const char* DESCRIPTION = "RenoDX for Rise of the Ronin";
-
-// NOLINTEND(readability-identifier-naming)
+extern "C" __declspec(dllexport) constexpr const char* NAME = "RenoDX for Rise of the Ronin";
+extern "C" __declspec(dllexport) constexpr const char* DESCRIPTION = "RenoDX for Rise of the Ronin";
 
 BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   switch (fdw_reason) {

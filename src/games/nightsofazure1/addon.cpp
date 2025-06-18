@@ -45,6 +45,7 @@ renodx::mods::shader::CustomShaders custom_shaders = {
 };
 
 renodx::utils::settings::Settings settings = {
+
     new renodx::utils::settings::Setting{
         .key = "toneMapType",
         .binding = &shader_injection.toneMapType,
@@ -163,6 +164,11 @@ renodx::utils::settings::Settings settings = {
         },
     },
 
+    // Start debug sliders
+    // AddDebugSetting(shader_injection, 01),
+    // AddDebugSetting(shader_injection, 02),
+    // AddDebugSetting(shader_injection, 03),
+
 };
 
 void OnPresetOff() {
@@ -179,12 +185,8 @@ void OnPresetOff() {
 
 }  // namespace
 
-// NOLINTBEGIN(readability-identifier-naming)
-
-extern "C" __declspec(dllexport) const char* NAME = "RenoDX";
-extern "C" __declspec(dllexport) const char* DESCRIPTION = "RenoDX for Nights of Azure 1";
-
-// NOLINTEND(readability-identifier-naming)
+extern "C" __declspec(dllexport) constexpr const char* NAME = "RenoDX";
+extern "C" __declspec(dllexport) constexpr const char* DESCRIPTION = "RenoDX for Nights of Azure 1";
 
 // Part of the check to see if the tonemap shader is drawn or not
 void OnPresent(

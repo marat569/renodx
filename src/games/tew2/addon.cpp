@@ -7,7 +7,7 @@
 
 #define DEBUG_LEVEL_0
 
-// #define DEBUG_LEVEL_1 // added
+// #define DEBUG_LEVEL_1 //added
 
 #include <embed/0x15A8E557.h>  // UI, Font, weapon menu
 #include <embed/0x1B480C7D.h>  // UI
@@ -243,12 +243,8 @@ void OnPresetOff() {
 
 }  // namespace
 
-// NOLINTBEGIN(readability-identifier-naming)
-
-extern "C" __declspec(dllexport) const char* NAME = "RenoDX";
-extern "C" __declspec(dllexport) const char* DESCRIPTION = "RenoDX for The Evil Within 2";
-
-// NOLINTEND(readability-identifier-naming)
+extern "C" __declspec(dllexport) constexpr const char* NAME = "RenoDX";
+extern "C" __declspec(dllexport) constexpr const char* DESCRIPTION = "RenoDX for The Evil Within 2";
 
 // Begin custom final copy pasta [ty Ersh/FF14]
 struct __declspec(uuid("1228220F-364A-46A2-BB29-1CCE591A018A")) DeviceData {

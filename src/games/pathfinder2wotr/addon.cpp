@@ -9,26 +9,7 @@
 
 // #define DEBUG_LEVEL_1 //added
 
-#include <embed/0x0F750BE1.h>  // Uberpost 4
-#include <embed/0x1C581A77.h>  // Uberpost 1
-#include <embed/0x20133A8B.h>  // Final
-#include <embed/0x3BB091D1.h>  // UI Uberpost 1
-#include <embed/0x49FD2384.h>  // Gamma/Final
-#include <embed/0x6134CFC2.h>  // Uberpost 3
-#include <embed/0x778CFAC9.h>  // Uberpost 2
-#include <embed/0xCB67E5FE.h>  // Paper white
-#include <embed/0xE45E5BE1.h>  // Clamp
-// UI
-#include <embed/0x54B47285.h>  // UI
-#include <embed/0x57A63191.h>  // UI
-#include <embed/0x653A9A09.h>  // UI
-#include <embed/0x65EB4440.h>  // UI
-#include <embed/0x6D137AF2.h>  // UI
-#include <embed/0x848EACE6.h>  // UI
-#include <embed/0xA970065F.h>  // UI
-#include <embed/0xBC4E0BCF.h>  // UI
-#include <embed/0xC2EF5A31.h>  // UI
-#include <embed/0xD5C38DDA.h>  // UI
+#include <embed/shaders.h>
 
 #include <deps/imgui/imgui.h>
 #include <include/reshade.hpp>
@@ -53,7 +34,7 @@ renodx::mods::shader::CustomShaders custom_shaders = {
     CustomShaderEntry(0xE45E5BE1),  // Clamp
     CustomShaderEntry(0x49FD2384),  // Gamma
     CustomShaderEntry(0x20133A8B),  // Final -- Gamma + Paper White
-    // UI
+                                    // UI
     CustomShaderEntry(0x848EACE6),  // UI
     CustomShaderEntry(0x65EB4440),  // UI
     CustomShaderEntry(0x6D137AF2),  // UI
@@ -235,12 +216,8 @@ void OnPresetOff() {
 
 }  // namespace
 
-// NOLINTBEGIN(readability-identifier-naming)
-
-extern "C" __declspec(dllexport) const char* NAME = "RenoDX";
-extern "C" __declspec(dllexport) const char* DESCRIPTION = "RenoDX for Pathfinder: Wrath of the Righteous";
-
-// NOLINTEND(readability-identifier-naming)
+extern "C" __declspec(dllexport) constexpr const char* NAME = "RenoDX";
+extern "C" __declspec(dllexport) constexpr const char* DESCRIPTION = "RenoDX for Pathfinder: Wrath of the Righteous";
 
 // float screen_width = GetSystemMetrics(SM_CXSCREEN);   // Used to calculate aspect ratio
 // float screen_height = GetSystemMetrics(SM_CYSCREEN);  // Used to calculate aspect ratio

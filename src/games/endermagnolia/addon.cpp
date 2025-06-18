@@ -367,12 +367,8 @@ void OnPresetOff() {
 
 }  // namespace
 
-// NOLINTBEGIN(readability-identifier-naming)
-
-extern "C" __declspec(dllexport) const char* NAME = "RenoDX Ender Magnolia";
-extern "C" __declspec(dllexport) const char* DESCRIPTION = "RenoDX Ender Magnolia";
-
-// NOLINTEND(readability-identifier-naming)
+extern "C" __declspec(dllexport) constexpr const char* NAME = "RenoDX Ender Magnolia";
+extern "C" __declspec(dllexport) constexpr const char* DESCRIPTION = "RenoDX Ender Magnolia";
 
 BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   switch (fdw_reason) {

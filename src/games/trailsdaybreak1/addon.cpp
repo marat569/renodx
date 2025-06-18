@@ -205,12 +205,8 @@ void OnPresetOff() {
 
 }  // namespace
 
-// NOLINTBEGIN(readability-identifier-naming)
-
-extern "C" __declspec(dllexport) const char* NAME = "RenoDX";
-extern "C" __declspec(dllexport) const char* DESCRIPTION = "RenoDX for The Legend of Heroes Trails through Daybreak 1";
-
-// NOLINTEND(readability-identifier-naming)
+extern "C" __declspec(dllexport) constexpr const char* NAME = "RenoDX";
+extern "C" __declspec(dllexport) constexpr const char* DESCRIPTION = "RenoDX for The Legend of Heroes Trails through Daybreak 1";
 
 // float screen_width = GetSystemMetrics(SM_CXSCREEN);   // Used to calculate aspect ratio
 // float screen_height = GetSystemMetrics(SM_CYSCREEN);  // Used to calculate aspect ratio

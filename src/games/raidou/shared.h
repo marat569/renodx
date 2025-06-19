@@ -25,7 +25,7 @@
 #define RENODX_TONE_MAP_HUE_CORRECTION    shader_injection.toneMapHueCorrection
 #define RENODX_TONE_MAP_HUE_SHIFT         shader_injection.toneMapHueShift
 #define RENODX_TONE_MAP_HUE_SHIFT_METHOD  shader_injection.toneMapHueShiftMethod
-#define RENODX_RENO_DRT_WHITE_CLIP        65.f  // Arri doesnt go to 10k; need whiteclip
+#define RENODX_RENO_DRT_WHITE_CLIP        shader_injection.reno_drt_white_clip
 #define RENODX_TONE_MAP_CLAMP_COLOR_SPACE color::convert::COLOR_SPACE_BT2020
 #define RENODX_RENO_DRT_TONE_MAP_METHOD   renodx::tonemap::renodrt::config::tone_map_method::REINHARD
 #define RENODX_GAMMA_CORRECTION           1.f
@@ -65,6 +65,7 @@ struct ShaderInjectData {
   float colorGradeBlowout;
 
   float colorGradeFlare;
+  float reno_drt_white_clip;
   float colorGradeColorSpace;
   float colorGradeRestorationMethod;
   float colorGradeStrength;

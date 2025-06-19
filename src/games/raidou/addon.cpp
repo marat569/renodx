@@ -266,6 +266,18 @@ renodx::utils::settings::Settings settings = {
         .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
     new renodx::utils::settings::Setting{
+        .key = "ColorGradeClip",
+        .binding = &shader_injection.reno_drt_white_clip,
+        .default_value = 4.f,
+        .label = "White Clip",
+        .section = "Color Grading",
+        .tooltip = "Clip point for white in nits",
+        .min = 1.f,
+        .max = 100.f,
+        .is_enabled = []() { return shader_injection.toneMapType == 3; },
+        .is_visible = []() { return settings[0]->GetValue() >= 1; },
+    },
+    new renodx::utils::settings::Setting{
         .key = "ColorGradeStrength",
         .binding = &shader_injection.colorGradeStrength,
         .value_type = renodx::utils::settings::SettingValueType::FLOAT,

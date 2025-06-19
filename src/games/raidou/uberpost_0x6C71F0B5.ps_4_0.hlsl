@@ -1,10 +1,8 @@
 #include "./common.hlsl"
 
-// Uberpost, found in prologue
+// Uberpost, found in first cutscene
 
-// ---- Created with 3Dmigoto v1.3.16 on Thu Jun 19 00:18:33 2025
-Texture2D<float4> t3 : register(t3);
-
+// ---- Created with 3Dmigoto v1.3.16 on Thu Jun 19 01:16:08 2025
 Texture2D<float4> t2 : register(t2);
 
 Texture2D<float4> t1 : register(t1);
@@ -29,14 +27,6 @@ void main(
   float4 fDest;
 
   r0.xyzw = t0.SampleBias(s0_s, v1.xy, cb0[5].x).xyzw;
-  r1.xyzw = t1.SampleBias(s0_s, v1.xy, cb0[5].x).xyzw;
-  r0.w = cmp(0 < cb0[135].x);
-  if (r0.w != 0) {
-    r2.xyz = r1.xyz * r1.www;
-    r1.xyz = float3(8, 8, 8) * r2.xyz;
-  }
-  r1.xyz = cb0[134].xxx * r1.xyz;
-  r0.xyz = r1.xyz * cb0[134].yzw + r0.xyz;
   r0.w = cmp(0 < cb0[142].z);
   if (r0.w != 0) {
     r1.xy = -cb0[142].xy + v1.xy;
@@ -66,11 +56,11 @@ void main(
   r1.xy = float2(0.5, 0.5) * cb0[132].xy;
   r1.yz = r0.zw * cb0[132].xy + r1.xy;
   r1.x = r0.y * cb0[132].y + r1.y;
-  r2.xyzw = t2.SampleLevel(s0_s, r1.xz, 0).xyzw;
+  r2.xyzw = t1.SampleLevel(s0_s, r1.xz, 0).xyzw;
   r3.x = cb0[132].y;
   r3.y = 0;
   r0.zw = r3.xy + r1.xz;
-  r1.xyzw = t2.SampleLevel(s0_s, r0.zw, 0).xyzw;
+  r1.xyzw = t1.SampleLevel(s0_s, r0.zw, 0).xyzw;
   r0.x = r0.x * cb0[132].z + -r0.y;
   r0.yzw = r1.xyz + -r2.xyz;
   r0.xyz = r0.xxx * r0.yzw + r2.xyz;
@@ -79,9 +69,9 @@ void main(
   r0.w = cmp(0 < cb0[133].w);
   if (r0.w != 0) {
     r0.xyz = (r0.xyz);  // removed saturate
-    r1.xyz = cmp(float3(0.00313080009, 0.00313080009, 0.00313080009) >= r0.xyz);
 
-    // sRGB encode
+    // sRGB Encode
+    // r1.xyz = cmp(float3(0.00313080009, 0.00313080009, 0.00313080009) >= r0.xyz);
     // r2.xyz = float3(12.9232101, 12.9232101, 12.9232101) * r0.xyz;
     // r3.xyz = log2(r0.xyz);
     // r3.xyz = float3(0.416666657, 0.416666657, 0.416666657) * r3.xyz;
@@ -95,18 +85,18 @@ void main(
     r2.xw = float2(0.5, 0.5) * cb0[133].xy;
     r2.yz = r2.yz * cb0[133].xy + r2.xw;
     r2.x = r0.w * cb0[133].y + r2.y;
-    r3.xyzw = t3.SampleLevel(s0_s, r2.xz, 0).xyzw;
+    r3.xyzw = t2.SampleLevel(s0_s, r2.xz, 0).xyzw;
     r4.x = cb0[133].y;
     r4.y = 0;
     r2.xy = r4.xy + r2.xz;
-    r2.xyzw = t3.SampleLevel(s0_s, r2.xy, 0).xyzw;
+    r2.xyzw = t2.SampleLevel(s0_s, r2.xy, 0).xyzw;
     r0.w = r1.z * cb0[133].z + -r0.w;
     r2.xyz = r2.xyz + -r3.xyz;
     r2.xyz = r0.www * r2.xyz + r3.xyz;
     r2.xyz = r2.xyz + -r1.xyz;
     r1.xyz = cb0[133].www * r2.xyz + r1.xyz;
 
-    // srgb decode
+    // sRGB Decode
     // r2.xyz = float3(0.0773993805, 0.0773993805, 0.0773993805) * r1.xyz;
     // r3.xyz = float3(0.0549999997, 0.0549999997, 0.0549999997) + r1.xyz;
     // r3.xyz = float3(0.947867334, 0.947867334, 0.947867334) * r3.xyz;

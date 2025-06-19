@@ -12,7 +12,7 @@ float4 ProcessColor(float3 untonemapped, float3 graded) {
     color.rgb *= RENODX_GAME_NITS / RENODX_UI_NITS;
     color.rgb = renodx::color::correct::GammaSafe(color.rgb, true);
   } else {
-    color.rgb = graded;
+    color.rgb = saturate(graded);
     color.rgb = renodx::color::correct::GammaSafe(color.rgb);
     color.rgb *= RENODX_GAME_NITS / RENODX_UI_NITS;
     color.rgb = renodx::color::correct::GammaSafe(color.rgb, true);

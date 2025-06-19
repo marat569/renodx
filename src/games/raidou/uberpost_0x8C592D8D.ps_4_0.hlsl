@@ -56,6 +56,8 @@ void main(
 
   float3 untonemapped = r0.gbr;
 
+  r0.gbr = RestoreHighlightSaturation(untonemapped);
+
   // Arri // lut sample
   r0.xyz = r0.xyz * float3(5.55555582, 5.55555582, 5.55555582) + float3(0.0479959995, 0.0479959995, 0.0479959995);
   r0.xyz = max(float3(0, 0, 0), r0.xyz);

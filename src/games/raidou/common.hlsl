@@ -94,32 +94,29 @@ float3 ToneMapMaxCLL(float3 color, float rolloff_start = 0.375f, float output_ma
 // We run this function right after untonemapped, and display map the rest of the sdr path down to ~2.f
 float3 RestoreHighlightSaturation(float3 color) {
   if (RENODX_TONE_MAP_TYPE != 0.f && DISPLAY_MAP_TYPE != 0.f) {
+    float color_y = renodx::color::y::from::BT709(color);
+
+    [branch]
     if (DISPLAY_MAP_TYPE == 1.f) {  // Dice
 
-      float dicePeak = DISPLAY_MAP_PEAK;          // 2.f default
-      float diceShoulder = DISPLAY_MAP_SHOULDER;  // 0.5f default
-      color = renodx::tonemap::dice::BT709(color, dicePeak, diceShoulder);
+      float dice_peak = DISPLAY_MAP_PEAK;          // 2.f default
+      float dice_shoulder = DISPLAY_MAP_SHOULDER;  // 0.5f default
+      float3 dice_color = renodx::tonemap::dice::BT709(color, dice_peak, dice_shoulder);
+      color = lerp(color, dice_color, saturate(color_y));
 
     } else if (DISPLAY_MAP_TYPE == 2.f) {  // Frostbite
 
-      float frostbitePeak = DISPLAY_MAP_PEAK;     // 2.f default
-      float diceShoulder = DISPLAY_MAP_SHOULDER;  // 0.5f default
-      float diceSaturation = 1.f;                 // Hardcode to 1.f
-      color = renodx::tonemap::frostbite::BT709(color, frostbitePeak, diceShoulder, diceSaturation);
+      float frostbite_peak = DISPLAY_MAP_PEAK;          // 2.f default
+      float frostbite_shoulder = DISPLAY_MAP_SHOULDER;  // 0.5f default
+      float frostbite_saturation = 1.f;                 // Hardcode to 1.f
+      float3 frostbite_color = renodx::tonemap::frostbite::BT709(color, frostbite_peak, frostbite_shoulder, frostbite_saturation);
+      color = lerp(color, frostbite_color, saturate(color_y));
 
-    } else if (DISPLAY_MAP_TYPE == 3.f) {
+    } else if (DISPLAY_MAP_TYPE == 3.f) {  // RenoDRT NeutralSDR
       float3 neutral_sdr_color = renodx::tonemap::renodrt::NeutralSDR(color);
-      float color_y = renodx::color::y::from::BT709(color);
-      // Lerp color and NeutralSDR(color) based on luminance
-      // Normally using NeutralSDR alone messes up midtones
-      // But the lerp makes sure it only gets applied to highlights
       color = lerp(color, neutral_sdr_color, saturate(color_y));
 
-    } else if (DISPLAY_MAP_TYPE == 4.f) {
-      float3 neutral_sdr_color = renodx::tonemap::renodrt::NeutralSDR(color);
-      float color_y = renodx::color::y::from::BT709(color);
-      // float3 color_okLCH = renodx::color::oklch::from::BT709(color);  //  lightness, chrominance, hue
-      // float color_okL = color_okLCH.x;                                // lightness is just the x channel of lch
+    } else if (DISPLAY_MAP_TYPE == 4.f) {  // ToneMapMaxCLL
       color = lerp(color, ToneMapMaxCLL(color), saturate(color_y));
     }
 

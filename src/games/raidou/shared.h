@@ -29,6 +29,7 @@
 #define RENODX_TONE_MAP_CLAMP_COLOR_SPACE color::convert::COLOR_SPACE_BT2020
 #define RENODX_RENO_DRT_TONE_MAP_METHOD   renodx::tonemap::renodrt::config::tone_map_method::REINHARD
 #define RENODX_GAMMA_CORRECTION           1.f
+#define UBERPOST_EXIST                    shader_injection.uberpostExist
 #define DEBUG_MIDGRAY                     shader_injection.midGray
 // #define RENODX_GAMMA_CORRECTION                shader_injection.toneMapGammaCorrection
 //  #define RENODX_SWAP_CHAIN_ENCODING_COLOR_SPACE (color::convert::COLOR_SPACE_BT2020 - 1.f)  // BT709 = BT2020 - 1
@@ -73,6 +74,8 @@ struct ShaderInjectData {
   float displayMapType;
   float displayMapPeak;
   float displayMapShoulder;
+
+  float uberpostExist;
 };
 
 #ifndef __cplusplus

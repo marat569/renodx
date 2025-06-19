@@ -23,6 +23,30 @@ float4 ProcessColor(float3 untonemapped, float3 graded) {
   return color;
 }
 
+// Process color for scenes that just clip
+float4 ProcessColor(float3 untonemapped) {
+  float4 color;
+  float midGray = 0.18f;
+
+  if (RENODX_TONE_MAP_TYPE != 0.f) {
+    // untonemapped.rgb *= midGray / 0.18f; // Adjust midgray, RenoDRT except 0.18f
+
+    color.rgb = renodx::draw::ToneMapPass(untonemapped);
+    color.rgb = renodx::color::correct::GammaSafe(color.rgb);
+    color.rgb *= RENODX_GAME_NITS / RENODX_UI_NITS;
+    color.rgb = renodx::color::correct::GammaSafe(color.rgb, true);
+  } else {
+    color.rgb = saturate(untonemapped);
+    color.rgb = renodx::color::correct::GammaSafe(color.rgb);
+    color.rgb *= RENODX_GAME_NITS / RENODX_UI_NITS;
+    color.rgb = renodx::color::correct::GammaSafe(color.rgb, true);
+  }
+
+  color.w = 1.f;
+
+  return color;
+}
+
 // RenoDRTSmoothClamp from FFX, swapped up to use Reinhard
 // Added whiteclip
 // STILL A WIP

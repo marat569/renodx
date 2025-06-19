@@ -19,9 +19,22 @@
 
 namespace {
 
-renodx::mods::shader::CustomShaders custom_shaders = {__ALL_CUSTOM_SHADERS};
-
 ShaderInjectData shader_injection;
+
+// Part of the check to see if uberposts exist
+bool check(reshade::api::command_list* cmd_list) {
+  shader_injection.uberpostExist = 1.f;
+  return true;
+}
+
+renodx::mods::shader::CustomShaders custom_shaders = {
+
+    CustomShaderEntryCallback(0x6C71F0B5, &check),  // Uberpost + Check
+    CustomShaderEntryCallback(0x8C592D8D, &check),  // Uberpost + Check
+    CustomShaderEntry(0x5E7CF06F),                  // clip shader
+
+};
+
 const std::string build_date = __DATE__;
 const std::string build_time = __TIME__;
 
@@ -408,6 +421,17 @@ void OnPresetOff() {
 extern "C" __declspec(dllexport) constexpr const char* NAME = "RenoDX";
 extern "C" __declspec(dllexport) constexpr const char* DESCRIPTION = "RenoDX for RAIDOU Remastered: The Mystery of the Soulless Army";
 
+void OnPresent(
+
+    reshade::api::command_queue* queue,
+    reshade::api::swapchain* swapchain,
+    const reshade::api::rect* source_rect,
+    const reshade::api::rect* dest_rect,
+    uint32_t dirty_rect_count,
+    const reshade::api::rect* dirty_rects) {
+  shader_injection.uberpostExist = 0;
+}
+
 BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   switch (fdw_reason) {
     case DLL_PROCESS_ATTACH:
@@ -480,6 +504,11 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   renodx::utils::settings::Use(fdw_reason, &settings, &OnPresetOff);
   renodx::mods::swapchain::Use(fdw_reason, &shader_injection);
   renodx::mods::shader::Use(fdw_reason, custom_shaders, &shader_injection);
+
+  // Part of the check to see if the uberpost shader is drawn or not
+  if (fdw_reason == DLL_PROCESS_ATTACH) {
+    reshade::register_event<reshade::addon_event::present>(OnPresent);
+  }
 
   return TRUE;
 }

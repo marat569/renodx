@@ -69,9 +69,9 @@ void main(
   r0.w = cmp(0 < cb0[133].w);
   if (r0.w != 0) {
     r0.xyz = (r0.xyz);  // removed saturate
+    r1.xyz = cmp(float3(0.00313080009, 0.00313080009, 0.00313080009) >= r0.xyz);
 
     // sRGB Encode
-    // r1.xyz = cmp(float3(0.00313080009, 0.00313080009, 0.00313080009) >= r0.xyz);
     // r2.xyz = float3(12.9232101, 12.9232101, 12.9232101) * r0.xyz;
     // r3.xyz = log2(r0.xyz);
     // r3.xyz = float3(0.416666657, 0.416666657, 0.416666657) * r3.xyz;

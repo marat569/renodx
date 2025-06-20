@@ -315,7 +315,7 @@ renodx::utils::settings::Settings settings = {
         .key = "DisplayMapType",
         .binding = &shader_injection.displayMapType,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 4.f,
+        .default_value = 1.f,
         .can_reset = true,
         .label = "Display Map Type",
         .section = "Highlight Saturation Restoration",
@@ -498,13 +498,14 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
           //.usage_include = reshade::api::resource_usage::render_target,
       });
 
+      // upgrading FP11 in Raidou causes a black screen :c
       // renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
       //     .old_format = reshade::api::format::r11g11b10_float,
       //     .new_format = reshade::api::format::r16g16b16a16_float,
       //     //.ignore_size = true,
       //     .use_resource_view_cloning = true,
-      //     .aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
-      //     //.usage_include = reshade::api::resource_usage::render_target,
+      //     //.aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
+      //     .usage_include = reshade::api::resource_usage::render_target,
       // });
 
       break;

@@ -333,6 +333,7 @@ renodx::utils::settings::Settings settings = {
         .label = "Display Map Peak",
         .section = "Highlight Saturation Restoration",
         .tooltip = "What nit value we want to display map down to -- 2.f is solid",
+        .min = 1.f,
         .max = 5.f,
         .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },

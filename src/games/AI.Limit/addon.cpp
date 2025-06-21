@@ -306,7 +306,7 @@ renodx::utils::settings::Settings settings = {
         .label = "Display Map Type",
         .section = "Highlight Saturation Restoration",
         .tooltip = "Sets the Display mapper used",
-        .labels = {"None", "DICE", "Frostbite", "RenoDRT NeutralSDR", "test"},
+        .labels = {"None", "DICE", "Frostbite", "RenoDRT NeutralSDR", "ToneMapMaxCLL"},
         .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
 
@@ -319,6 +319,7 @@ renodx::utils::settings::Settings settings = {
         .label = "Display Map Peak",
         .section = "Highlight Saturation Restoration",
         .tooltip = "What nit value we want to display map down to -- 2.f is solid",
+        .min = 1.f,
         .max = 5.f,
         .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },

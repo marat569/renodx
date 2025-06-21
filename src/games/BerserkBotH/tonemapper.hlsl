@@ -17,7 +17,6 @@ float3 applyUserTonemap(float3 untonemapped, float3 vanillaColor, float3 midGray
   float3 outputColor;
 
   if (injectedData.toneMapType == 0.f) {
-    outputColor = max(0, vanillaColor);  // clamps to 709/no negative colors for the vanilla tonemapper
     outputColor = saturate(vanillaColor);
   } else {
     outputColor = untonemapped;
@@ -27,7 +26,7 @@ float3 applyUserTonemap(float3 untonemapped, float3 vanillaColor, float3 midGray
   float vanillaMidGray = midGray;  // calculate mid grey from the second hable run
   float renoDRTContrast = 1.f;
   // float renoDRTFlare = injectedData.colorGradeFlare;  // 0.01f seems to be a good middleground
-  float renoDRTFlare = 0.01 * pow(injectedData.colorGradeFlare, 2.33f);  // 50/1.f will be 0.01, 100/2.f will be 0.0502
+  float renoDRTFlare = 0.01f * pow(injectedData.colorGradeFlare, 2.33f);  // 50/1.f will be 0.01, 100/2.f will be 0.0502
   float renoDRTShadows = 1.f;
   float renoDRTDechroma = 0.f;
   // float renoDRTDechroma = injectedData.colorGradeBlowout;

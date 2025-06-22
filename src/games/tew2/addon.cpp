@@ -7,7 +7,7 @@
 
 #define DEBUG_LEVEL_0
 
-// #define DEBUG_LEVEL_1 //added
+// #define DEBUG_LEVEL_1 //
 
 #include <embed/0x15A8E557.h>  // UI, Font, weapon menu
 #include <embed/0x1B480C7D.h>  // UI

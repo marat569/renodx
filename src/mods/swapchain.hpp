@@ -155,6 +155,7 @@ static void* swap_chain_device_proxy = nullptr;
 static bool bypass_dummy_windows = true;
 static bool use_auto_upgrade = false;
 static std::unordered_set<std::string> ignored_window_class_names = {};
+static std::unordered_set<reshade::api::device_api> ignored_device_apis = {};
 static reshade::api::format swap_chain_proxy_format = reshade::api::format::r16g16b16a16_float;
 static std::span<const std::uint8_t> swap_chain_proxy_vertex_shader = {};
 static std::span<const std::uint8_t> swap_chain_proxy_pixel_shader = {};
@@ -1336,6 +1337,14 @@ static bool OnCreateDevice(reshade::api::device_api api, uint32_t& api_version) 
 }
 
 static void OnInitDevice(reshade::api::device* device) {
+  if (ignored_device_apis.contains(device->get_api())) {
+    std::stringstream s;
+    s << "mods::swapchain::OnInitDevice(Abort from ignored device api: ";
+    s << static_cast<uint32_t>(device->get_api());
+    s << ")";
+    reshade::log::message(reshade::log::level::info, s.str().c_str());
+    return;
+  }
   std::stringstream s;
   s << "mods::swapchain::OnInitDevice(";
   s << PRINT_PTR((uintptr_t)(device));
@@ -1436,10 +1445,21 @@ static void OnDestroyCommandList(reshade::api::command_list* cmd_list) {
   renodx::utils::data::Delete<CommandListData>(cmd_list);
 }
 
-static bool ShouldModifySwapchainHwnd(HWND hwnd) {
+static bool ShouldModifySwapchain(HWND hwnd, reshade::api::device_api device_api) {
+  if (!ignored_device_apis.empty()) {
+    if (ignored_device_apis.contains(device_api)) {
+      std::stringstream s;
+      s << "mods::swapchain::ShouldModifySwapchain(Abort from ignored device api: ";
+      s << static_cast<uint32_t>(device_api);
+      s << ")";
+      reshade::log::message(reshade::log::level::info, s.str().c_str());
+      return false;
+    }
+  }
+
   if (renodx::utils::platform::IsToolWindow(hwnd)) {
     std::stringstream s;
-    s << "mods::swapchain::ShouldModifySwapchainHwnd(Tool Window: ";
+    s << "mods::swapchain::ShouldModifySwapchain(Tool Window: ";
     s << PRINT_PTR(reinterpret_cast<uintptr_t>(hwnd));
     s << ")";
     reshade::log::message(reshade::log::level::info, s.str().c_str());
@@ -1449,7 +1469,7 @@ static bool ShouldModifySwapchainHwnd(HWND hwnd) {
   auto class_name = renodx::utils::platform::GetWindowClassName(hwnd);
   {
     std::stringstream s;
-    s << "mods::swapchain::ShouldModifySwapchainHwnd(Checking class name: ";
+    s << "mods::swapchain::ShouldModifySwapchain(Checking class name: ";
     s << class_name;
     s << ")";
     reshade::log::message(reshade::log::level::info, s.str().c_str());
@@ -1459,7 +1479,7 @@ static bool ShouldModifySwapchainHwnd(HWND hwnd) {
     auto lower_case_view = class_name | std::views::transform([](auto c) { return std::tolower(c); });
     if (!std::ranges::search(lower_case_view, std::string("dummy")).empty()) {
       std::stringstream s;
-      s << "mods::swapchain::ShouldModifySwapchainHwnd(Dummy window: ";
+      s << "mods::swapchain::ShouldModifySwapchain(Dummy window: ";
       s << PRINT_PTR(reinterpret_cast<uintptr_t>(hwnd));
       s << ")";
       reshade::log::message(reshade::log::level::info, s.str().c_str());
@@ -1471,7 +1491,7 @@ static bool ShouldModifySwapchainHwnd(HWND hwnd) {
     if (!class_name.empty()) {
       if (ignored_window_class_names.contains(class_name)) {
         std::stringstream s;
-        s << "mods::swapchain::ShouldModifySwapchainHwnd(Ignored class name: ";
+        s << "mods::swapchain::ShouldModifySwapchain(Ignored class name: ";
         s << class_name;
         s << PRINT_PTR(reinterpret_cast<uintptr_t>(hwnd));
         s << ")";
@@ -1500,18 +1520,22 @@ static bool OnCreateSwapchain(reshade::api::swapchain_desc& desc, void* hwnd) {
 
   bool is_dxgi = false;
   switch (device_api) {
-    default:
     case reshade::api::device_api::d3d10:
     case reshade::api::device_api::d3d11:
     case reshade::api::device_api::d3d12:
       is_dxgi = true;
+    case reshade::api::device_api::d3d9:
+    case reshade::api::device_api::opengl:
     case reshade::api::device_api::vulkan:
+      break;
+    default:
+      assert(false);
       break;
   }
 
-  if (!ShouldModifySwapchainHwnd(static_cast<HWND>(hwnd))) {
+  if (!ShouldModifySwapchain(static_cast<HWND>(hwnd), device_api)) {
     std::stringstream s;
-    s << "mods::swapchain::OnCreateSwapchain(Abort from ShouldModifySwapchainHwnd: ";
+    s << "mods::swapchain::OnCreateSwapchain(Abort from ShouldModifySwapchain: ";
     s << PRINT_PTR(reinterpret_cast<uintptr_t>(hwnd));
     s << ")";
     reshade::log::message(reshade::log::level::info, s.str().c_str());
@@ -1629,9 +1653,9 @@ static void OnInitSwapchain(reshade::api::swapchain* swapchain, bool resize) {
 
   HWND hwnd = static_cast<HWND>(swapchain->get_hwnd());
 
-  if (!ShouldModifySwapchainHwnd(hwnd)) {
+  if (!ShouldModifySwapchain(hwnd, device->get_api())) {
     std::stringstream s;
-    s << "mods::swapchain::OnInitSwapchain(Abort from ShouldModifySwapchainHwnd: ";
+    s << "mods::swapchain::OnInitSwapchain(Abort from ShouldModifySwapchain: ";
     s << PRINT_PTR(reinterpret_cast<uintptr_t>(hwnd));
     s << ")";
     reshade::log::message(reshade::log::level::info, s.str().c_str());

@@ -88,21 +88,33 @@ renodx::utils::settings::Settings settings = {
         .max = 500.f,
     },
     new renodx::utils::settings::Setting{
-        .key = "GammaCorrection",
-        .binding = &shader_injection.tone_map_gamma_correction,
+        .key = "SwapChainGammaCorrection",
+        .binding = &shader_injection.swap_chain_gamma_correction,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 1.f,
-        .label = "Gamma Correction",
+        .default_value = 2.f,
+        .label = "UI Gamma Correction",
         .section = "Tone Mapping",
-        .tooltip = "Emulates a display EOTF.",
-        .labels = {"Off", "2.2", "BT.1886"},
+        .tooltip = "Controls the gamma correction applied to the UI and HUD elements.\nEncoding 2-D assets for HDR that were originally intended for sRGB creates a \"washed out\" look without correction.",
+        .labels = {"Off", "2.2", "2.4"},
+        .is_visible = []() { return current_settings_mode >= 1; },
+    },
+    new renodx::utils::settings::Setting{
+        .key = "OutputColorSpace",
+        .binding = &shader_injection.output_color_space,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .label = "Color Space",
+        .section = "Tone Mapping",
+        .tooltip = "The output color space; this applies to both the scene and UI.\nBe aware that Wuthering Waves was mastered for BT.709.",
+        .labels = {"BT.709", "DCI-P3", "BT.2020"},
+        .is_enabled = []() { return shader_injection.processing_use_scrgb == 0; },
         .is_visible = []() { return current_settings_mode >= 1; },
     },
     new renodx::utils::settings::Setting{
         .key = "ToneMapHueProcessor",
         .binding = &shader_injection.tone_map_hue_processor,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 0.f,
+        .default_value = 1.f,
         .label = "Hue Processor",
         .section = "Tone Mapping",
         .tooltip = "Selects hue processor",
@@ -123,6 +135,18 @@ renodx::utils::settings::Settings settings = {
         .is_visible = []() { return current_settings_mode >= 2; },
     },
     new renodx::utils::settings::Setting{
+        .key = "WuWaTonemapper",
+        .binding = &shader_injection.wuwa_tonemapper,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 3.f,
+        .label = "Game Tone Mapper",
+        .section = "Scene Grading",
+        .tooltip = "Adjusts the tone mapper used by the game.\nThe provided names are from the game's files.\n\"Kuro\" is the original behavior.",
+        .labels = {"None", "Genshin", "Death Stranding", "Kuro"},
+        .is_enabled = []() { return current_settings_mode >= 1
+                                    && shader_injection.color_grade_strength > 0; },
+    },
+    new renodx::utils::settings::Setting{
         .key = "ColorGradeHueCorrection",
         .binding = &shader_injection.color_grade_hue_correction,
         .default_value = 100.f,
@@ -131,7 +155,8 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Corrects per-channel hue shifts from per-channel grading.",
         .min = 0.f,
         .max = 100.f,
-        .is_enabled = []() { return shader_injection.tone_map_type >= 1; },
+        .is_enabled = []() { return shader_injection.tone_map_type >= 1
+                                    && shader_injection.color_grade_strength > 0; },
         .parse = [](float value) { return value * 0.01f; },
         .is_visible = []() { return current_settings_mode >= 2; },
     },
@@ -144,7 +169,8 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Corrects unbalanced saturation from per-channel grading.",
         .min = 0.f,
         .max = 100.f,
-        .is_enabled = []() { return shader_injection.tone_map_type >= 1; },
+        .is_enabled = []() { return shader_injection.tone_map_type >= 1
+                                    && shader_injection.color_grade_strength > 0; },
         .parse = [](float value) { return value * 0.01f; },
         .is_visible = []() { return current_settings_mode >= 2; },
     },
@@ -157,7 +183,8 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Restores color from blowout from per-channel grading.",
         .min = 0.f,
         .max = 100.f,
-        .is_enabled = []() { return shader_injection.tone_map_type >= 1; },
+        .is_enabled = []() { return shader_injection.tone_map_type >= 1
+                                    && shader_injection.color_grade_strength > 0; },
         .parse = [](float value) { return value * 0.01f; },
     },
     new renodx::utils::settings::Setting{
@@ -166,10 +193,12 @@ renodx::utils::settings::Settings settings = {
         .default_value = 50.f,
         .label = "Hue Shift",
         .section = "Scene Grading",
-        .tooltip = "Selects strength of hue shifts from per-channel grading.",
+        .tooltip = "Modulates between the hues of the uncorrected and corrected saturation.",
         .min = 0.f,
         .max = 100.f,
-        .is_enabled = []() { return shader_injection.tone_map_type >= 1; },
+        .is_enabled = []() { return shader_injection.tone_map_type >= 1
+                                    && shader_injection.color_grade_strength > 0
+                                    && shader_injection.color_grade_saturation_correction > 0; },
         .parse = [](float value) { return value * 0.01f; },
         .is_visible = []() { return current_settings_mode >= 2; },
     },
@@ -267,26 +296,32 @@ renodx::utils::settings::Settings settings = {
         .is_enabled = []() { return shader_injection.tone_map_type == 3; },
         .is_visible = []() { return current_settings_mode >= 1; },
     },
-    new renodx::utils::settings::Setting{
-        .key = "ColorGradeColorSpace",
-        .binding = &shader_injection.color_grade_color_space,
-        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 0.f,
-        .label = "Color Space",
-        .section = "Custom Color Grading",
-        .tooltip = "Selects output color space"
-                   "\nUS Modern for BT.709 D65."
-                   "\nJPN Modern for BT.709 D93."
-                   "\nUS CRT for BT.601 (NTSC-U)."
-                   "\nJPN CRT for BT.601 ARIB-TR-B9 D93 (NTSC-J)."
-                   "\nDefault: US CRT",
-        .labels = {
-            "US Modern",
-            "JPN Modern",
-            "US CRT",
-            "JPN CRT",
-        },
-        .is_visible = []() { return settings[0]->GetValue() >= 1; },
+    new renodx::utils::settings::Setting {
+        .key = "WuWaChromaticAberration",
+        .binding = &shader_injection.wuwa_chromatic_aberration,
+        .default_value = 100.f,
+        .label = "Chromatic Aberration",
+        .section = "Post-Processing",
+        .tooltip = "Reduces chromatic aberration intensity when applied by the game.\n100 retains original behavior, 0 disables it completely.",
+        .parse = [](float value) { return value * 0.01f; }
+    },
+    new renodx::utils::settings::Setting {
+        .key = "WuWaBloom",
+        .binding = &shader_injection.wuwa_bloom,
+        .default_value = 100.f,
+        .label = "Bloom",
+        .section = "Post-Processing",
+        .tooltip = "Reduces bloom intensity when applied by the game.\n100 retains original behavior, 0 disables it completely.",
+        .parse = [](float value) { return value * 0.01f; }
+    },
+    new renodx::utils::settings::Setting {
+        .key = "WuWaGrain",
+        .binding = &shader_injection.wuwa_grain,
+        .default_value = 100.f,
+        .label = "Grain",
+        .section = "Post-Processing",
+        .tooltip = "Reduces grain intensity when applied by the game.\n100 retains original behavior, 0 disables it completely.\nThe effect is very subtle and likely only exists for dithering.",
+        .parse = [](float value) { return value * 0.01f; }
     },
 };
 
@@ -378,20 +413,20 @@ renodx::utils::settings::Settings info_settings = {
 
 void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("ToneMapType", 0.f);
+  renodx::utils::settings::UpdateSetting("WuWaTonemapper", 3.f);
   renodx::utils::settings::UpdateSetting("ToneMapPeakNits", 203.f);
   renodx::utils::settings::UpdateSetting("ToneMapGameNits", 203.f);
   renodx::utils::settings::UpdateSetting("ToneMapUINits", 203.f);
-  renodx::utils::settings::UpdateSetting("ToneMapGammaCorrection", 0.f);
-  renodx::utils::settings::UpdateSetting("ToneMapHueCorrection", 0.f);
+  renodx::utils::settings::UpdateSetting("SwapChainGammaCorrection", 0.f);
+  renodx::utils::settings::UpdateSetting("OutputColorSpace", 0.f);
   renodx::utils::settings::UpdateSetting("ColorGradeExposure", 1.f);
   renodx::utils::settings::UpdateSetting("ColorGradeHighlights", 50.f);
   renodx::utils::settings::UpdateSetting("ColorGradeShadows", 50.f);
   renodx::utils::settings::UpdateSetting("ColorGradeContrast", 50.f);
   renodx::utils::settings::UpdateSetting("ColorGradeSaturation", 50.f);
   renodx::utils::settings::UpdateSetting("ColorGradeBlowout", 0.f);
-  renodx::utils::settings::UpdateSetting("ColorGradeLUTStrength", 100.f);
-  renodx::utils::settings::UpdateSetting("ColorGradeLUTScaling", 0.f);
-  renodx::utils::settings::UpdateSetting("ColorGradeColorSpace", 0.f);
+  renodx::utils::settings::UpdateSetting("WuWaBloom", 100.f);
+  renodx::utils::settings::UpdateSetting("WuWaGrain", 100.f);
 }
 
 bool fired_on_init_swapchain = false;
@@ -406,68 +441,6 @@ void OnInitSwapchain(reshade::api::swapchain* swapchain, bool resize) {
   }
 }
 
-// Per game resource upgrades, where we need custom paramaters -- the sliders (output size/ratio/all) don't work
-void AddExpedition33Upgrades() {
-  // Portrait letterboxes screens
-  renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
-      .old_format = reshade::api::format::r10g10b10a2_unorm,
-      .new_format = reshade::api::format::r16g16b16a16_float,
-      .use_resource_view_cloning = true,
-      .aspect_ratio = 2880.f / 2160.f,
-  });
-
-  renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
-      .old_format = reshade::api::format::r10g10b10a2_unorm,
-      .new_format = reshade::api::format::r16g16b16a16_float,
-      .use_resource_view_cloning = true,
-      .aspect_ratio = 3840.f / 1608.f,
-  });
-  // DLAA support
-  renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
-      .old_format = reshade::api::format::r10g10b10a2_unorm,
-      .new_format = reshade::api::format::r16g16b16a16_float,
-      .use_resource_view_cloning = true,
-      .aspect_ratio = 3044.f / 1712.f,
-  });
-}
-
-void AddAvowedUpgrades() {
-  renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
-      .old_format = reshade::api::format::r10g10b10a2_unorm,
-      .new_format = reshade::api::format::r16g16b16a16_float,
-      .use_resource_view_cloning = true,
-      .aspect_ratio = 4360.f / 2160.f,
-  });
-}
-
-void AddWuchangUpgrades() {
-    renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
-      .old_format = reshade::api::format::r10g10b10a2_unorm,
-      .new_format = reshade::api::format::r16g16b16a16_float,
-      .use_resource_view_cloning = true,
-      .aspect_ratio = 2560.f / 1024.f,
-  });
-}
-
-void AddGamePatches() {
-  auto process_path = renodx::utils::platform::GetCurrentProcessPath();
-  auto filename = process_path.filename().string();
-  auto product_name = renodx::utils::platform::GetProductName(process_path);
-
-  if (product_name == "Expedition 33") {
-    AddExpedition33Upgrades();
-  } else if (product_name == "Avowed") {
-    AddAvowedUpgrades();
-  } else if (product_name == "Tony Hawks(TM) Pro Skater(TM) 3 + 4"){
-    renodx::mods::swapchain::swapchain_proxy_revert_state = true;
-  } else if (product_name == "Project_Plague"){
-    AddWuchangUpgrades();
-  } else {
-    return;
-  }
-  reshade::log::message(reshade::log::level::info, std::format("Applied patches for {} ({}).", filename, product_name).c_str());
-}
-
 const auto UPGRADE_TYPE_NONE = 0.f;
 const auto UPGRADE_TYPE_OUTPUT_SIZE = 1.f;
 const auto UPGRADE_TYPE_OUTPUT_RATIO = 2.f;
@@ -478,99 +451,12 @@ const std::unordered_map<
     std::unordered_map<std::string, float>>  // {Key, Value}
     GAME_DEFAULT_SETTINGS = {
         {
-            "Psychonauts2-WinGDK-Shipping.exe",
-            {
-                {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_RATIO},
-                {"Upgrade_R8G8B8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
-                {"ForceBorderless", 0.f},
-            },
-        },
-        {
-            "CRISIS CORE -FINAL FANTASY VII- REUNION",
-            {
-                {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
-            },
-        },
-        {
-            "RainCodePlus-Win64-Shipping.exe",
-            {
-                {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_RATIO},
-            },
-        },
-        {
             "Wuthering Waves",
             {
                 {"Upgrade_R8G8B8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
             },
         },
-        {
-            "Expedition 33",
-            {
-                {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
-                {"Upgrade_B8G8R8A8_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
-                {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
-            },
-        },
-        {
-            "Avowed",
-            {
-                {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
-            },
-        },
-        {
-            "InfinityNikki",
-            {
-                {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
-            },
-        },
-
-        {
-            "Stellar Blade",
-            {
-                {"Upgrade_CopyDestinations", 1.f},
-                {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
-                {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
-            },
-        },
-        {
-            "Stellar Blade (Demo)",
-            {
-                {"Upgrade_CopyDestinations", 1.f},
-                {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
-                {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
-            },
-        },
-        {
-            "Lies of P",
-            {
-                {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
-                {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
-            },
-        },
-        {
-            "Like a Dragon: Ishin!",
-            {
-                {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
-                {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
-            },
-        },
-
-        {
-            "Pal",
-            {
-                {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
-            },
-        },
-
-        {
-            "Project_Plague",
-            {
-                {"Upgrade_CopyDestinations", 1.f},
-                {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
-            },
-        },
-
 };
 
 float g_dump_shaders = 0;
@@ -758,6 +644,15 @@ void AddAdvancedSettings() {
     }
   }
 
+  // Upgrade letterbox cutscene resources
+  renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      .old_format = reshade::api::format::r8g8b8a8_typeless,
+      .new_format = reshade::api::format::r16g16b16a16_float,
+      .ignore_size = false,
+      .use_resource_view_cloning = true,
+      .aspect_ratio = 3840.f / 1620.f,
+  });
+
   {
     auto* swapchain_setting = new renodx::utils::settings::Setting{
         .key = "Upgrade_SwapChainCompatibility",
@@ -876,7 +771,7 @@ bool initialized = false;
 }  // namespace
 
 extern "C" __declspec(dllexport) constexpr const char* NAME = "RenoDX";
-extern "C" __declspec(dllexport) constexpr const char* DESCRIPTION = "RenoDX for Unreal Engine";
+extern "C" __declspec(dllexport) constexpr const char* DESCRIPTION = "RenoDX for Wuthering Waves";
 
 BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
   switch (fdw_reason) {
@@ -928,8 +823,6 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
             .dimensions = {.width = 32, .height = 32, .depth = 32},
             .resource_tag = 1.f,
         });
-
-        AddGamePatches();
 
         initialized = true;
       }

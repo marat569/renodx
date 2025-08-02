@@ -1,7 +1,6 @@
 // ---- Created with 3Dmigoto v1.3.16 on Fri Dec  6 02:32:25 2024
 
-#include "./shared.h"
-#include "./tonemapper.hlsl"
+#include "./common.hlsl"
 
 Texture2D<float4> t0 : register(t0);
 
@@ -15,9 +14,9 @@ cbuffer cb0 : register(b0) {
 #define cmp -
 
 void main(
-    float4 v0 : SV_POSITION0,
-    float2 v1 : TEXCOORD0,
-    out float4 o0 : SV_Target0) {
+    float4 v0: SV_POSITION0,
+    float2 v1: TEXCOORD0,
+    out float4 o0: SV_Target0) {
   float4 r0, r1, r2;
   uint4 bitmask, uiDest;
   float4 fDest;

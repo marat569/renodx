@@ -18,12 +18,17 @@ struct ShaderInjectData {
   float colorGradeContrast;
   float colorGradeSaturation;
   float toneMapHueCorrectionStrength;
+  float toneMapHueCorrectionType;
+  float ColorGradeColorSpace;
+  float debug01;
+  float colorGradeHighlights2;
 };
 
 #ifndef __cplusplus
 cbuffer cb13 : register(b13) {
   ShaderInjectData injectedData : packoffset(c0);
 }
+
 #endif
 
 #endif  // SRC_FANTA_SHARED_H_

@@ -1,7 +1,7 @@
 // ---- Created with 3Dmigoto v1.3.16 on Thu Dec  5 19:31:25 2024
 // Final Shader
 
-#include "./shared.h"
+#include "./common.hlsl"
 
 SamplerState BlitSampler_s : register(s0);
 Texture2D<float4> BlitTexture : register(t0);
@@ -16,6 +16,10 @@ void main(
   o0.xyzw = BlitTexture.Sample(BlitSampler_s, v0.xy).xyzw;
 
   o0.rgb = renodx::math::PowSafe(o0.rgb, 2.2f);
+
+  if (injectedData.ColorGradeColorSpace == 1.f) {
+    o0.rgb = renodx::color::bt709::from::BT709D93(o0.rgb);
+  }
 
   o0.rgb *= injectedData.toneMapUINits / 80.f;  // Scale luminance -- The tonemapper has a ratio of injectedData.toneMapGameNits / injectedData.toneMapUINits
 

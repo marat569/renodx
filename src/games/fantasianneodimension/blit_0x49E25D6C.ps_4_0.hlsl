@@ -2,7 +2,7 @@
 // Only spawns during battles
 // Last shader that's the game render only during battles
 
-#include "./shared.h"
+#include "./common.hlsl"
 
 Texture2D<float4> t0 : register(t0);
 

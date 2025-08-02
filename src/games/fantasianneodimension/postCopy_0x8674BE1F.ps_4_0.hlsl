@@ -2,7 +2,7 @@
 // Last shader that's the game render during the open world
 // Spawns in battles along side the blit shader
 
-#include "./shared.h"
+#include "./common.hlsl"
 
 Texture2D<float4> t0 : register(t0);
 

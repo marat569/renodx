@@ -83,6 +83,19 @@ renodx::utils::settings::Settings settings = {
         .min = 48.f,
         .max = 500.f,
     },
+
+    new renodx::utils::settings::Setting{
+        .key = "toneMapHueCorrectionType",
+        .binding = &shader_injection.toneMapHueCorrectionType,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 1.f,
+        .can_reset = false,
+        .label = "Hue Correction Type",
+        .section = "Tone Mapping",
+        .tooltip = "Selects the color processor for Hue Correction",
+        .labels = {"Reinhard", "NeutralSDR"},
+    },
+
     new renodx::utils::settings::Setting{
         .key = "toneMapHueCorrectionStrength",
         .binding = &shader_injection.toneMapHueCorrectionStrength,
@@ -141,6 +154,22 @@ renodx::utils::settings::Settings settings = {
     },
 
     new renodx::utils::settings::Setting{
+        .key = "ColorGradeColorSpace",
+        .binding = &shader_injection.ColorGradeColorSpace,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .label = "Color Space",
+        .section = "Color Grading",
+        .tooltip = "Selects output color space"
+                   "\nUS Modern for BT.709 D65."
+                   "\nJPN Modern for BT.709 D93.",
+        .labels = {
+            "US Modern",
+            "JPN Modern",
+        },
+    },
+
+    new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
         .label = " - Join the HDR Den Discord if you need help!",
         .section = "Instructions",
@@ -176,6 +205,19 @@ renodx::utils::settings::Settings settings = {
         .tooltip = std::string(__DATE__),
     },
 
+    // Debug sliders
+    // AddDebugSetting(shader_injection, 01),  // debug01
+
+    new renodx::utils::settings::Setting{
+        .key = "colorGradeHighlights",
+        .binding = &shader_injection.colorGradeHighlights2,
+        .default_value = 50.f,
+        .label = "Highlights 2",
+        .section = "DEBUG",
+        .max = 100.f,
+        .parse = [](float value) { return value * 0.02f; },
+    },
+
 };
 
 void OnPresetOff() {
@@ -183,12 +225,14 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("toneMapPeakNits", 203.f);
   renodx::utils::settings::UpdateSetting("toneMapGameNits", 203.f);
   renodx::utils::settings::UpdateSetting("toneMapUINits", 203.f);
+  renodx::utils::settings::UpdateSetting("toneMapHueCorrectionType", 0.f);
   renodx::utils::settings::UpdateSetting("toneMapHueCorrectionStrength", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeExposure", 1.f);
   renodx::utils::settings::UpdateSetting("colorGradeHighlights", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeShadows", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeContrast", 50.f);
   renodx::utils::settings::UpdateSetting("colorGradeSaturation", 50.f);
+  renodx::utils::settings::UpdateSetting("ColorGradeColorSpace", 0.f);
 }
 
 }  // namespace

@@ -2,8 +2,7 @@
 // The game clamps here
 // There seems to be color correction going on here
 
-#include "./shared.h"
-#include "./tonemapper.hlsl"
+#include "./common.hlsl"
 
 Texture2D<float4> t1 : register(t1);
 

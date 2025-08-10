@@ -474,14 +474,14 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
           //.usage_include = reshade::api::resource_usage::render_target,
       });
 
-      renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
-          .old_format = reshade::api::format::r11g11b10_float,
-          .new_format = reshade::api::format::r16g16b16a16_float,
-          //.ignore_size = true,
-          .use_resource_view_cloning = true,
-          .aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
-          //.usage_include = reshade::api::resource_usage::render_target,
-      });
+      // renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      //     .old_format = reshade::api::format::r11g11b10_float,
+      //     .new_format = reshade::api::format::r16g16b16a16_float,
+      //     //.ignore_size = true,
+      //     .use_resource_view_cloning = true,
+      //     //.aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
+      //     //.usage_include = reshade::api::resource_usage::render_target,
+      // });
 
       break;
     case DLL_PROCESS_DETACH:

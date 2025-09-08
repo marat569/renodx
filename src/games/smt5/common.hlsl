@@ -10,6 +10,8 @@ static struct UELutBuilderConfig {
 } RENODX_UE_CONFIG;
 // clang-format on
 
+// Lutbuilder code
+
 // First instance of 0.272228718, 0.674081743, 0.0536895171
 void SetUngradedAP1(float3 color) {
   RENODX_UE_CONFIG.ungraded_ap1 = color;
@@ -72,7 +74,8 @@ void SetGradedBT709(inout float3 color) {
 }
 
 float3 GenerateToneMap() {
-  return renodx::draw::ToneMapPass(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709);
+  // return renodx::draw::ToneMapPass(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709);
+  float3 color = renodx::draw::ComputeUntonemappedGraded(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709);  // untonemapped graded in lutbuilder
 }
 
 float3 GenerateToneMap(float3 graded_bt709) {
@@ -92,4 +95,28 @@ float4 GenerateOutput() {
 float4 GenerateOutput(float3 graded_bt709) {
   SetGradedBT709(graded_bt709);
   return GenerateOutput();
+}
+
+// Grading code, WIP
+
+float3 GenerateSDRColor(float3 linear_color) {
+  // Generate SDR Color for grading to process
+  float3 neutral_sdr = renodx::tonemap::renodrt::NeutralSDR(abs(linear_color));
+  float3 srgb_color = renodx::color::srgb::EncodeSafe(neutral_sdr);
+
+  return srgb_color;
+}
+
+float3 ProcessGradingOutput(float3 linear_color, float3 srgb_graded_color) {
+  float3 output_color;
+  float3 linear_graded_color = renodx::color::srgb::DecodeSafe(srgb_graded_color);
+  if (RENODX_TONE_MAP_TYPE == 0) {
+    // do nothing if TM Type Vanilla
+    output_color = saturate(srgb_graded_color);
+  } else {
+    output_color = renodx::draw::ToneMapPass(linear_color, linear_graded_color);
+    output_color = renodx::draw::RenderIntermediatePass(output_color);
+  }
+
+  return output_color;
 }

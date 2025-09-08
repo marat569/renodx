@@ -432,6 +432,16 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       //     //.usage_include = reshade::api::resource_usage::render_target,
       // });
 
+      // // RGB10A2 UNORM ASPECT RATIO
+      // renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      //     .old_format = reshade::api::format::r10g10b10a2_unorm,
+      //     .new_format = reshade::api::format::r16g16b16a16_float,
+      //     .use_resource_view_cloning = true,
+      //     .aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
+      //     .usage_include = reshade::api::resource_usage::render_target,
+      // });
+
+      // 32x32x32 lutbuilder
       renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
           .old_format = reshade::api::format::r10g10b10a2_unorm,
           .new_format = reshade::api::format::r16g16b16a16_float,

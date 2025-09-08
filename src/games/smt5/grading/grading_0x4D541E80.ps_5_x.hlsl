@@ -67,12 +67,8 @@ void main(
   r1.yzw = t2.Sample(s1_s, r1.yz).xyz;
 
   float3 linear_color = renodx::draw::InvertIntermediatePass(r1.yzw);
-  float3 signs = sign(linear_color);
-  float3 neutral_sdr = renodx::tonemap::renodrt::NeutralSDR(linear_color);
-  float3 srgb_color = renodx::color::srgb::EncodeSafe(neutral_sdr);
-
-  if (RENODX_TONE_MAP_TYPE != 0) {
-    r1.yzw = srgb_color;
+  if (RENODX_TONE_MAP_TYPE != 0.f) {
+    r1.yzw = GenerateSDRColor(linear_color);
   }
 
   r2.xyz = float3(-0.5, -0.5, -0.5) + r1.yzw;
@@ -136,16 +132,8 @@ void main(
   r1.xyz = cb3[7].xyz + -r0.xyz;
   r0.xyz = cb3[12].www * r1.xyz + r0.xyz;
 
-  float3 graded_color = renodx::color::srgb::DecodeSafe(r0.rgb);
+  o0.rgb = ProcessGradingOutput(linear_color, r0.xyz);
 
-  if (RENODX_TONE_MAP_TYPE == 0.f) {
-    o0.xyz = max(float3(0, 0, 0), r0.xyz);
-    o0 = saturate(o0);
-  } else {
-    o0.rgb = renodx::draw::ToneMapPass(linear_color, graded_color);
-    o0.rgb = renodx::draw::RenderIntermediatePass(o0.rgb);
-  }
-  
   o0.w = 1;
   return;
 }

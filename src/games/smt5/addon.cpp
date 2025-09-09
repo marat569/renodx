@@ -289,18 +289,17 @@ renodx::utils::settings::Settings settings = {
         .is_visible = []() { return settings[0]->GetValue() >= 1; },
     },
 
-    // new renodx::utils::settings::Setting{
-    //     .key = "SDRInput",
-    //     .binding = &shader_injection.sdrInputDebug,
-    //     .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-    //     .default_value = 0,
-    //     .can_reset = true,
-    //     .label = "Post Process Input",
-    //     .section = "DEBUG",
-    //     .tooltip = "Configures the input color for UpgradeToneMap",
-    //     .labels = {"Saturate", "RenoDRT NeutralSDR"},
-    //     .is_visible = []() { return settings[0]->GetValue() >= 1; },
-    // },
+    new renodx::utils::settings::Setting{
+        .key = "Debug_Sdr_Tm",
+        .binding = &shader_injection.debug_sdr_tm,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 4.f,
+        .can_reset = true,
+        .label = "Debug SDR TM",
+        .section = "DEBUG",
+        .labels = {"NeutralSDR", "Exp Rolloff", "ReinhardY PW", "DICE", "NeutralSDR Y Lerp"},
+        .is_visible = []() { return current_settings_mode >= 2; },
+    },
 
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
@@ -390,9 +389,9 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       renodx::mods::swapchain::expected_constant_buffer_space = 50;
       renodx::mods::swapchain::expected_constant_buffer_index = 13;
 
-      renodx::mods::shader::force_pipeline_cloning = true;  // So the mod works with the toolkit
-      // renodx::mods::swapchain::force_borderless = false;     // needed for stability
-      // renodx::mods::swapchain::prevent_full_screen = false;  // needed for stability
+      renodx::mods::shader::force_pipeline_cloning = true;   // So the mod works with the toolkit
+      renodx::mods::swapchain::force_borderless = false;     // needed for stability
+      renodx::mods::swapchain::prevent_full_screen = false;  // needed for stability
 
       renodx::mods::swapchain::use_resource_cloning = true;
       renodx::mods::swapchain::swapchain_proxy_compatibility_mode = false;

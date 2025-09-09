@@ -1,5 +1,46 @@
 #include "./shared.h"
 
+// etc functions
+
+float3 ReinhardPiecewiseExtended(float3 x, float white_max, float x_max = 1.f, float shoulder = 0.18f) {
+  const float x_min = 0.f;
+  float exposure = renodx::tonemap::ComputeReinhardExtendableScale(white_max, x_max, x_min, shoulder, shoulder);
+  float3 extended = renodx::tonemap::ReinhardExtended(x * exposure, white_max * exposure, x_max);
+  extended = min(extended, x_max);
+
+  return lerp(x, extended, step(shoulder, x));
+}
+
+float3 ExponentialRollOffByLum(float3 color, float output_luminance_max, float highlights_shoulder_start = 0.f) {
+  const float source_luminance = renodx::color::y::from::BT709(color);
+
+  [branch]
+  if (source_luminance > 0.0f) {
+    const float compressed_luminance = renodx::tonemap::ExponentialRollOff(source_luminance, highlights_shoulder_start, output_luminance_max);
+    color *= compressed_luminance / source_luminance;
+  }
+
+  return color;
+}
+
+float3 ApplyExponentialRollOff(float3 color) {
+  const float paperWhite = RENODX_GAME_NITS / renodx::color::srgb::REFERENCE_WHITE;
+
+  const float peakWhite = RENODX_PEAK_NITS / renodx::color::srgb::REFERENCE_WHITE;
+
+  // const float highlightsShoulderStart = paperWhite;
+  const float highlightsShoulderStart = 1.f;
+
+  [branch]
+  if (RENODX_TONE_MAP_PER_CHANNEL == 0.f) {
+    return ExponentialRollOffByLum(color * paperWhite, peakWhite, highlightsShoulderStart) / paperWhite;
+  } else {
+    return renodx::tonemap::ExponentialRollOff(color * paperWhite, highlightsShoulderStart, peakWhite) / paperWhite;
+  }
+}
+
+// Lutbuilder code
+
 // clang-format off
 static struct UELutBuilderConfig {
   float3 ungraded_ap1;
@@ -9,8 +50,6 @@ static struct UELutBuilderConfig {
   float3 graded_bt709;
 } RENODX_UE_CONFIG;
 // clang-format on
-
-// Lutbuilder code
 
 // First instance of 0.272228718, 0.674081743, 0.0536895171
 void SetUngradedAP1(float3 color) {
@@ -110,11 +149,31 @@ float3 GenerateSDRColor(float3 linear_color) {
 float3 ProcessGradingOutput(float3 linear_color, float3 srgb_graded_color) {
   float3 output_color;
   float3 linear_graded_color = renodx::color::srgb::DecodeSafe(srgb_graded_color);
+  [branch]
   if (RENODX_TONE_MAP_TYPE == 0) {
     // do nothing if TM Type Vanilla
     output_color = saturate(srgb_graded_color);
-  } else {
-    output_color = renodx::draw::ToneMapPass(linear_color, linear_graded_color);
+  }
+
+  [branch]
+  if (RENODX_TONE_MAP_TYPE != 0) {
+    [branch]
+    if (RENODX_TONE_MAP_TYPE == 6.f) {
+      renodx::draw::Config draw_config = renodx::draw::BuildConfig();
+      draw_config.peak_white_nits = 10000.f;
+      draw_config.tone_map_hue_correction = 0.f;
+      draw_config.tone_map_hue_shift = 0.f;
+      draw_config.tone_map_per_channel = 0.f;
+      draw_config.tone_map_type = 3.f;
+      draw_config.swap_chain_clamp_nits = 10000;
+
+      output_color = renodx::draw::ToneMapPass(linear_color, linear_graded_color, draw_config);
+
+      output_color = ApplyExponentialRollOff(output_color);
+    } else {
+      output_color = renodx::draw::ToneMapPass(linear_color, linear_graded_color);
+    }
+
     output_color = renodx::draw::RenderIntermediatePass(output_color);
   }
 

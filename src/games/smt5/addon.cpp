@@ -302,6 +302,17 @@ renodx::utils::settings::Settings settings = {
     },
 
     new renodx::utils::settings::Setting{
+        .key = "Debug_1",
+        .binding = &shader_injection.debug_1,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .can_reset = true,
+        .label = "Debug 1",
+        .section = "DEBUG",
+        .labels = {"Off", "On"},
+        .is_visible = []() { return current_settings_mode >= 2; },
+    },
+    new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
         .label = "- Please make sure the game's brightness is set to default! \r\n \r\n - Join the RenoDX discord for help!",
         .section = "Instructions",

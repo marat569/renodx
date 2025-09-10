@@ -386,7 +386,10 @@ void main(
 
     r2.xyz = max(float3(0, 0, 0), r3.xyz);
   }
+
+  // To-Do: Properly scale SDR lut
   r2.xyz = saturate(r2.xyz);
+
   r0.xyz = float3(12.9200001, 12.9200001, 12.9200001) * r2.xyz;
   r3.xyz = cmp(r2.xyz >= float3(0.00313066994, 0.00313066994, 0.00313066994));
   r2.xyz = log2(r2.xyz);

@@ -31,6 +31,7 @@
 #define CUSTOM_COLOR_GRADE_BLOWOUT_RESTORATION   shader_injection.color_grade_blowout_restoration
 #define CUSTOM_COLOR_GRADE_HUE_SHIFT             shader_injection.color_grade_hue_shift
 #define DEBUG_SDR_TM                             shader_injection.debug_sdr_tm
+#define DEBUG_1                                  shader_injection.debug_1
 
 // Must be 32bit aligned
 // Should be 4x32
@@ -63,6 +64,7 @@ struct ShaderInjectData {
   float processing_use_scrgb;
 
   float debug_sdr_tm;
+  float debug_1;
 };
 
 #ifndef __cplusplus

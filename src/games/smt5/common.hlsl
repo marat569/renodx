@@ -112,10 +112,10 @@ void SetUngradedAP1(float3 color) {
 void SetUntonemappedAP1(inout float3 color) {
   RENODX_UE_CONFIG.untonemapped_ap1 = color;
   RENODX_UE_CONFIG.untonemapped_bt709 = renodx::color::bt709::from::AP1(RENODX_UE_CONFIG.untonemapped_ap1);
-  if (DEBUG_1 == 1.f) {
-    color = RENODX_UE_CONFIG.untonemapped_bt709 = renodx::tonemap::dice::BT709(RENODX_UE_CONFIG.untonemapped_bt709, 2.f, 0.5);
-    color = renodx::color::ap1::from::BT709(color);
-  }
+  // if (DEBUG_1 == 1.f) {
+  //   color = RENODX_UE_CONFIG.untonemapped_bt709 = renodx::tonemap::dice::BT709(RENODX_UE_CONFIG.untonemapped_bt709, 2.f, 0.5);
+  //   color = renodx::color::ap1::from::BT709(color);
+  // }
   RENODX_UE_CONFIG.tonemapped_bt709 = abs(RENODX_UE_CONFIG.untonemapped_bt709);
 }
 
@@ -197,6 +197,18 @@ float4 GenerateOutput() {
 float4 GenerateOutput(float3 graded_bt709) {
   SetGradedBT709(graded_bt709);
   return GenerateOutput();
+}
+
+float3 DisplaymapUntonemappedAP1(float3 untonemapped_ap1) {
+  float3 color;
+  if (RENODX_TONE_MAP_TYPE != 0) {
+    if (DEBUG_1 == 1.f) {
+      color = renodx::tonemap::dice::BT709(untonemapped_ap1, 2.f, 0.5);
+    }
+  } else {
+    color = color;
+  }
+  return color;
 }
 
 // Grading code, WIP

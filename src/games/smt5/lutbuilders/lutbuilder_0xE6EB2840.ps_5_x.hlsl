@@ -168,6 +168,8 @@ void main(
 
   SetUntonemappedAP1(r0.xyz);
 
+  r0.xyz = DisplaymapUntonemappedAP1(r0.xyz);
+
   // AP1 => BT709
   r1.x = dot(float3(1.70505154, -0.621790707, -0.0832583979), r0.xyz);
   r1.y = dot(float3(-0.130257145, 1.14080286, -0.0105485283), r0.xyz);

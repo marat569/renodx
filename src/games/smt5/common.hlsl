@@ -248,6 +248,21 @@ float3 DisplaymapUntonemappedAP1(float3 untonemapped_ap1) {
   return color;
 }
 
+// Output Shader Functions
+
+float3 ApplyCustomBloom(float3 render, float3 bloom_texture, float scaling = 0.5f) {
+  if (FX_BLOOM != 0.f) {
+    float mid_gray_bloomed = (0.18 + renodx::color::y::from::BT709(bloom_texture)) / 0.18;
+
+    float scene_luminance = renodx::color::y::from::BT709(render) * mid_gray_bloomed;
+    float bloom_blend = saturate(smoothstep(0.f, 0.18f, scene_luminance));
+    float3 bloom_scaled = lerp(0.f, bloom_texture, bloom_blend);
+    return bloom_texture = lerp(bloom_texture, bloom_scaled, 1.f * scaling);
+  } else {
+    return bloom_texture;
+  }
+}
+
 // Grading code, WIP
 
 float3 GenerateSDRColor(float3 linear_color) {

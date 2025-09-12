@@ -134,7 +134,9 @@ renodx::utils::settings::Settings settings = {
         .max = 100.f,
         .is_enabled = []() { return shader_injection.tone_map_type >= 1; },
         .parse = [](float value) { return value * 0.01f; },
-        .is_visible = []() { return current_settings_mode >= 2; },
+        // .is_visible = []() { return current_settings_mode >= 2; },
+        .is_visible = []() { return false; },
+
     },
     new renodx::utils::settings::Setting{
         .key = "ColorGradeSaturationCorrection",
@@ -147,7 +149,8 @@ renodx::utils::settings::Settings settings = {
         .max = 100.f,
         .is_enabled = []() { return shader_injection.tone_map_type >= 1; },
         .parse = [](float value) { return value * 0.01f; },
-        .is_visible = []() { return current_settings_mode >= 2; },
+        // .is_visible = []() { return current_settings_mode >= 2; },
+        .is_visible = []() { return false; },
     },
     new renodx::utils::settings::Setting{
         .key = "ColorGradeBlowoutRestoration",
@@ -159,7 +162,8 @@ renodx::utils::settings::Settings settings = {
         .min = 0.f,
         .max = 100.f,
         .is_enabled = []() { return shader_injection.tone_map_type >= 1; },
-        .parse = [](float value) { return value * 0.01f; },
+        // .is_visible = []() { return current_settings_mode >= 2; },
+        .is_visible = []() { return false; },
     },
     new renodx::utils::settings::Setting{
         .key = "ColorGradeHueShift",
@@ -172,7 +176,8 @@ renodx::utils::settings::Settings settings = {
         .max = 100.f,
         .is_enabled = []() { return shader_injection.tone_map_type >= 1; },
         .parse = [](float value) { return value * 0.01f; },
-        .is_visible = []() { return current_settings_mode >= 2; },
+        // .is_visible = []() { return current_settings_mode >= 2; },
+        .is_visible = []() { return false; },
     },
     new renodx::utils::settings::Setting{
         .key = "ColorGradeExposure",
@@ -293,12 +298,12 @@ renodx::utils::settings::Settings settings = {
     new renodx::utils::settings::Setting{
         .key = "Fx_Bloom",
         .binding = &shader_injection.fx_bloom,
-        .default_value = 100.f,
-        .label = "Bloom",
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 1.f,
+        .label = "Custom Bloom",
         .section = "Effects",
-        .tooltip = "Bloom strength",
-        .max = 100.f,
-        .parse = [](float value) { return value * 0.01f; },
+        .tooltip = "Doesn't apply bloom on shadows",
+        .labels = {"Off", "On"},
         .is_visible = []() { return current_settings_mode >= 1; },
     },
 
@@ -368,6 +373,7 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("ColorGradeBlowout", 0.f);
   renodx::utils::settings::UpdateSetting("ColorGradeColorSpace", 0.f);
   renodx::utils::settings::UpdateSetting("ToneMapHueShiftMethod", 4.f);
+  renodx::utils::settings::UpdateSetting("Fx_Bloom", 0.f);
   renodx::utils::settings::UpdateSetting("Fx_GrainType", 0.f);
 }
 

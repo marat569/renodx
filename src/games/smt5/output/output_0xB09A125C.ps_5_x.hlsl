@@ -1,5 +1,5 @@
-// ---- Created with 3Dmigoto v1.3.16 on Thu Sep 11 22:50:23 2025
-// Movies output
+// ---- Created with 3Dmigoto v1.3.16 on Fri Sep 12 17:54:27 2025
+// Found in in-engine cutscenes at the start of the game
 
 #include "../common.hlsl"
 
@@ -30,14 +30,11 @@ cbuffer cb0 : register(b0) {
 // 3Dmigoto declarations
 #define cmp -
 
-void main(
-    linear noperspective float2 v0: TEXCOORD0,
-    linear noperspective float2 w0: TEXCOORD3,
-    linear noperspective float3 v1: TEXCOORD1,
-    linear noperspective float4 v2: TEXCOORD2,
-    float2 v3: TEXCOORD4,
-    float4 v4: SV_POSITION0,
-    out float4 o0: SV_Target0) {
+void main(linear noperspective float2 v0: TEXCOORD0,
+          linear noperspective float2 w0: TEXCOORD3,
+          linear noperspective float3 v1: TEXCOORD1,
+          linear noperspective float4 v2: TEXCOORD2, float2 v3: TEXCOORD4,
+          float4 v4: SV_POSITION0, out float4 o0: SV_Target0) {
   float4 r0, r1, r2;
   uint4 bitmask, uiDest;
   float4 fDest;
@@ -66,7 +63,7 @@ void main(
   r2.xy = cb0[58].zw * v0.xy + cb0[59].xy;
   r2.xy = max(cb0[50].zw, r2.xy);
   r2.xy = min(cb0[51].xy, r2.xy);
-  r2.xyz = t1.Sample(s1_s, r2.xy).xyz;  // BloomTexture.Sample
+  r2.xyz = t1.Sample(s1_s, r2.xy).xyz;
   float3 bloom_texture = r2.xyz;
 
   if (RENODX_TONE_MAP_TYPE != 0.f) {
@@ -75,17 +72,12 @@ void main(
 
   r2.xyz = cb1[135].zzz * r2.xyz;
   r0.yz = r0.yz * float2(0.5, -0.5) + float2(0.5, 0.5);
-  r0.yzw = t2.Sample(s2_s, r0.yz).xyz;  // BloomDirtMaskTexture
+  r0.yzw = t2.Sample(s2_s, r0.yz).xyz;
   r0.yzw = r0.yzw * cb0[66].xyz + cb0[61].xyz;
   r0.yzw = r2.xyz * r0.yzw;
   r0.yzw = r1.xyz * cb0[60].xyz + r0.yzw;
-  r0.yzw = v1.xxx * r0.yzw;
-  r1.xy = cb0[62].xx * v1.yz;
-  r1.x = dot(r1.xy, r1.xy);
-  r1.x = 1 + r1.x;
-  r1.x = rcp(r1.x);
-  r1.x = r1.x * r1.x;
-  r0.yzw = r0.yzw * r1.xxx + float3(0.00266771927, 0.00266771927, 0.00266771927);
+  r0.yzw =
+      r0.yzw * v1.xxx + float3(0.00266771927, 0.00266771927, 0.00266771927);
   r0.yzw = log2(r0.yzw);
   r0.yzw = saturate(r0.yzw * float3(0.0714285746, 0.0714285746, 0.0714285746) + float3(0.610726953, 0.610726953, 0.610726953));
   r0.yzw = r0.yzw * float3(0.96875, 0.96875, 0.96875) + float3(0.015625, 0.015625, 0.015625);
@@ -113,7 +105,8 @@ void main(
     r1.xyz = exp2(r1.xyz);
     r1.xyz = float3(10000, 10000, 10000) * r1.xyz;
     r1.xyz = r1.xyz / cb0[64].www;
-    r1.xyz = max(float3(6.10351999e-05, 6.10351999e-05, 6.10351999e-05), r1.xyz);
+    r1.xyz =
+        max(float3(6.10351999e-05, 6.10351999e-05, 6.10351999e-05), r1.xyz);
     r2.xyz = float3(12.9200001, 12.9200001, 12.9200001) * r1.xyz;
     r1.xyz = max(float3(0.00313066994, 0.00313066994, 0.00313066994), r1.xyz);
     r1.xyz = log2(r1.xyz);

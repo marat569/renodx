@@ -47,14 +47,16 @@ void main(
   r0.x = 493013 * r0.x;
   r0.x = frac(r0.x);
   r0.yzw = t0.Sample(s0_s, v0.xy).xyz;  // Game Render
+  float3 render = r0.yzw;
   r0.yzw = cb1[135].zzz * r0.yzw;
   r1.xy = cb0[58].zw * v0.xy + cb0[59].xy;
   r1.xy = max(cb0[50].zw, r1.xy);
   r1.xy = min(cb0[51].xy, r1.xy);
   r1.xyz = t1.Sample(s1_s, r1.xy).xyz;  // BloomTexture.Sample
+  float3 bloom_texture = r1.xyz;
 
   if (RENODX_TONE_MAP_TYPE != 0.f) {
-    r1.xyz *= FX_BLOOM;  // Custom Bloom Strength
+    r1.xyz = ApplyCustomBloom(render, bloom_texture);
   }
 
   r1.xyz = cb1[135].zzz * r1.xyz;
@@ -63,7 +65,7 @@ void main(
   r2.xyz = t2.Sample(s2_s, r2.xy).xyz;  // BloomDirtMaskTexture
   r2.xyz = r2.xyz * cb0[66].xyz + cb0[61].xyz;
   r1.xyz = r2.xyz * r1.xyz;
-  r0.yzw = r0.yzw * cb0[60].xyz + r1.xyz;
+  r0.yzw = r0.yzw * cb0[60].xyz + r1.xyz;  // combined render + bloom/bloomdirt
   r0.yzw = r0.yzw * v1.xxx + float3(0.00266771927, 0.00266771927, 0.00266771927);
   r0.yzw = log2(r0.yzw);
   r0.yzw = saturate(r0.yzw * float3(0.0714285746, 0.0714285746, 0.0714285746) + float3(0.610726953, 0.610726953, 0.610726953));

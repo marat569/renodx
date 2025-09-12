@@ -2,6 +2,46 @@
 
 // etc functions
 
+// Mass Effect Displaymapper
+// Linear color in -> Linear color out
+// Params in PQ -- Use the helper function to call the displaymapper (MassEffectDisplayMap())
+// NormalizedLinearValue = linear color
+// SoftShoulderStart2084 = shoulder start in nits (PQ values) -- everything under this is ignored
+// MaxBrightnessOfDisplay2084 = peak nits
+// MaxBrightnessOfScene2084 = Y of Linear Color (Encoded in PQ) -- Basically whiteclip
+
+float3 MapHDRSceneToDisplayCapabilities(float3 NormalizedLinearValue, float SoftShoulderStart2084, float MaxBrightnessOfDisplay2084, float MaxBrightnessOfScene2084) {
+  float3 bt2020_color = renodx::color::bt2020::from::BT709(NormalizedLinearValue);
+  float3 ST2084 = renodx::color::pq::EncodeSafe(bt2020_color);
+
+  // Use a simple Bezier curve to create a soft shoulder
+  const float P0 = SoftShoulderStart2084;           // First point is: soft shoulder start nits
+  const float P1 = MaxBrightnessOfDisplay2084;      // Middle point is: TV max nits
+  const float P2 = MaxBrightnessOfDisplay2084;      // Last point is also TV max nits, since values higher than TV max nits are essentially clipped to TV max brightness
+  const float SceneMax = MaxBrightnessOfScene2084;  // To determine range, use max brightness of HDR scene
+
+  float3 T = saturate((ST2084 - P0) / (SceneMax - P0));  // Amount to lerp wrt current value
+  float3 B0 = (P0 * (1 - T)) + (P1 * T);                 // Lerp between p0 and p1
+  float3 B1 = (P1 * (1 - T)) + (P2 * T);                 // Lerp between p1 and p2
+  float3 MappedValue = (B0 * (1 - T)) + (B1 * T);        // Final lerp for Bezier
+
+  MappedValue = min(MappedValue, ST2084);  // If HDR scene max luminance is too close to shoulders, then it could end up producing a higher value than the ST.2084 curve,
+  // which will saturate colors, i.e. the opposite of what HDR display mapping should do, therefore always take minimum of the two
+
+  // Return a linear color
+  return renodx::color::bt709::from::BT2020(renodx::color::pq::DecodeSafe((ST2084 > SoftShoulderStart2084) ? MappedValue : ST2084));
+}
+
+float3 MassEffectDisplayMap(float3 linear_color, float shoulder_start, float peak_nits, float scene_peak) {
+  // Helper function for Mass Effect's display mapper to encode params to PQ
+
+  shoulder_start = renodx::color::pq::EncodeSafe(float3(shoulder_start, shoulder_start, shoulder_start)).x;
+  peak_nits = renodx::color::pq::EncodeSafe(float3(peak_nits, peak_nits, peak_nits)).x;
+  scene_peak = renodx::color::pq::EncodeSafe(float3(scene_peak, scene_peak, scene_peak)).x;
+
+  return MapHDRSceneToDisplayCapabilities(linear_color, shoulder_start, peak_nits, scene_peak);
+}
+
 /// Applies Exponential Roll-Off tonemapping using the maximum channel.
 /// Used to fit the color into a 0–output_max range for SDR LUT compatibility.
 float3 ToneMapMaxCLL(float3 color, float rolloff_start = 0.375f, float output_max = 1.f) {
@@ -112,10 +152,6 @@ void SetUngradedAP1(float3 color) {
 void SetUntonemappedAP1(inout float3 color) {
   RENODX_UE_CONFIG.untonemapped_ap1 = color;
   RENODX_UE_CONFIG.untonemapped_bt709 = renodx::color::bt709::from::AP1(RENODX_UE_CONFIG.untonemapped_ap1);
-  // if (DEBUG_1 == 1.f) {
-  //   color = RENODX_UE_CONFIG.untonemapped_bt709 = renodx::tonemap::dice::BT709(RENODX_UE_CONFIG.untonemapped_bt709, 2.f, 0.5);
-  //   color = renodx::color::ap1::from::BT709(color);
-  // }
   RENODX_UE_CONFIG.tonemapped_bt709 = abs(RENODX_UE_CONFIG.untonemapped_bt709);
 }
 
@@ -124,7 +160,7 @@ void SetTonemappedBT709(inout float color_red, inout float color_green, inout fl
   float3 color = float3(color_red, color_green, color_blue);
   RENODX_UE_CONFIG.tonemapped_bt709 = color;
 
-  if (DEBUG_1 == 0.f) {
+  if (DISPLAYMAP_UNTONEMAPPED_AP1 == 0.f) {
     if (CUSTOM_COLOR_GRADE_BLOWOUT_RESTORATION != 0.f
         || CUSTOM_COLOR_GRADE_HUE_CORRECTION != 0.f
         || CUSTOM_COLOR_GRADE_SATURATION_CORRECTION != 0.f
@@ -199,11 +235,12 @@ float4 GenerateOutput(float3 graded_bt709) {
   return GenerateOutput();
 }
 
+// Display map Untonemapped AP1 in the lutbuilder to restore SDR Hues
 float3 DisplaymapUntonemappedAP1(float3 untonemapped_ap1) {
   float3 color;
   if (RENODX_TONE_MAP_TYPE != 0) {
-    if (DEBUG_1 == 1.f) {
-      color = renodx::tonemap::dice::BT709(untonemapped_ap1, 2.f, 0.5);
+    if (DISPLAYMAP_UNTONEMAPPED_AP1 == 1.f) {
+      color = renodx::tonemap::dice::BT709(untonemapped_ap1, 1.f, 0.5);
     }
   } else {
     color = color;
@@ -223,7 +260,7 @@ float3 GenerateSDRColor(float3 linear_color) {
   return srgb_color;
 }
 
-float3 ProcessGradingOutput(float3 linear_color, float3 srgb_graded_color) {
+float3 ProcessGradingOutput(float3 linear_color, float3 srgb_graded_color, float2 uv) {
   float3 output_color;
   float3 linear_graded_color = renodx::color::srgb::DecodeSafe(srgb_graded_color);
   [branch]
@@ -251,6 +288,17 @@ float3 ProcessGradingOutput(float3 linear_color, float3 srgb_graded_color) {
       // output_color = renodx::draw::ToneMapPass(linear_color, linear_graded_color);
 
       output_color = renodx::draw::ToneMapPass(linear_color, linear_graded_color, sdr_tm_test(linear_color));
+    }
+
+    if (FX_CUSTOM_GRAIN_TYPE != 0.f) {
+      float3 grained = renodx::effects::ApplyFilmGrain(
+          output_color,
+          uv,
+          CUSTOM_RANDOM,
+          FX_CUSTOM_GRAIN_STRENGTH * 0.03f,
+          1.f);
+
+      output_color = grained;
     }
 
     output_color = renodx::draw::RenderIntermediatePass(output_color);

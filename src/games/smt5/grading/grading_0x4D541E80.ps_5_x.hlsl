@@ -66,6 +66,7 @@ void main(
   r0.zw = cb1[132].zw * r0.zw;
   r1.yzw = t2.Sample(s1_s, r1.yz).xyz;
 
+  float2 uv = r1.yz;
   float3 linear_color = renodx::draw::InvertIntermediatePass(r1.yzw);
   if (RENODX_TONE_MAP_TYPE != 0.f) {
     r1.yzw = GenerateSDRColor(linear_color);
@@ -132,7 +133,7 @@ void main(
   r1.xyz = cb3[7].xyz + -r0.xyz;
   r0.xyz = cb3[12].www * r1.xyz + r0.xyz;
 
-  o0.rgb = ProcessGradingOutput(linear_color, r0.xyz);
+  o0.rgb = ProcessGradingOutput(linear_color, r0.xyz, uv);
 
   o0.w = 1;
   return;

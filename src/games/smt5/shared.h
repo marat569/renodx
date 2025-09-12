@@ -18,6 +18,7 @@
 #define RENODX_TONE_MAP_BLOWOUT                  shader_injection.color_grade_blowout
 #define RENODX_TONE_MAP_FLARE                    shader_injection.color_grade_flare
 #define RENODX_RENO_DRT_WHITE_CLIP               shader_injection.reno_drt_white_clip
+#define RENODX_TONE_MAP_PER_CHANNEL              0.f
 #define RENODX_TONE_MAP_PASS_AUTOCORRECTION      1.f
 #define RENODX_TONE_MAP_WORKING_COLOR_SPACE      color::convert::COLOR_SPACE_BT2020
 #define RENODX_TONE_MAP_CLAMP_COLOR_SPACE        -1.f
@@ -30,8 +31,12 @@
 #define CUSTOM_COLOR_GRADE_SATURATION_CORRECTION shader_injection.color_grade_saturation_correction
 #define CUSTOM_COLOR_GRADE_BLOWOUT_RESTORATION   shader_injection.color_grade_blowout_restoration
 #define CUSTOM_COLOR_GRADE_HUE_SHIFT             shader_injection.color_grade_hue_shift
-#define DEBUG_SDR_TM                             shader_injection.debug_sdr_tm
-#define DEBUG_1                                  shader_injection.debug_1
+#define FX_BLOOM                                 shader_injection.fx_bloom
+#define FX_CUSTOM_GRAIN_TYPE                     shader_injection.fx_custom_grain_type
+#define FX_CUSTOM_GRAIN_STRENGTH                 shader_injection.fx_custom_grain_strength
+#define CUSTOM_RANDOM                            shader_injection.custom_random
+#define DEBUG_SDR_TM                             4.f
+#define DISPLAYMAP_UNTONEMAPPED_AP1              1.f
 
 // Must be 32bit aligned
 // Should be 4x32
@@ -63,8 +68,10 @@ struct ShaderInjectData {
 
   float processing_use_scrgb;
 
-  float debug_sdr_tm;
-  float debug_1;
+  float fx_bloom;
+  float fx_custom_grain_type;
+  float fx_custom_grain_strength;
+  float custom_random;
 };
 
 #ifndef __cplusplus

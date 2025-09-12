@@ -14,6 +14,7 @@
 
 #include "../../mods/shader.hpp"
 #include "../../mods/swapchain.hpp"
+#include "../../utils/random.hpp"
 #include "../../utils/settings.hpp"
 #include "./shared.h"
 
@@ -290,30 +291,37 @@ renodx::utils::settings::Settings settings = {
     },
 
     new renodx::utils::settings::Setting{
-        .key = "Debug_Sdr_Tm",
-        .binding = &shader_injection.debug_sdr_tm,
-        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 4.f,
-        .can_reset = true,
-        .label = "Debug SDR TM",
-        .section = "DEBUG",
-        .labels = {"NeutralSDR", "Exp Rolloff", "ReinhardY PW", "DICE", "NeutralSDR Y Lerp"},
-        .is_visible = []() { return current_settings_mode >= 2; },
+        .key = "Fx_Bloom",
+        .binding = &shader_injection.fx_bloom,
+        .default_value = 100.f,
+        .label = "Bloom",
+        .section = "Effects",
+        .tooltip = "Bloom strength",
+        .max = 100.f,
+        .parse = [](float value) { return value * 0.01f; },
+        .is_visible = []() { return current_settings_mode >= 1; },
     },
 
     new renodx::utils::settings::Setting{
-        .key = "Debug_1",
-        .binding = &shader_injection.debug_1,
+        .key = "Fx_GrainType",
+        .binding = &shader_injection.fx_custom_grain_type,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 1.f,
-        .can_reset = true,
-        .label = "DICE Highlight restoration",
-        .section = "DEBUG",
-        .tooltip = "Uses DICE instead of Reno's Per-Channel Correction to restore highlights.",
-
-        .labels = {"Off", "On"},
-        .is_visible = []() { return current_settings_mode >= 2; },
+        .default_value = 0.f,
+        .label = "Grain Type",
+        .section = "Effects",
+        .labels = {"Vanilla", "Perceptual"},
+        .is_visible = []() { return current_settings_mode >= 1; },
     },
+
+    new renodx::utils::settings::Setting{
+        .key = "Fx_GrainStrength",
+        .binding = &shader_injection.fx_custom_grain_strength,
+        .default_value = 25.f,
+        .label = "Grain Strength",
+        .section = "Effects",
+        .parse = [](float value) { return value * 0.01f; },
+    },
+
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
         .label = "- Please make sure the game's brightness is set to default! \r\n \r\n - Join the RenoDX discord for help!",
@@ -358,10 +366,9 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("ColorGradeContrast", 50.f);
   renodx::utils::settings::UpdateSetting("ColorGradeSaturation", 50.f);
   renodx::utils::settings::UpdateSetting("ColorGradeBlowout", 0.f);
-  renodx::utils::settings::UpdateSetting("ColorGradeLUTStrength", 100.f);
-  renodx::utils::settings::UpdateSetting("ColorGradeLUTScaling", 0.f);
   renodx::utils::settings::UpdateSetting("ColorGradeColorSpace", 0.f);
   renodx::utils::settings::UpdateSetting("ToneMapHueShiftMethod", 4.f);
+  renodx::utils::settings::UpdateSetting("Fx_GrainType", 0.f);
 }
 
 // bool fired_on_init_swapchain = false;
@@ -462,12 +469,15 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
           .resource_tag = 1.f,
       });
 
+      renodx::utils::random::binds.push_back(&shader_injection.custom_random);
+
       break;
     case DLL_PROCESS_DETACH:
       reshade::unregister_addon(h_module);
       break;
   }
 
+  renodx::utils::random::Use(fdw_reason);
   renodx::utils::settings::Use(fdw_reason, &settings, &OnPresetOff);
   renodx::mods::swapchain::Use(fdw_reason, &shader_injection);
   renodx::mods::shader::Use(fdw_reason, custom_shaders, &shader_injection);

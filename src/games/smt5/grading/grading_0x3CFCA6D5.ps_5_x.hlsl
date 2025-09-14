@@ -61,9 +61,11 @@ void main(
   r1.xz = cb0[38].zw * r1.xy;
   r3.xy = r1.xz * cb1[130].xy + cb1[129].xy;
   r1.xz = r1.xz * cb0[5].xy + cb0[4].xy;
-  r1.xzw = t2.Sample(s1_s, r1.xz).xyz;
 
   float2 uv = r1.xz;
+
+  r1.xzw = t2.Sample(s1_s, r1.xz).xyz;
+
   float3 linear_color = renodx::draw::InvertIntermediatePass(r1.xzw);
   if (RENODX_TONE_MAP_TYPE != 0.f) {
     r1.xzw = GenerateSDRColor(linear_color);

@@ -1,13 +1,23 @@
 #include "./shared.h"
 
-float4 ProcessColor(float3 untonemapped, float3 graded) {
+float4 ProcessColor(float3 untonemapped, float3 graded, float2 uv) {
   float4 color;
   float midGray = 0.18f;
 
   if (RENODX_TONE_MAP_TYPE != 0.f) {
     // untonemapped.rgb *= midGray / 0.18f; // Adjust midgray, RenoDRT except 0.18f
 
-    color.rgb = renodx::draw::ToneMapPass(untonemapped, graded);
+    float untonemapped_y = renodx::color::y::from::BT709(untonemapped);
+    float3 neutral_sdr_y = lerp(untonemapped, renodx::tonemap::renodrt::NeutralSDR(untonemapped), saturate(untonemapped_y));
+
+    // Scuffed SDR/HDR debug
+    // if (uv.x > 0.5f) {  // right = HDR
+    //   color.rgb = renodx::draw::ToneMapPass(untonemapped, graded, neutral_sdr_y);
+    // } else {  // left = SDR
+    //   color.rgb = saturate(graded);
+    // }
+
+    color.rgb = renodx::draw::ToneMapPass(untonemapped, graded, neutral_sdr_y);
     color.rgb = renodx::color::correct::GammaSafe(color.rgb);
     color.rgb *= RENODX_GAME_NITS / RENODX_UI_NITS;
     color.rgb = renodx::color::correct::GammaSafe(color.rgb, true);

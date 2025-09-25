@@ -268,7 +268,7 @@ renodx::utils::settings::Settings settings = {
     new renodx::utils::settings::Setting{
         .key = "ColorGradeClip",
         .binding = &shader_injection.reno_drt_white_clip,
-        .default_value = 4.f,
+        .default_value = 10.f,
         .label = "White Clip",
         .section = "Color Grading",
         .tooltip = "Clip point for white in nits",

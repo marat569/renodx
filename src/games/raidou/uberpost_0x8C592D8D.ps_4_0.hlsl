@@ -28,6 +28,7 @@ void main(
   uint4 bitmask, uiDest;
   float4 fDest;
 
+  float2 uv = v1.xy;
   r0.xyzw = t0.SampleBias(s0_s, v1.xy, cb0[5].x).xyzw;
   r1.xyzw = t1.SampleBias(s0_s, v1.xy, cb0[5].x).xyzw;
   r0.w = cmp(0 < cb0[135].x);
@@ -125,7 +126,7 @@ void main(
 
   o0.w = 1;
 
-  o0 = ProcessColor(untonemapped, graded);
+  o0 = ProcessColor(untonemapped, graded, uv);
 
   return;
 }

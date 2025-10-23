@@ -21,6 +21,10 @@
 #define RENODX_RENO_DRT_NEUTRAL_SDR_TONE_MAP_METHOD 0.f
 #endif
 
+#ifndef RENODX_RENO_DRT_NEUTRAL_SDR_WHITE_CLIP
+#define RENODX_RENO_DRT_NEUTRAL_SDR_WHITE_CLIP 100.f
+#endif
+
 namespace renodx {
 namespace tonemap {
 namespace renodrt {
@@ -163,9 +167,7 @@ float3 BT709(float3 bt709, Config current_config) {
   float3 color_output;
 
   [branch]
-  if (current_config.tone_map_method == config::tone_map_method::NONE) {
-    // noop
-  } else if (current_config.tone_map_method == config::tone_map_method::DANIELE) {
+  if (current_config.tone_map_method == config::tone_map_method::DANIELE) {
     renodx::tonemap::daniele::Config daniele_config = renodx::tonemap::daniele::config::Create();
 
     daniele_config.n_r = reference_white;               // reference nits
@@ -192,7 +194,7 @@ float3 BT709(float3 bt709, Config current_config) {
       color_output = input_color * (y_original > 0 ? (y_new / y_original) : 0);
     }
   } else {
-    float white_clip = max(current_config.white_clip, peak);
+    float white_clip = current_config.white_clip;
     [branch]
     if (current_config.highlights != 1.f) {
       white_clip = renodx::color::grade::Highlights(white_clip, current_config.highlights, current_config.mid_gray_value);
@@ -227,10 +229,12 @@ float3 BT709(float3 bt709, Config current_config) {
         color_output *= current_config.mid_gray_value;
       }
       [branch]
-      if (current_config.tone_map_method == config::tone_map_method::REINHARD) {
+      if (current_config.tone_map_method == config::tone_map_method::NONE) {
+        // noop
+      } else if (current_config.tone_map_method == config::tone_map_method::REINHARD) {
         color_output = ReinhardScalableExtended(
             color_output,
-            white_clip,
+            max(white_clip, peak),
             peak,
             0,
             current_config.mid_gray_value,
@@ -240,7 +244,7 @@ float3 BT709(float3 bt709, Config current_config) {
         color_output = HermiteSplinePerChannelRolloff(
             color_output,
             peak,
-            white_clip);
+            clamp(white_clip, peak, 500.f));
       }
 
       color_output *= signs;
@@ -251,10 +255,12 @@ float3 BT709(float3 bt709, Config current_config) {
       }
       float y_new = y;
       [branch]
-      if (current_config.tone_map_method == config::tone_map_method::REINHARD) {
+      if (current_config.tone_map_method == config::tone_map_method::NONE) {
+        // noop
+      } else if (current_config.tone_map_method == config::tone_map_method::REINHARD) {
         y_new = ReinhardScalableExtended(
             y,
-            white_clip,
+            max(white_clip, peak),
             peak,
             0,
             current_config.mid_gray_value,
@@ -264,7 +270,7 @@ float3 BT709(float3 bt709, Config current_config) {
         y_new = HermiteSplineLuminanceRolloff(
             y,
             peak,
-            white_clip);
+            clamp(white_clip, peak, 500.f));
       }
 
       color_output = input_color * (y_original > 0 ? (y_new / y_original) : 0);
@@ -447,6 +453,7 @@ float3 NeutralSDR(float3 bt709, bool per_channel = false) {
   renodrt_config.tone_map_method = RENODX_RENO_DRT_NEUTRAL_SDR_TONE_MAP_METHOD;
   renodrt_config.clamp_peak = RENODX_RENO_DRT_NEUTRAL_SDR_CLAMP_PEAK;
   renodrt_config.clamp_color_space = RENODX_RENO_DRT_NEUTRAL_SDR_CLAMP_COLOR_SPACE;
+  renodrt_config.white_clip = RENODX_RENO_DRT_NEUTRAL_SDR_WHITE_CLIP;
 
   return BT709(bt709, renodrt_config);
 }

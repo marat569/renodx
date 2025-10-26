@@ -52,7 +52,7 @@ float4 shader_injection[8] : register(c50);
 
 #define RENODX_PEAK_WHITE_NITS                 shader_injection[0][0]
 #define RENODX_DIFFUSE_WHITE_NITS              shader_injection[0][1]
-#define RENODX_GRAPHICS_WHITE_NITS             203.f
+#define RENODX_GRAPHICS_WHITE_NITS             shader_injection[0][2]
 #define RENODX_COLOR_GRADE_STRENGTH            shader_injection[0][3]
 #define RENODX_TONE_MAP_TYPE                   shader_injection[1][0]
 #define RENODX_TONE_MAP_EXPOSURE               shader_injection[1][1]
@@ -76,8 +76,8 @@ float4 shader_injection[8] : register(c50);
 #define CUSTOM_4                               shader_injection[5][3]
 #define CUSTOM_5                               shader_injection[6][0]
 #define CUSTOM_6                               shader_injection[6][1]
-#define CUSTOM_VIGNETTE                        shader_injection[6][2]
-#define CUSTOM_BLOOM                           shader_injection[6][3]
+#define CUSTOM_7                               shader_injection[6][2]
+#define CUSTOM_8                               shader_injection[6][3]
 #define CUSTOM_FILM_GRAIN_STRENGTH             shader_injection[7][0]
 #define CUSTOM_RANDOM                          shader_injection[7][1]
 
@@ -98,7 +98,7 @@ cbuffer shader_injection : register(b13) {
 
 #define RENODX_PEAK_WHITE_NITS                 shader_injection.peak_white_nits
 #define RENODX_DIFFUSE_WHITE_NITS              shader_injection.diffuse_white_nits
-#define RENODX_GRAPHICS_WHITE_NITS             203.f
+#define RENODX_GRAPHICS_WHITE_NITS             shader_injection.graphics_white_nits
 #define RENODX_COLOR_GRADE_STRENGTH            shader_injection.color_grade_strength
 #define RENODX_TONE_MAP_TYPE                   shader_injection.tone_map_type
 #define RENODX_GAMMA_CORRECTION                shader_injection.gamma_correction
@@ -122,8 +122,8 @@ cbuffer shader_injection : register(b13) {
 #define CUSTOM_4                               shader_injection.custom_4
 #define CUSTOM_5                               shader_injection.custom_5
 #define CUSTOM_6                               shader_injection.custom_6
-#define CUSTOM_VIGNETTE                        shader_injection.custom_vignette
-#define CUSTOM_BLOOM                           shader_injection.custom_bloom
+#define CUSTOM_7                               shader_injection.custom_7
+#define CUSTOM_8                               shader_injection.custom_8
 #define CUSTOM_FILM_GRAIN_STRENGTH             shader_injection.custom_film_grain
 #define CUSTOM_RANDOM                          shader_injection.custom_random
 #define RENODX_RENO_DRT_TONE_MAP_METHOD        renodx::tonemap::renodrt::config::tone_map_method::HERMITE_SPLINE

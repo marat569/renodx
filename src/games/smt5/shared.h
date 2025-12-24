@@ -36,6 +36,7 @@
 #define FX_CUSTOM_GRAIN_STRENGTH                 shader_injection.fx_custom_grain_strength
 #define FX_LUT_SCALING                           shader_injection.lut_scaling
 #define CUSTOM_RANDOM                            shader_injection.custom_random
+#define GRADING_EXIST                            shader_injection.grading_exist
 #define DEBUG_SDR_TM                             4.f
 #define DISPLAYMAP_UNTONEMAPPED_AP1              1.f
 
@@ -74,6 +75,8 @@ struct ShaderInjectData {
   float fx_custom_grain_type;
   float fx_custom_grain_strength;
   float custom_random;
+
+  float grading_exist;
 };
 
 #ifndef __cplusplus

@@ -222,10 +222,18 @@ float3 GenerateToneMap(float3 graded_bt709) {
 }
 
 float4 GenerateOutput() {
-  // float3 color = renodx::draw::ToneMapPass(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709);
-  // float3 color = renodx::draw::ComputeUntonemappedGraded(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709);  // untonemapped graded in lutbuilder
+  float3 color;
 
-  float3 color = renodx::draw::ComputeUntonemappedGraded(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709, sdr_tm_test(RENODX_UE_CONFIG.untonemapped_bt709));  // untonemapped graded in lutbuilder
+  [branch]
+  if (GRADING_EXIST == 1) {
+    color = renodx::draw::ComputeUntonemappedGraded(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709, sdr_tm_test(RENODX_UE_CONFIG.untonemapped_bt709));  // untonemapped graded in lutbuilder
+  } else {
+    // Only for one area in the non-venge compaign
+    renodx::draw::Config draw_config = renodx::draw::BuildConfig();
+    draw_config.tone_map_type = 3.f;
+
+    color = renodx::draw::ToneMapPass(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709, sdr_tm_test(RENODX_UE_CONFIG.untonemapped_bt709), draw_config);
+  }
 
   color = renodx::draw::RenderIntermediatePass(color);
   color *= 1.f / 1.05f;

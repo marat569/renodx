@@ -20,14 +20,64 @@
 
 namespace {
 
+ShaderInjectData shader_injection;
+
+// Part of the check to see if grading exist
+bool check(reshade::api::command_list* cmd_list) {
+  shader_injection.grading_exist = 1.f;
+  return true;
+}
+
+// Part if lutbuilder exists, set grading back to 0
+bool lutbuilder(reshade::api::command_list* cmd_list) {
+  shader_injection.grading_exist = 0.f;
+  return true;
+}
+
+// on DRAW
+#define CustomDirectXShadersCallbackOnDraw(__crc32__, __callback__)                   \
+  {                                                                                   \
+    __crc32__, {                                                                      \
+      .crc32 = __crc32__,                                                             \
+      .on_draw = __callback__,                                                        \
+      .code_by_device = {                                                             \
+          {reshade::api::device_api::d3d11, RENODX_JOIN_MACRO(__##__crc32__, _dx11)}, \
+          {reshade::api::device_api::d3d12, RENODX_JOIN_MACRO(__##__crc32__, _dx12)}, \
+      },                                                                              \
+    }                                                                                 \
+  }
+
+// on DRAWN
+#define CustomDirectXShadersCallbackOnDrawn(__crc32__, __callback__)                  \
+  {                                                                                   \
+    __crc32__, {                                                                      \
+      .crc32 = __crc32__,                                                             \
+      .on_drawn = __callback__,                                                       \
+      .code_by_device = {                                                             \
+          {reshade::api::device_api::d3d11, RENODX_JOIN_MACRO(__##__crc32__, _dx11)}, \
+          {reshade::api::device_api::d3d12, RENODX_JOIN_MACRO(__##__crc32__, _dx12)}, \
+      },                                                                              \
+    }                                                                                 \
+  }
+
 renodx::mods::shader::CustomShaders custom_shaders = {
+
+    // Grading shaders
+    CustomDirectXShadersCallbackOnDrawn(0x3CFCA6D5, &check),
+    CustomDirectXShadersCallbackOnDrawn(0x4D541E80, &check),
+    CustomDirectXShadersCallbackOnDrawn(0x84676A8E, &check),
+    CustomDirectXShadersCallbackOnDrawn(0xD0AE0A40, &check),
+    CustomDirectXShadersCallbackOnDrawn(0xD2F5778E, &check),
+    CustomDirectXShadersCallbackOnDrawn(0xD019CA1A, &check),
+
+    // Lutbuilders
+    CustomDirectXShadersCallbackOnDrawn(0xC1BCC6B5, &lutbuilder),
+    CustomDirectXShadersCallbackOnDrawn(0xE6EB2840, &lutbuilder),
 
     __ALL_CUSTOM_SHADERS,
 };
 
 float current_settings_mode = 0;
-
-ShaderInjectData shader_injection;
 
 const std::string build_date = __DATE__;
 const std::string build_time = __TIME__;

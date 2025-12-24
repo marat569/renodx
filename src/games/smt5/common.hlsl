@@ -35,9 +35,11 @@ float3 MapHDRSceneToDisplayCapabilities(float3 NormalizedLinearValue, float Soft
 float3 MassEffectDisplayMap(float3 linear_color, float shoulder_start, float peak_nits, float scene_peak) {
   // Helper function for Mass Effect's display mapper to encode params to PQ
 
-  shoulder_start = renodx::color::pq::EncodeSafe(float3(shoulder_start, shoulder_start, shoulder_start)).x;
-  peak_nits = renodx::color::pq::EncodeSafe(float3(peak_nits, peak_nits, peak_nits)).x;
-  scene_peak = renodx::color::pq::EncodeSafe(float3(scene_peak, scene_peak, scene_peak)).x;
+  float3 params2pq = renodx::color::pq::EncodeSafe(float3(shoulder_start, peak_nits, scene_peak));
+
+  shoulder_start = params2pq.x;
+  peak_nits = params2pq.y;
+  scene_peak = params2pq.z;
 
   return MapHDRSceneToDisplayCapabilities(linear_color, shoulder_start, peak_nits, scene_peak);
 }
@@ -305,15 +307,18 @@ float3 ProcessGradingOutput(float3 linear_color, float3 srgb_graded_color, float
       output_color = renodx::draw::ToneMapPass(linear_color, linear_graded_color, sdr_tm_test(linear_color));
     }
 
+    [branch]
     if (FX_CUSTOM_GRAIN_TYPE != 0.f) {
-      float3 grained = renodx::effects::ApplyFilmGrain(
-          output_color,
-          uv,
-          CUSTOM_RANDOM,
-          FX_CUSTOM_GRAIN_STRENGTH * 0.03f,
-          1.f);
+      if (FX_CUSTOM_GRAIN_TYPE == 1.f) {
+        float3 grained = renodx::effects::ApplyFilmGrain(
+            output_color,
+            uv,
+            CUSTOM_RANDOM,
+            FX_CUSTOM_GRAIN_STRENGTH * 0.03f,
+            1.f);
 
-      output_color = grained;
+        output_color = grained;
+      }
     }
 
     output_color = renodx::draw::RenderIntermediatePass(output_color);

@@ -8,7 +8,7 @@
 #define RENODX_UI_NITS                           shader_injection.tone_map_ui_nits
 #define RENODX_GAMMA_CORRECTION                  shader_injection.tone_map_gamma_correction
 #define RENODX_TONE_MAP_HUE_PROCESSOR            shader_injection.tone_map_hue_processor
-#define RENODX_COLOR_GRADE_STRENGTH              shader_injection.color_grade_strength
+#define RENODX_COLOR_GRADE_STRENGTH              1.f  // shader_injection.color_grade_strength
 #define RENODX_TONE_MAP_EXPOSURE                 shader_injection.color_grade_exposure
 #define RENODX_TONE_MAP_HIGHLIGHTS               shader_injection.color_grade_highlights
 #define RENODX_TONE_MAP_SHADOWS                  shader_injection.color_grade_shadows
@@ -34,6 +34,7 @@
 #define FX_BLOOM                                 shader_injection.fx_bloom
 #define FX_CUSTOM_GRAIN_TYPE                     shader_injection.fx_custom_grain_type
 #define FX_CUSTOM_GRAIN_STRENGTH                 shader_injection.fx_custom_grain_strength
+#define FX_LUT_SCALING                           shader_injection.lut_scaling
 #define CUSTOM_RANDOM                            shader_injection.custom_random
 #define DEBUG_SDR_TM                             4.f
 #define DISPLAYMAP_UNTONEMAPPED_AP1              1.f
@@ -68,6 +69,7 @@ struct ShaderInjectData {
 
   float processing_use_scrgb;
 
+  float lut_scaling;
   float fx_bloom;
   float fx_custom_grain_type;
   float fx_custom_grain_strength;

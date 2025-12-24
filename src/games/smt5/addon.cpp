@@ -111,18 +111,18 @@ renodx::utils::settings::Settings settings = {
         .is_enabled = []() { return shader_injection.tone_map_type >= 1; },
         .is_visible = []() { return current_settings_mode >= 2; },
     },
-    new renodx::utils::settings::Setting{
-        .key = "ColorGradeStrength",
-        .binding = &shader_injection.color_grade_strength,
-        .default_value = 100.f,
-        .label = "Strength",
-        .section = "Scene Grading",
-        .tooltip = "Scene grading as applied by the game",
-        .max = 100.f,
-        .is_enabled = []() { return shader_injection.tone_map_type >= 1; },
-        .parse = [](float value) { return value * 0.01f; },
-        .is_visible = []() { return current_settings_mode >= 2; },
-    },
+    // new renodx::utils::settings::Setting{
+    //     .key = "ColorGradeStrength",
+    //     .binding = &shader_injection.color_grade_strength,
+    //     .default_value = 100.f,
+    //     .label = "Strength",
+    //     .section = "Scene Grading",
+    //     .tooltip = "Scene grading as applied by the game",
+    //     .max = 100.f,
+    //     .is_enabled = []() { return shader_injection.tone_map_type >= 1; },
+    //     .parse = [](float value) { return value * 0.01f; },
+    //     .is_visible = []() { return current_settings_mode >= 2; },
+    // },
     new renodx::utils::settings::Setting{
         .key = "ColorGradeHueCorrection",
         .binding = &shader_injection.color_grade_hue_correction,
@@ -328,6 +328,20 @@ renodx::utils::settings::Settings settings = {
     },
 
     new renodx::utils::settings::Setting{
+        .key = "Lut_Scaling",
+        .binding = &shader_injection.lut_scaling,
+        .default_value = 25.f,
+        .label = "Lut Scaling",
+        .section = "Effects",
+        .tooltip = "Scales the color grade LUT to full range",
+        .min = 0.f,
+        .max = 100.f,
+        .is_enabled = []() { return shader_injection.tone_map_type >= 1; },
+        .parse = [](float value) { return value * 0.01f; },
+        .is_visible = []() { return current_settings_mode >= 2; },
+    },
+
+    new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
         .label = "- Please make sure the game's brightness is set to default! \r\n \r\n - Join the RenoDX discord for help!",
         .section = "Instructions",
@@ -375,6 +389,7 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("ToneMapHueShiftMethod", 4.f);
   renodx::utils::settings::UpdateSetting("Fx_Bloom", 0.f);
   renodx::utils::settings::UpdateSetting("Fx_GrainType", 0.f);
+  renodx::utils::settings::UpdateSetting("Lut_Scaling", 0.f);
 }
 
 // bool fired_on_init_swapchain = false;

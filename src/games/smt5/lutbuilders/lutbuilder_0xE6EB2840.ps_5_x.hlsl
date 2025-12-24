@@ -389,37 +389,53 @@ void main(
     r2.xyz = max(float3(0, 0, 0), r3.xyz);
   }
 
-  // To-Do: Properly scale SDR lut
-  r2.xyz = saturate(r2.xyz);
+  float3 lut_input_color = r2.rgb;
 
-  r0.xyz = float3(12.9200001, 12.9200001, 12.9200001) * r2.xyz;
-  r3.xyz = cmp(r2.xyz >= float3(0.00313066994, 0.00313066994, 0.00313066994));
-  r2.xyz = log2(r2.xyz);
-  r2.xyz = float3(0.416666657, 0.416666657, 0.416666657) * r2.xyz;
-  r2.xyz = exp2(r2.xyz);
-  r2.xyz = r2.xyz * float3(1.05499995, 1.05499995, 1.05499995) + float3(-0.0549999997, -0.0549999997, -0.0549999997);
-  r0.xyz = r3.xyz ? r2.xyz : r0.xyz;
-  r2.yzw = r0.xyz * float3(0.9375, 0.9375, 0.9375) + float3(0.03125, 0.03125, 0.03125);
-  r0.w = r2.w * 16 + -0.5;
-  r1.w = floor(r0.w);
-  r0.w = -r1.w + r0.w;
-  r1.w = r2.y + r1.w;
-  r2.x = 0.0625 * r1.w;
-  r3.xyz = t0.Sample(s0_s, r2.xz).xyz;
-  r2.xy = float2(0.0625, 0) + r2.xz;
-  r2.xyz = t0.Sample(s0_s, r2.xy).xyz;
-  r2.xyz = r2.xyz + -r3.xyz;
-  r2.xyz = r0.www * r2.xyz + r3.xyz;
-  r2.xyz = cb0[39].xxx * r2.xyz;
-  r0.xyz = cb0[38].xxx * r0.xyz + r2.xyz;
-  r0.xyz = max(float3(6.10351999e-05, 6.10351999e-05, 6.10351999e-05), r0.xyz);
-  r2.xyz = cmp(float3(0.0404499993, 0.0404499993, 0.0404499993) < r0.xyz);
-  r3.xyz = r0.xyz * float3(0.947867274, 0.947867274, 0.947867274) + float3(0.0521326996, 0.0521326996, 0.0521326996);
-  r3.xyz = log2(r3.xyz);
-  r3.xyz = float3(2.4000001, 2.4000001, 2.4000001) * r3.xyz;
-  r3.xyz = exp2(r3.xyz);
-  r0.xyz = float3(0.0773993805, 0.0773993805, 0.0773993805) * r0.xyz;
-  r0.xyz = r2.xyz ? r3.xyz : r0.xyz;
+  if (RENODX_TONE_MAP_TYPE != 0.f && FX_LUT_SCALING != 0.f) {
+    renodx::lut::Config lut_config = renodx::lut::config::Create();
+    lut_config.lut_sampler = s0_s;
+    lut_config.strength = 1.f;
+    lut_config.scaling = FX_LUT_SCALING;
+    lut_config.type_input = renodx::lut::config::type::SRGB;
+    lut_config.type_output = renodx::lut::config::type::SRGB;
+    lut_config.size = 16;
+
+    float3 post_lut_color = renodx::lut::Sample(t0, lut_config, lut_input_color);
+    r0.rgb = post_lut_color;
+
+  } else {
+    r2.xyz = saturate(r2.xyz);
+
+    r0.xyz = float3(12.9200001, 12.9200001, 12.9200001) * r2.xyz;
+    r3.xyz = cmp(r2.xyz >= float3(0.00313066994, 0.00313066994, 0.00313066994));
+    r2.xyz = log2(r2.xyz);
+    r2.xyz = float3(0.416666657, 0.416666657, 0.416666657) * r2.xyz;
+    r2.xyz = exp2(r2.xyz);
+    r2.xyz = r2.xyz * float3(1.05499995, 1.05499995, 1.05499995) + float3(-0.0549999997, -0.0549999997, -0.0549999997);
+    r0.xyz = r3.xyz ? r2.xyz : r0.xyz;
+    r2.yzw = r0.xyz * float3(0.9375, 0.9375, 0.9375) + float3(0.03125, 0.03125, 0.03125);
+    r0.w = r2.w * 16 + -0.5;
+    r1.w = floor(r0.w);
+    r0.w = -r1.w + r0.w;
+    r1.w = r2.y + r1.w;
+    r2.x = 0.0625 * r1.w;
+    r3.xyz = t0.Sample(s0_s, r2.xz).xyz;
+    r2.xy = float2(0.0625, 0) + r2.xz;
+    r2.xyz = t0.Sample(s0_s, r2.xy).xyz;
+    r2.xyz = r2.xyz + -r3.xyz;
+    r2.xyz = r0.www * r2.xyz + r3.xyz;
+    r2.xyz = cb0[39].xxx * r2.xyz;
+    r0.xyz = cb0[38].xxx * r0.xyz + r2.xyz;
+    r0.xyz = max(float3(6.10351999e-05, 6.10351999e-05, 6.10351999e-05), r0.xyz);
+    r2.xyz = cmp(float3(0.0404499993, 0.0404499993, 0.0404499993) < r0.xyz);
+    r3.xyz = r0.xyz * float3(0.947867274, 0.947867274, 0.947867274) + float3(0.0521326996, 0.0521326996, 0.0521326996);
+    r3.xyz = log2(r3.xyz);
+    r3.xyz = float3(2.4000001, 2.4000001, 2.4000001) * r3.xyz;
+    r3.xyz = exp2(r3.xyz);
+    r0.xyz = float3(0.0773993805, 0.0773993805, 0.0773993805) * r0.xyz;
+    r0.xyz = r2.xyz ? r3.xyz : r0.xyz;
+  }
+
   r2.xyz = r0.xyz * r0.xyz;
   r0.xyz = cb0[26].yyy * r0.xyz;
   r0.xyz = cb0[26].xxx * r2.xyz + r0.xyz;

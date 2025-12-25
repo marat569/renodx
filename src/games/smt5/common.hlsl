@@ -44,49 +44,9 @@ float3 MassEffectDisplayMap(float3 linear_color, float shoulder_start, float pea
   return MapHDRSceneToDisplayCapabilities(linear_color, shoulder_start, peak_nits, scene_peak);
 }
 
-/// Applies Exponential Roll-Off tonemapping using the maximum channel.
-/// Used to fit the color into a 0–output_max range for SDR LUT compatibility.
-float3 ToneMapMaxCLL(float3 color, float rolloff_start = 0.375f, float output_max = 1.f) {
-  color = min(color, 100.f);
-  float peak = max(color.r, max(color.g, color.b));
-  peak = min(peak, 100.f);
-  float log_peak = log2(peak);
-
-  // Apply exponential shoulder in log space
-  float log_mapped = renodx::tonemap::ExponentialRollOff(log_peak, log2(rolloff_start), log2(output_max));
-  float scale = exp2(log_mapped - log_peak);  // How much to compress all channels
-
-  return min(output_max, color * scale);
-}
-
-float ReinhardPiecewiseExtended(float x, float white_max, float x_max = 1.f, float shoulder = 0.18f) {
-  const float x_min = 0.f;
-  float exposure = renodx::tonemap::ComputeReinhardExtendableScale(white_max, x_max, x_min, shoulder, shoulder);
-  float extended = renodx::tonemap::ReinhardExtended(x * exposure, white_max * exposure, x_max);
-  extended = min(extended, x_max);
-
-  return lerp(x, extended, step(shoulder, x));
-}
-
-float3 ReinhardPiecewiseExtended(float3 x, float white_max, float x_max = 1.f, float shoulder = 0.18f) {
-  const float x_min = 0.f;
-  float exposure = renodx::tonemap::ComputeReinhardExtendableScale(white_max, x_max, x_min, shoulder, shoulder);
-  float3 extended = renodx::tonemap::ReinhardExtended(x * exposure, white_max * exposure, x_max);
-  extended = min(extended, x_max);
-
-  return lerp(x, extended, step(shoulder, x));
-}
-
-float3 ReinhardPiecewiseExtendedByLum(float3 color, float white_max, float float_max = 1.f, float shoulder = 0.18f) {
-  const float source_luminance = renodx::color::y::from::BT709(color);
-
-  [branch]
-  if (source_luminance > 0.0f) {
-    const float compressed_luminance = ReinhardPiecewiseExtended(source_luminance, white_max, float_max, shoulder);
-    color *= compressed_luminance / source_luminance;
-  }
-
-  return color;
+float3 NeutralSDRYLerp(float3 color) {
+  float color_y = renodx::color::y::from::BT709(color);
+  return color = lerp(color, renodx::tonemap::renodrt::NeutralSDR(color), saturate(color_y));
 }
 
 float3 ExponentialRollOffByLum(float3 color, float output_luminance_max, float highlights_shoulder_start = 0.f) {
@@ -101,38 +61,46 @@ float3 ExponentialRollOffByLum(float3 color, float output_luminance_max, float h
   return color;
 }
 
-float3 ApplyExponentialRollOff(float3 color) {
-  const float paperWhite = RENODX_GAME_NITS / renodx::color::srgb::REFERENCE_WHITE;
+float3 ApplyExponentialRollOff(float3 color, float per_ch = RENODX_TONE_MAP_PER_CHANNEL) {
+  float peak_white = RENODX_PEAK_NITS;
+  float paper_white = RENODX_GAME_NITS;
+  float peak_ratio = peak_white / paper_white;
 
-  const float peakWhite = RENODX_PEAK_NITS / renodx::color::srgb::REFERENCE_WHITE;
+  // Adjust peak based on gamma correction
+  [branch]
+  if (RENODX_GAMMA_CORRECTION != 0) {
+    peak_ratio = renodx::color::correct::Gamma(
+        peak_ratio,
+        RENODX_GAMMA_CORRECTION > 0.f,
+        abs(RENODX_GAMMA_CORRECTION) == 1.f ? 2.2f : 2.4f);
+  }
 
-  // const float highlightsShoulderStart = paperWhite;
-  const float highlightsShoulderStart = 1.f;
+  // 1.f shoulder so game nits doesnt get compressed
+  float highlight_shoulder_start = 1.f;
 
   [branch]
-  if (RENODX_TONE_MAP_PER_CHANNEL == 0.f) {
-    return ExponentialRollOffByLum(color * paperWhite, peakWhite, highlightsShoulderStart) / paperWhite;
+  if (per_ch == 0.f) {
+    return ExponentialRollOffByLum(color, peak_ratio, highlight_shoulder_start);
   } else {
-    return renodx::tonemap::ExponentialRollOff(color * paperWhite, highlightsShoulderStart, peakWhite) / paperWhite;
+    return renodx::tonemap::ExponentialRollOff(color, peak_ratio, highlight_shoulder_start);
   }
 }
 
-float3 sdr_tm_test(float3 color) {
-  if (DEBUG_SDR_TM == 0.f) {
-    color = renodx::tonemap::renodrt::NeutralSDR(color);
-  } else if (DEBUG_SDR_TM == 1.f) {
-    color = renodx::tonemap::ExponentialRollOff(color, 0.5f, 1.f);
-  } else if (DEBUG_SDR_TM == 2.f) {
-    color = ReinhardPiecewiseExtendedByLum(color, 100.f, 100.f, 0.5f);
-  } else if (DEBUG_SDR_TM == 3.f) {
-    color = renodx::tonemap::dice::BT709(color, 1.f, 0.5f);
-  } else if (DEBUG_SDR_TM == 4.f) {
-    float color_y = renodx::color::y::from::BT709(color);
-    color = lerp(color, renodx::tonemap::renodrt::NeutralSDR(color), saturate(color_y));
-  }
+// float3 TonemapPassDisplayMap(float3 untonemapped, float3 tonemapped) {
+//   // draw::tonemappass
+//   renodx::draw::Config draw_config = renodx::draw::BuildConfig();
+//   // draw_config.peak_white_nits = 10000.f;
+//   draw_config.tone_map_hue_correction = 0.f;
+//   draw_config.tone_map_hue_shift = 0.f;
+//   draw_config.tone_map_per_channel = 0.f;
+//   draw_config.tone_map_type = 3.f;
+//   draw_config.swap_chain_clamp_nits = 10000.f;
 
-  return color;
-}
+//   float3 renodrt = renodx::draw::ToneMapPass(untonemapped, tonemapped, NeutralSDRYLerp(untonemapped), draw_config);
+
+//   // Displaymap to peak per channel via exp rolloff
+//   return ApplyExponentialRollOff(renodrt, 1.f);
+// }
 
 // Lutbuilder code
 
@@ -213,7 +181,7 @@ float3 GenerateToneMap() {
   // return renodx::draw::ToneMapPass(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709);
   // float3 color = renodx::draw::ComputeUntonemappedGraded(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709,);  // untonemapped graded in lutbuilder
 
-  float3 color = renodx::draw::ComputeUntonemappedGraded(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709, sdr_tm_test(RENODX_UE_CONFIG.untonemapped_bt709));  // untonemapped graded in lutbuilder
+  float3 color = renodx::draw::ComputeUntonemappedGraded(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709, NeutralSDRYLerp(RENODX_UE_CONFIG.untonemapped_bt709));  // untonemapped graded in lutbuilder
 }
 
 float3 GenerateToneMap(float3 graded_bt709) {
@@ -226,17 +194,18 @@ float4 GenerateOutput() {
 
   [branch]
   if (GRADING_EXIST == 1) {
-    color = renodx::draw::ComputeUntonemappedGraded(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709, sdr_tm_test(RENODX_UE_CONFIG.untonemapped_bt709));  // untonemapped graded in lutbuilder
+    color = renodx::draw::ComputeUntonemappedGraded(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709, NeutralSDRYLerp(RENODX_UE_CONFIG.untonemapped_bt709));  // untonemapped graded in lutbuilder
   } else {
     // Only for one area in the non-venge compaign
     renodx::draw::Config draw_config = renodx::draw::BuildConfig();
     draw_config.tone_map_type = 3.f;
 
-    color = renodx::draw::ToneMapPass(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709, sdr_tm_test(RENODX_UE_CONFIG.untonemapped_bt709), draw_config);
+    color = renodx::draw::ToneMapPass(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709, NeutralSDRYLerp(RENODX_UE_CONFIG.untonemapped_bt709), draw_config);
   }
 
   color = renodx::draw::RenderIntermediatePass(color);
   color *= 1.f / 1.05f;
+
   return float4(color, 1.f);
 }
 
@@ -278,7 +247,7 @@ float3 ApplyCustomBloom(float3 render, float3 bloom_texture, float scaling = 0.5
 float3 GenerateSDRColor(float3 linear_color) {
   // Generate SDR Color for grading to process
   // float3 neutral_sdr = renodx::tonemap::renodrt::NeutralSDR(abs(linear_color));
-  float3 neutral_sdr = sdr_tm_test(abs(linear_color));
+  float3 neutral_sdr = NeutralSDRYLerp(abs(linear_color));
 
   float3 srgb_color = renodx::color::srgb::EncodeSafe(neutral_sdr);
 
@@ -296,24 +265,7 @@ float3 ProcessGradingOutput(float3 linear_color, float3 srgb_graded_color, float
 
   [branch]
   if (RENODX_TONE_MAP_TYPE != 0) {
-    [branch]
-    if (RENODX_TONE_MAP_TYPE == 6.f) {
-      renodx::draw::Config draw_config = renodx::draw::BuildConfig();
-      draw_config.peak_white_nits = 10000.f;
-      draw_config.tone_map_hue_correction = 0.f;
-      draw_config.tone_map_hue_shift = 0.f;
-      draw_config.tone_map_per_channel = 0.f;
-      draw_config.tone_map_type = 3.f;
-      draw_config.swap_chain_clamp_nits = 10000.f;
-
-      output_color = renodx::draw::ToneMapPass(linear_color, linear_graded_color, sdr_tm_test(linear_color), draw_config);
-
-      output_color = ApplyExponentialRollOff(output_color);
-    } else {
-      // output_color = renodx::draw::ToneMapPass(linear_color, linear_graded_color);
-
-      output_color = renodx::draw::ToneMapPass(linear_color, linear_graded_color, sdr_tm_test(linear_color));
-    }
+    output_color = renodx::draw::ToneMapPass(linear_color, linear_graded_color, NeutralSDRYLerp(linear_color));
 
     [branch]
     if (FX_CUSTOM_GRAIN_TYPE != 0.f) {

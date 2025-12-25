@@ -103,7 +103,7 @@ renodx::utils::settings::Settings settings = {
         .label = "Tone Mapper",
         .section = "Tone Mapping",
         .tooltip = "Sets the tone mapper type",
-        .labels = {"Vanilla", "RenoDRT", "RenoDRT + Rolloff"},
+        .labels = {"Vanilla", "RenoDRT"},
         .parse = [](float value) { return value * 3.f; },
         .is_visible = []() { return current_settings_mode >= 1; },
     },

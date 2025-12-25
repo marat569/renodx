@@ -37,7 +37,6 @@
 #define FX_LUT_SCALING                           shader_injection.lut_scaling
 #define CUSTOM_RANDOM                            shader_injection.custom_random
 #define GRADING_EXIST                            shader_injection.grading_exist
-#define DEBUG_SDR_TM                             4.f
 #define DISPLAYMAP_UNTONEMAPPED_AP1              1.f
 
 // Must be 32bit aligned

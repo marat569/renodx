@@ -22,6 +22,8 @@ namespace {
 
 ShaderInjectData shader_injection;
 
+float draw_ui = 1.f;
+
 // Part of the check to see if grading exist
 bool check(reshade::api::command_list* cmd_list) {
   shader_injection.grading_exist = 1.f;
@@ -61,6 +63,38 @@ bool lutbuilder(reshade::api::command_list* cmd_list) {
   }
 
 renodx::mods::shader::CustomShaders custom_shaders = {
+
+    // Hide UI Vertex Shaders
+
+    {
+        0x6DF08FD2,
+        {
+            .crc32 = 0x6DF08FD2,
+            .on_draw = [](auto) {
+              return draw_ui;
+            },
+        },
+    },
+
+    {
+        0x927B8EE0,
+        {
+            .crc32 = 0x927B8EE0,
+            .on_draw = [](auto) {
+              return draw_ui;
+            },
+        },
+    },
+
+    {
+        0x8BE61B4F,
+        {
+            .crc32 = 0x8BE61B4F,
+            .on_draw = [](auto) {
+              return draw_ui;
+            },
+        },
+    },
 
     // Grading shaders
     CustomDirectXShadersCallbackOnDrawn(0x3CFCA6D5, &check),
@@ -375,6 +409,7 @@ renodx::utils::settings::Settings settings = {
         .label = "Grain Strength",
         .section = "Effects",
         .parse = [](float value) { return value * 0.01f; },
+        .is_visible = []() { return current_settings_mode >= 1; },
     },
 
     new renodx::utils::settings::Setting{
@@ -389,6 +424,18 @@ renodx::utils::settings::Settings settings = {
         .is_enabled = []() { return shader_injection.tone_map_type >= 1; },
         .parse = [](float value) { return value * 0.01f; },
         .is_visible = []() { return current_settings_mode >= 2; },
+    },
+
+    new renodx::utils::settings::Setting{
+        .key = "Draw_UI",
+        .binding = &draw_ui,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 1.f,
+        .label = "Draw UI",
+        .section = "Effects",
+        .tooltip = "Allows hiding the UI, useful for screenshots.",
+        .labels = {"Off", "On"},
+        .is_visible = []() { return current_settings_mode >= 1; },
     },
 
     new renodx::utils::settings::Setting{
@@ -440,6 +487,7 @@ void OnPresetOff() {
   renodx::utils::settings::UpdateSetting("Fx_Bloom", 0.f);
   renodx::utils::settings::UpdateSetting("Fx_GrainType", 0.f);
   renodx::utils::settings::UpdateSetting("Lut_Scaling", 0.f);
+  renodx::utils::settings::UpdateSetting("Draw_UI", 1.f);
 }
 
 // bool fired_on_init_swapchain = false;

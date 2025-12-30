@@ -15,6 +15,7 @@
 #define RENODX_TONE_MAP_HIGHLIGHT_SATURATION   shader_injection.colorGradeHighlightSaturation
 #define RENODX_TONE_MAP_BLOWOUT                shader_injection.colorGradeBlowout
 #define RENODX_TONE_MAP_FLARE                  shader_injection.colorGradeFlare
+#define RENODX_RENO_DRT_WHITE_CLIP             65.f
 #define RENODX_TONE_MAP_WORKING_COLOR_SPACE    color::convert::COLOR_SPACE_AP1
 #define RENODX_TONE_MAP_PER_CHANNEL            shader_injection.toneMapPerChannel
 #define RENODX_TONE_MAP_HUE_PROCESSOR          shader_injection.toneMapHueProcessor

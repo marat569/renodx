@@ -149,12 +149,20 @@ void main(
   o0.rgb = RENODX_TONE_MAP_TYPE ? r0.rgb : max(0, r0.rgb);  // We need the above max(0 -- or else death screens artifact
   o0.w = 1;
 
-  if (RENODX_TONE_MAP_TYPE) {
-    float3 processed_sdr = signs * renodx::color::srgb::Decode(o0.rgb);
+  // if (RENODX_TONE_MAP_TYPE) {
+  //   float3 processed_sdr = signs * renodx::color::srgb::Decode(o0.rgb);
 
-    float3 upgraded_hdr = renodx::tonemap::UpgradeToneMap(linear_color, signs * sdr_color, processed_sdr, 1.f);
+  //   float3 upgraded_hdr = renodx::tonemap::UpgradeToneMap(linear_color, signs * sdr_color, processed_sdr, 1.f);
 
-    o0.rgb = renodx::draw::RenderIntermediatePass(upgraded_hdr);
+  //   o0.rgb = renodx::draw::RenderIntermediatePass(upgraded_hdr);
+  // }
+
+  if (RENODX_TONE_MAP_TYPE != 0.f) {
+    float3 processed_sdr = renodx::color::srgb::Decode(o0.rgb);
+    if (POSTFX_EXIST != 0.f) {
+      o0.rgb = renodx::draw::ComputeUntonemappedGraded(linear_color, processed_sdr, sdr_color);
+    }
+    o0.rgb = renodx::draw::RenderIntermediatePass(o0.rgb);
   }
 
   return;

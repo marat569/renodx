@@ -132,7 +132,7 @@ void main(
   r1.xyz = cb2[1].xyz + -r0.xyz;
   r0.xyz = cb2[2].xxx * r1.xyz + r0.xyz;
   // o0.xyz = max(float3(0, 0, 0), r0.xyz);
-  o0.rgb = RENODX_TONE_MAP_TYPE ? r0.rgb : max(0, r0.rgb);
+  o0.rgb = RENODX_TONE_MAP_TYPE ? r0.rgb : saturate(r0.rgb);
   o0.w = 1.f;
 
   // if (RENODX_TONE_MAP_TYPE != 0.f) {
@@ -146,12 +146,21 @@ void main(
 
   // o0.rgb = ScaleLuminance(o0.rgb);
 
-  if (RENODX_TONE_MAP_TYPE) {
-    float3 processed_sdr = signs * renodx::color::srgb::Decode(o0.rgb);
+  // if (RENODX_TONE_MAP_TYPE) {
+  //   float3 processed_sdr = signs * renodx::color::srgb::Decode(o0.rgb);
 
-    float3 upgraded_hdr = renodx::tonemap::UpgradeToneMap(linear_color, signs * sdr_color, processed_sdr, 1.f);
+  //   float3 upgraded_hdr = renodx::tonemap::UpgradeToneMap(linear_color, signs * sdr_color, processed_sdr, 1.f);
 
-    o0.rgb = renodx::draw::RenderIntermediatePass(upgraded_hdr);
+  //   o0.rgb = renodx::draw::RenderIntermediatePass(upgraded_hdr);
+  // }
+
+  if (RENODX_TONE_MAP_TYPE != 0.f) {
+    float3 processed_sdr = renodx::color::srgb::Decode(o0.rgb);
+    if (POSTFX_EXIST != 0.f) {
+      // o0.rgb = renodx::draw::ToneMapPass(linear_color, processed_sdr, sdr_color);
+      o0.rgb = renodx::draw::ToneMapPass(linear_color, processed_sdr, sdr_color);
+    }
+    o0.rgb = renodx::draw::RenderIntermediatePass(o0.rgb);
   }
 
   return;

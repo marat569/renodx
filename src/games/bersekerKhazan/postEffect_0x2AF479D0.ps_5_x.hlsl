@@ -47,16 +47,10 @@ void main(
   r2.xyzw = max(cb0[6].xyxy, r2.xyzw);
   r2.xyzw = min(cb0[6].zwzw, r2.xyzw);
   r0.yzw = t0.Sample(s0_s, r2.xy).xyz;
-  // r0.yzw = RestoreLuminance(r0.yzw);
   r0.yzw = ToGamma(r0.yzw);
   float3 untonemapped = r0.yzw;  // no AA?
 
-  // float3 sdrInput = DEBUG_SDR_INPUT ? saturate(renodx::tonemap::renodrt::NeutralSDR(max(0, untonemapped))) : saturate(untonemapped);
-  // float3 sdr = RENODX_TONE_MAP_TYPE ? sdrInput : saturate(untonemapped);
-  // r0.yzw = sdr;
-
   r2.xyz = t0.Sample(s0_s, r2.zw).xyz;  // Blurs the game?
-  // r2.xyz = RestoreLuminance(r2.xyz);
   r2.xyz = ToGamma(r2.xyz);
 
   r0.yz = float2(0.212599993, 0.715200007) * r0.yz;
@@ -70,12 +64,10 @@ void main(
   float3 input_color = r1.xyz;
   float3 linear_color = renodx::draw::InvertIntermediatePass(input_color);
   float3 signs = sign(linear_color);
-  float3 sdr_color = saturate(renodx::tonemap::renodrt::NeutralSDR(abs(linear_color)));
+  // float3 sdr_color = saturate(renodx::tonemap::renodrt::NeutralSDR((linear_color)));
+  float3 sdr_color = saturate(NeutralSDRYOrMaxCH((linear_color)));
   float3 gamma_color = renodx::color::srgb::Encode(sdr_color);
-  // r1.xyz = gamma_color;
   r1.xyz = RENODX_TONE_MAP_TYPE ? gamma_color : r1.xyz;  // Fix vanilla
-
-  // r1.xyz = RestoreLuminance(r1.xyz);
 
   r3.xyzw = max(cb0[6].xyxy, r3.xyzw);
   r3.xyzw = min(cb0[6].zwzw, r3.xyzw);

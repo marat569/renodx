@@ -24,12 +24,32 @@ float4 LutBuilderToneMap(float3 untonemapped_ap1, float3 tonemapped_bt709) {
 
 // Lutbuilder end
 
+float ComputeReinhardSmoothClampScale(float3 untonemapped, float rolloff_start = 0.375f, float output_max = 1.f, float white_clip = 100.f) {
+  float peak = renodx::math::Max(untonemapped.r, untonemapped.g, untonemapped.b);
+  float mapped_peak = renodx::tonemap::ReinhardPiecewiseExtended(peak, white_clip, output_max, rolloff_start);
+  float scale = renodx::math::DivideSafe(mapped_peak, peak, 1.f);
+
+  return scale;
+}
+
+float3 NeutralSDRYOrMaxCH(float3 linear_color) {
+  [branch]
+  if (DEBUG_MAX_CH == 0.f) {  // Y TM
+    return saturate(renodx::tonemap::renodrt::NeutralSDR((linear_color)));
+  } else {  // Max CH
+    return saturate(linear_color * ComputeReinhardSmoothClampScale(linear_color, 0.5f));
+  }
+
+  return linear_color;
+}
+
 float3 ToGamma(float3 color) {
   [branch]
   if (RENODX_TONE_MAP_TYPE) {
     float3 input_color = color;
     float3 linear_color = renodx::draw::InvertIntermediatePass(input_color);
-    float3 sdr_color = saturate(renodx::tonemap::renodrt::NeutralSDR(abs(linear_color)));
+    // float3 sdr_color = saturate(renodx::tonemap::renodrt::NeutralSDR((linear_color)));
+    float3 sdr_color = NeutralSDRYOrMaxCH(linear_color);
     float3 gamma_color = renodx::color::srgb::Encode(sdr_color);
 
     color = gamma_color;

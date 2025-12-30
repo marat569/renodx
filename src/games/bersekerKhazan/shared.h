@@ -36,6 +36,8 @@
 #define RENODX_RENO_DRT_NEUTRAL_SDR_CLAMP_COLOR_SPACE -1.f
 #define RENODX_RENO_DRT_NEUTRAL_SDR_WHITE_CLIP        20.f
 
+#define DEBUG_MAX_CH 1.f
+
 #define LUTBUILDER_EXIST shader_injection.lutbuilder_exist
 #define GODRAY_EXIST     shader_injection.godray_exist
 #define POSTFX_EXIST     shader_injection.postfx_exist

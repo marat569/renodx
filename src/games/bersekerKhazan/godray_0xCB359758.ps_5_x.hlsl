@@ -48,7 +48,8 @@ void main(
   float3 input_color = r0.yzw;
   float3 linear_color = renodx::draw::InvertIntermediatePass(input_color);
   float3 signs = sign(linear_color);
-  float3 sdr_color = saturate(renodx::tonemap::renodrt::NeutralSDR(abs(linear_color)));
+  // float3 sdr_color = saturate(renodx::tonemap::renodrt::NeutralSDR((linear_color)));
+  float3 sdr_color = saturate(NeutralSDRYOrMaxCH((linear_color)));
   float3 gamma_color = renodx::color::srgb::Encode(sdr_color);
   // r0.yzw = gamma_color;
   r0.yzw = RENODX_TONE_MAP_TYPE ? gamma_color : r0.yzw;  // Fix vanilla

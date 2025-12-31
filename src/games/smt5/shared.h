@@ -38,6 +38,7 @@
 #define CUSTOM_RANDOM                            shader_injection.custom_random
 #define GRADING_EXIST                            shader_injection.grading_exist
 #define DISPLAYMAP_UNTONEMAPPED_AP1              1.f
+#define DEBUG_MAX_CH                             1.f
 
 // Must be 32bit aligned
 // Should be 4x32

@@ -44,9 +44,23 @@ float3 MassEffectDisplayMap(float3 linear_color, float shoulder_start, float pea
   return MapHDRSceneToDisplayCapabilities(linear_color, shoulder_start, peak_nits, scene_peak);
 }
 
+float ComputeReinhardSmoothClampScale(float3 untonemapped, float rolloff_start = 0.375f, float output_max = 1.f, float white_clip = 100.f) {
+  float peak = renodx::math::Max(untonemapped.r, untonemapped.g, untonemapped.b);
+  float mapped_peak = renodx::tonemap::ReinhardPiecewiseExtended(peak, white_clip, output_max, rolloff_start);
+  float scale = renodx::math::DivideSafe(mapped_peak, peak, 1.f);
+
+  return scale;
+}
+
+// Re-using function for Max-CH SDR TM because I'm too lazy to replace the param in all the other functions
 float3 NeutralSDRYLerp(float3 color) {
-  float color_y = renodx::color::y::from::BT709(color);
-  return color = lerp(color, renodx::tonemap::renodrt::NeutralSDR(color), saturate(color_y));
+  [branch]
+  if (DEBUG_MAX_CH == 0.f) {  // Y TM
+    float color_y = renodx::color::y::from::BT709(color);
+    return color = lerp(color, renodx::tonemap::renodrt::NeutralSDR(color), saturate(color_y));
+  } else {  // Max CH TM
+    return saturate(color * ComputeReinhardSmoothClampScale(color, 0.5f));
+  }
 }
 
 float3 ExponentialRollOffByLum(float3 color, float output_luminance_max, float highlights_shoulder_start = 0.f) {

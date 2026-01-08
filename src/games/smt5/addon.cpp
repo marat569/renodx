@@ -439,6 +439,19 @@ renodx::utils::settings::Settings settings = {
     },
 
     new renodx::utils::settings::Setting{
+        .key = "Debug_YUV",
+        .binding = &shader_injection.debug_yuv,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 1.f,
+        .label = "Debug YUV",
+        .section = "Effects",
+        .tooltip = "Allows hiding the UI, useful for screenshots.",
+        .labels = {"Vanilla BT601 Limited", "Bt709 Full", "BT709 from YCbCrLimited", "BT601 Limited Reno"},
+        //.is_visible = []() { return current_settings_mode >= 1; },
+        .is_visible = []() { return false; },
+    },
+
+    new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
         .label = "- Please make sure the game's brightness is set to default! \r\n \r\n - Join the RenoDX discord for help!",
         .section = "Instructions",

@@ -100,121 +100,21 @@ float3 ApplyExponentialRollOff(float3 color, float per_ch = RENODX_TONE_MAP_PER_
   }
 }
 
-// float3 TonemapPassDisplayMap(float3 untonemapped, float3 tonemapped) {
-//   // draw::tonemappass
-//   renodx::draw::Config draw_config = renodx::draw::BuildConfig();
-//   // draw_config.peak_white_nits = 10000.f;
-//   draw_config.tone_map_hue_correction = 0.f;
-//   draw_config.tone_map_hue_shift = 0.f;
-//   draw_config.tone_map_per_channel = 0.f;
-//   draw_config.tone_map_type = 3.f;
-//   draw_config.swap_chain_clamp_nits = 10000.f;
-
-//   float3 renodrt = renodx::draw::ToneMapPass(untonemapped, tonemapped, NeutralSDRYLerp(untonemapped), draw_config);
-
-//   // Displaymap to peak per channel via exp rolloff
-//   return ApplyExponentialRollOff(renodrt, 1.f);
-// }
-
 // Lutbuilder code
 
-// clang-format off
-static struct UELutBuilderConfig {
-  float3 ungraded_ap1;
-  float3 untonemapped_ap1;
-  float3 untonemapped_bt709;
-  float3 tonemapped_bt709;
-  float3 graded_bt709;
-} RENODX_UE_CONFIG;
-// clang-format on
-
-// First instance of 0.272228718, 0.674081743, 0.0536895171
-void SetUngradedAP1(float3 color) {
-  RENODX_UE_CONFIG.ungraded_ap1 = color;
-}
-
-void SetUntonemappedAP1(inout float3 color) {
-  RENODX_UE_CONFIG.untonemapped_ap1 = color;
-  RENODX_UE_CONFIG.untonemapped_bt709 = renodx::color::bt709::from::AP1(RENODX_UE_CONFIG.untonemapped_ap1);
-  RENODX_UE_CONFIG.tonemapped_bt709 = abs(RENODX_UE_CONFIG.untonemapped_bt709);
-}
-
-void SetTonemappedBT709(inout float color_red, inout float color_green, inout float color_blue) {
-  if (RENODX_TONE_MAP_TYPE == 0.f) return;
-  float3 color = float3(color_red, color_green, color_blue);
-  RENODX_UE_CONFIG.tonemapped_bt709 = color;
-
-  if (DISPLAYMAP_UNTONEMAPPED_AP1 == 0.f) {
-    if (CUSTOM_COLOR_GRADE_BLOWOUT_RESTORATION != 0.f
-        || CUSTOM_COLOR_GRADE_HUE_CORRECTION != 0.f
-        || CUSTOM_COLOR_GRADE_SATURATION_CORRECTION != 0.f
-        || CUSTOM_COLOR_GRADE_HUE_SHIFT != 1.f) {
-      color = renodx::draw::ApplyPerChannelCorrection(
-          RENODX_UE_CONFIG.untonemapped_bt709,
-          float3(color_red, color_green, color_blue),
-          CUSTOM_COLOR_GRADE_BLOWOUT_RESTORATION,
-          CUSTOM_COLOR_GRADE_HUE_CORRECTION,
-          CUSTOM_COLOR_GRADE_SATURATION_CORRECTION,
-          CUSTOM_COLOR_GRADE_HUE_SHIFT);
-    }
-  }
-
-  color = abs(color);
-  color_red = color.r;
-  color_green = color.g;
-  color_blue = color.b;
-}
-
-void SetTonemappedBT709(inout float3 color) {
-  SetTonemappedBT709(color.r, color.g, color.b);
-}
-
-// Used by LUTs
-void SetTonemappedAP1(inout float color_red, inout float color_green, inout float color_blue) {
-  if (RENODX_TONE_MAP_TYPE == 0.f) return;
-  float3 color = float3(color_red, color_green, color_blue);
-  float3 bt709_color = renodx::color::bt709::from::AP1(color);
-  SetTonemappedBT709(bt709_color);
-
-  color = renodx::color::ap1::from::BT709(bt709_color);
-  color_red = color.r;
-  color_green = color.g;
-  color_blue = color.b;
-}
-
-void SetTonemappedAP1(inout float3 color) {
-  SetTonemappedAP1(color.r, color.g, color.b);
-}
-
-void SetGradedBT709(inout float3 color) {
-  RENODX_UE_CONFIG.graded_bt709 = color;
-  RENODX_UE_CONFIG.graded_bt709 *= sign(RENODX_UE_CONFIG.tonemapped_bt709);
-}
-
-float3 GenerateToneMap() {
-  // return renodx::draw::ToneMapPass(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709);
-  // float3 color = renodx::draw::ComputeUntonemappedGraded(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709,);  // untonemapped graded in lutbuilder
-
-  float3 color = renodx::draw::ComputeUntonemappedGraded(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709, NeutralSDRYLerp(RENODX_UE_CONFIG.untonemapped_bt709));  // untonemapped graded in lutbuilder
-}
-
-float3 GenerateToneMap(float3 graded_bt709) {
-  SetGradedBT709(graded_bt709);
-  return GenerateToneMap();
-}
-
-float4 GenerateOutput() {
+float4 LutBuilderToneMap(float3 untonemapped_ap1, float3 graded_bt709) {
   float3 color;
+  float3 untonemapped_bt709 = renodx::color::bt709::from::AP1(untonemapped_ap1);
 
   [branch]
-  if (GRADING_EXIST == 1) {
-    color = renodx::draw::ComputeUntonemappedGraded(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709, NeutralSDRYLerp(RENODX_UE_CONFIG.untonemapped_bt709));  // untonemapped graded in lutbuilder
+  if (GRADING_EXIST == 1.f) {
+    color = renodx::draw::ComputeUntonemappedGraded(untonemapped_bt709, graded_bt709, NeutralSDRYLerp(untonemapped_bt709));  // untonemapped graded in lutbuilder
   } else {
     // Only for one area in the non-venge compaign
     renodx::draw::Config draw_config = renodx::draw::BuildConfig();
     draw_config.tone_map_type = 3.f;
 
-    color = renodx::draw::ToneMapPass(RENODX_UE_CONFIG.untonemapped_bt709, RENODX_UE_CONFIG.graded_bt709, NeutralSDRYLerp(RENODX_UE_CONFIG.untonemapped_bt709), draw_config);
+    color = renodx::draw::ToneMapPass(untonemapped_bt709, graded_bt709, NeutralSDRYLerp(untonemapped_bt709), draw_config);
   }
 
   color = renodx::draw::RenderIntermediatePass(color);
@@ -223,18 +123,14 @@ float4 GenerateOutput() {
   return float4(color, 1.f);
 }
 
-float4 GenerateOutput(float3 graded_bt709) {
-  SetGradedBT709(graded_bt709);
-  return GenerateOutput();
-}
-
 // Display map Untonemapped AP1 in the lutbuilder to restore SDR Hues
 float3 DisplaymapUntonemappedAP1(float3 untonemapped_ap1) {
   float3 color;
   if (RENODX_TONE_MAP_TYPE != 0) {
-    if (DISPLAYMAP_UNTONEMAPPED_AP1 == 1.f) {
-      color = renodx::tonemap::dice::BT709(untonemapped_ap1, 1.f, 0.5);
-    }
+    color = renodx::color::bt709::from::AP1(untonemapped_ap1);
+    float color_y = renodx::color::y::from::BT709(color);
+    color = renodx::tonemap::dice::BT709(color, 1.f, 0.5f);
+    color = renodx::color::ap1::from::BT709(color);
   } else {
     color = color;
   }

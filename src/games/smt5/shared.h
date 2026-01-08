@@ -39,6 +39,7 @@
 #define GRADING_EXIST                            shader_injection.grading_exist
 #define DISPLAYMAP_UNTONEMAPPED_AP1              1.f
 #define DEBUG_MAX_CH                             1.f
+#define DEBUG_YUV                                shader_injection.debug_yuv
 
 // Must be 32bit aligned
 // Should be 4x32
@@ -77,6 +78,8 @@ struct ShaderInjectData {
   float custom_random;
 
   float grading_exist;
+
+  float debug_yuv;
 };
 
 #ifndef __cplusplus

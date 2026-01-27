@@ -50,6 +50,20 @@ bool HandleUICompositing(float4 ui_color_gamma, float4 scene_color_pq, inout flo
 
   scene_color_linear = renodx::color::bt709::from::BT2020(scene_color_linear);
 
+  // apply Reinhard under UI
+#if 1
+  // if (TONEMAP_UNDER_UI != 0.f) {
+  float y_in = renodx::color::y::from::BT709(scene_color_linear);
+
+  const float peak = 1.f;  // UI white
+  float y_tonemapped = lerp(y_in, renodx::tonemap::Reinhard(y_in, peak), saturate(y_in));
+
+  float y_out = lerp(y_in, y_tonemapped, ui_alpha);
+
+  scene_color_linear = renodx::color::correct::Luminance(scene_color_linear, y_in, y_out);
+  //}
+#endif
+
   scene_color_linear = ApplyFilmGrain(scene_color_linear, position, CUSTOM_RANDOM);
 
   ui_color_gamma.rgb = renodx::color::gamma::EncodeSafe(ui_color_linear.rgb);
@@ -85,6 +99,20 @@ bool HandleIntermediateCompositing(float4 ui_color_gamma, float4 scene_color_pq,
   // linearize scene, normalize brightness
   float3 scene_color_linear = renodx::color::pq::DecodeSafe(scene_color_pq.rgb, RENODX_GRAPHICS_WHITE_NITS);
   scene_color_linear = renodx::color::bt709::from::BT2020(scene_color_linear);
+
+// apply Reinhard under UI
+#if 1
+  // if (TONEMAP_UNDER_UI != 0.f) {
+  float y_in = renodx::color::y::from::BT709(scene_color_linear);
+
+  const float peak = 1.f;  // UI white
+  float y_tonemapped = lerp(y_in, renodx::tonemap::Reinhard(y_in, peak), saturate(y_in));
+
+  float y_out = lerp(y_in, y_tonemapped, ui_alpha);
+
+  scene_color_linear = renodx::color::correct::Luminance(scene_color_linear, y_in, y_out);
+  //}
+#endif
 
   // blend in gamma
   ui_color_gamma.rgb = renodx::color::gamma::EncodeSafe(ui_color_linear);

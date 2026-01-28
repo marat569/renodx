@@ -1,4 +1,5 @@
-#define USE_SDR_LUT 0
+#define USE_SDR_LUT     0
+#define LUTBUILDER_HASH 0x773A9497
 
 #include "./filmiclutbuilder.hlsli"
 

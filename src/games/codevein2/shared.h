@@ -1,7 +1,7 @@
 #ifndef SRC_GAMES_SILENTHILLF_SHARED_H_
 #define SRC_GAMES_SILENTHILLF_SHARED_H_
 
-#define ENABLE_SLIDERS 1
+#define ENABLE_SLIDERS   1
 #define FIX_POST_PROCESS 2
 
 #if ENABLE_SLIDERS
@@ -33,6 +33,8 @@ struct ShaderInjectData {
   float custom_grain_type;
   float custom_grain_strength;
   float custom_sharpness;
+
+  float scuffed_ui_fix;
 
   // float fix_post_process;
 };
@@ -69,6 +71,7 @@ cbuffer cb13 : register(b13, space50) {
 #define CUSTOM_GRAIN_TYPE     shader_injection.custom_grain_type
 #define CUSTOM_GRAIN_STRENGTH shader_injection.custom_grain_strength
 #define CUSTOM_SHARPNESS      shader_injection.custom_sharpness
+#define SCUFFED_UI_FIX        shader_injection.scuffed_ui_fix
 
 // #define FIX_POST_PROCESS                     shader_injection.fix_post_process     // 0 - BT.2020 PQ, 1 - BT.709 piecewise sRGB, 2 - BT.2020 piecewise sRGB
 #define OVERRIDE_BLACK_CLIP shader_injection.override_black_clip  // 0 - Off, 1 - 0.0001 nits

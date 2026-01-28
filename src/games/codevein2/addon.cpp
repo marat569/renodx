@@ -307,6 +307,16 @@ renodx::utils::settings::Settings settings = {
         .labels = {"Off", "2.2"},
         .is_enabled = []() { return shader_injection.tone_map_type != 0; },
     },
+    new renodx::utils::settings::Setting{
+        .key = "ScuffedUIFix",
+        .binding = &shader_injection.scuffed_ui_fix,
+        .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
+        .default_value = 0.f,
+        .label = "Scuffed UI Artifact Fix",
+        .section = "Other",
+        .tooltip = "Fixs UI artifacts by making some of them opaque.",
+        .labels = {"Off", "On"},
+    },
 // new renodx::utils::settings::Setting{
 //     .value_type = renodx::utils::settings::SettingValueType::BUTTON,
 //     .label = "Reset All",
@@ -391,6 +401,7 @@ void OnPresetOff() {
       {"ColorGradeLUTGamutRestoration", 0.f},
       {"FxGrainType", 0.f},
       {"FxGrainStrength", 50.f},
+      {"ScuffedUIFix", 0.f},
   });
 }
 

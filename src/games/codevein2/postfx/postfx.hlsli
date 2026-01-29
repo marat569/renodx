@@ -33,17 +33,15 @@ float4 SampleAndConvertToSRGB(Texture2D<float4> scene_texture, SamplerState samp
   float4 pq_color = scene_texture.Sample(sampler, location);
   float tex_alpha = pq_color.a;
 
-  
   float3 linear_color = renodx::color::pq::DecodeSafe(pq_color.rgb, RENODX_DIFFUSE_WHITE_NITS);
   if (FIX_POST_PROCESS == 1.f) linear_color = renodx::color::bt709::from::BT2020(linear_color);
-  
+
   if (RENODX_TONE_MAP_TYPE == 0.f || FIX_POST_PROCESS == 0.f) return pq_color;
 
   return float4(renodx::color::gamma::EncodeSafe(linear_color), tex_alpha);
 }
 
 float3 ConvertSRGBtoPQAndUpgradeToneMap(float3 srgb_color, float3 unclamped_linear_sample, float3 tonemapped_linear_sample) {
-  
   float3 linear_color = renodx::color::gamma::DecodeSafe(srgb_color);
   if (FIX_POST_PROCESS == 2.f) {  // all in BT.2020
     linear_color = renodx::color::bt709::from::BT2020(linear_color);
@@ -51,18 +49,18 @@ float3 ConvertSRGBtoPQAndUpgradeToneMap(float3 srgb_color, float3 unclamped_line
     tonemapped_linear_sample = renodx::color::bt709::from::BT2020(tonemapped_linear_sample);
   }
   if (RENODX_TONE_MAP_TYPE == 0.f || FIX_POST_PROCESS == 0.f) return max(0, srgb_color);
-  
+
   linear_color = renodx::tonemap::UpgradeToneMap(unclamped_linear_sample, tonemapped_linear_sample, linear_color, 1.f);
   return renodx::color::pq::EncodeSafe(renodx::color::bt2020::from::BT709(linear_color), RENODX_DIFFUSE_WHITE_NITS);
 }
 
-float3 ConvertSRGBtoPQ(float3 srgb_color) {
-  if (RENODX_TONE_MAP_TYPE == 0.f || FIX_POST_PROCESS == 0.f) return max(0, srgb_color);
+// float3 ConvertSRGBtoPQ(float3 srgb_color) {
+//   if (RENODX_TONE_MAP_TYPE == 0.f || FIX_POST_PROCESS == 0.f) return max(0, srgb_color);
 
-  float3 linear_color = renodx::color::gamma::DecodeSafe(srgb_color);
-  if (FIX_POST_PROCESS == 2.f) linear_color = renodx::color::bt709::from::BT2020(linear_color);
-  return renodx::color::pq::EncodeSafe(renodx::color::bt2020::from::BT709(linear_color), RENODX_DIFFUSE_WHITE_NITS);
-}
+//   float3 linear_color = renodx::color::gamma::DecodeSafe(srgb_color);
+//   if (FIX_POST_PROCESS == 2.f) linear_color = renodx::color::bt709::from::BT2020(linear_color);
+//   return renodx::color::pq::EncodeSafe(renodx::color::bt2020::from::BT709(linear_color), RENODX_DIFFUSE_WHITE_NITS);
+// }
 
 float3 ConditionalConvertSRGBToBT2020(float3 srgb_color) {
   if (RENODX_TONE_MAP_TYPE == 0.f || FIX_POST_PROCESS != 2.f) return srgb_color;
@@ -75,4 +73,19 @@ float3 ConditionalConvertSRGBToBT2020(float3 srgb_color) {
 float4 ConditionalConvertSRGBToBT2020(float4 srgb_color) {
   ConditionalConvertSRGBToBT2020(srgb_color.rgb);
   return float4(srgb_color.rgb, srgb_color.a);
+}
+
+float4 ConvertPQToSRGB(float4 pq_color) {
+  float3 srgb_color;
+  srgb_color = renodx::color::pq::DecodeSafe(pq_color.rgb, RENODX_DIFFUSE_WHITE_NITS);
+  srgb_color = renodx::color::bt709::from::BT2020(srgb_color);
+  srgb_color = renodx::color::gamma::EncodeSafe(srgb_color);
+
+  return float4(srgb_color.rgb, pq_color.a);
+}
+
+float3 ConvertSRGBtoPQ(float3 srgb_color) {
+  float3 linear_color = renodx::color::gamma::DecodeSafe(srgb_color);
+  // if (FIX_POST_PROCESS == 2.f) linear_color = renodx::color::bt709::from::BT2020(linear_color);
+  return renodx::color::pq::EncodeSafe(renodx::color::bt2020::from::BT709(linear_color), RENODX_DIFFUSE_WHITE_NITS);
 }

@@ -574,6 +574,11 @@ float4 main(
   float _25 = PostProcessOutput_ViewportSizeInverse.y * (SV_Position.y - float((uint)(int)(PostProcessOutput_ViewportMin.y)));
   float _30 = (SV_Position.x - float((uint)(int)(PostProcessOutput_ViewportMin.x))) * PostProcessOutput_ViewportSizeInverse.x;
   float4 _42 = PostProcessInput_0_Texture.Sample(PostProcessInput_0_Sampler, float2(((_30 * PostProcessInput_0_UVViewportSize.x) + PostProcessInput_0_UVViewportMin.x), ((_25 * PostProcessInput_0_UVViewportSize.y) + PostProcessInput_0_UVViewportMin.y)));
+
+  // _42 = game render
+  // Convert game render from PQ -> Gamma
+  _42 = ConvertPQToSRGB(_42);
+
   uint2 _68 = SceneTexturesStruct_CustomStencilTexture.Load(int3((uint)(uint((((_30 * View.ViewSizeAndInvSize.x) + View.ViewRectMin.x) * View.BufferSizeAndInvSize.z) * View.BufferSizeAndInvSize.x)), (uint)(uint((((_25 * View.ViewSizeAndInvSize.y) + View.ViewRectMin.y) * View.BufferSizeAndInvSize.w) * View.BufferSizeAndInvSize.y)), 0));
 
   float _73 = floor(float((uint)(int)(_68.y)) * 0.03125f) * 0.5f;
@@ -587,9 +592,14 @@ float4 main(
   float _151 = _42.x - (_147 * _42.x);
   float _152 = _42.y - (_147 * _42.y);
   float _153 = _42.z - (_147 * _42.z);
-  SV_Target.x = max(((((Material.PreshaderBuffer[1].x) - _151) * (Material.PreshaderBuffer[0].y)) + _151), 0.0f);
-  SV_Target.y = max(((((Material.PreshaderBuffer[1].y) - _152) * (Material.PreshaderBuffer[0].y)) + _152), 0.0f);
-  SV_Target.z = max(((((Material.PreshaderBuffer[1].z) - _153) * (Material.PreshaderBuffer[0].y)) + _153), 0.0f);
+  // Removed max 0
+  SV_Target.x = ((((Material.PreshaderBuffer[1].x) - _151) * (Material.PreshaderBuffer[0].y)) + _151);
+  SV_Target.y = ((((Material.PreshaderBuffer[1].y) - _152) * (Material.PreshaderBuffer[0].y)) + _152);
+  SV_Target.z = ((((Material.PreshaderBuffer[1].z) - _153) * (Material.PreshaderBuffer[0].y)) + _153);
   SV_Target.w = 0.0f;
+
+  // Convert output from gamma back to -> PQ
+  SV_Target.rgb = ConvertSRGBtoPQ(SV_Target.rgb);
+
   return SV_Target;
 }

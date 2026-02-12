@@ -43,9 +43,17 @@ struct ShaderInjectData {
 #ifndef __cplusplus
 
 #if ENABLE_SLIDERS
-cbuffer cb13 : register(b13, space50) {
+#if ((__SHADER_TARGET_MAJOR == 5 && __SHADER_TARGET_MINOR >= 1) || __SHADER_TARGET_MAJOR >= 6)
+cbuffer injected_buffer : register(b13, space50) {
+#elif (__SHADER_TARGET_MAJOR < 5) || ((__SHADER_TARGET_MAJOR == 5) && (__SHADER_TARGET_MINOR < 1))
+cbuffer injected_buffer : register(b13) {
+#endif
   ShaderInjectData shader_injection : packoffset(c0);
 }
+
+#if (__SHADER_TARGET_MAJOR >= 6)
+#pragma dxc diagnostic ignored "-Wparentheses-equality"
+#endif
 
 #define RENODX_TONE_MAP_TYPE                 shader_injection.tone_map_type  // 0 - Vanilla, 1 - None, 2 - ACES, 3 - RenoDRT, 4 - SDR
 #define RENODX_PEAK_WHITE_NITS               shader_injection.peak_white_nits

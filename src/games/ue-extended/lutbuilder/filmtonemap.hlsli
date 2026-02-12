@@ -53,30 +53,30 @@ Config Create(
 
 }  // config
 
-#define FILMTONECURVE_GENERATOR(T)                                                                                                                                        \
-  T ApplyToneCurve(T untonemapped, const Config p) {                                                                                                                      \
-    T untonemapped_log = log2(untonemapped) * 0.3010300099849701f;                                                                                                        \
-                                                                                                                                                                          \
-    /* Straight */                                                                                                                                                        \
-    T straight_curve = p.FilmSlope * (untonemapped_log + p.log_mid_anchor);                                                                                               \
-                                                                                                                                                                          \
-    /* Construct Toe and blend with Straight */                                                                                                                           \
-    T toe_offset = untonemapped_log - p.log_toe_threshold;                                                                                                                \
-    T toe_curve =                                                                                                                                                         \
-        select((untonemapped_log < p.log_toe_threshold),                                                                                                                  \
-               (((p.toe_width * 2.f) / (exp2((toe_offset * 1.4426950216293335f) * ((p.FilmSlope * -2.f) / p.toe_width)) + 1.f)) - p.FilmBlackClip),                       \
-               straight_curve);                                                                                                                                           \
-                                                                                                                                                                          \
-    /* Construct Shoulder and blend with Straight */                                                                                                                      \
-    T shoulder_offset = untonemapped_log - p.log_shoulder_threshold;                                                                                                      \
-    T shoulder_curve =                                                                                                                                                    \
-        select((untonemapped_log > p.log_shoulder_threshold),                                                                                                             \
-               ((1.f + p.FilmWhiteClip) - ((p.shoulder_width * 2.f) / (exp2((shoulder_offset * 1.4426950216293335f) * ((p.FilmSlope * 2.f) / p.shoulder_width)) + 1.f))), \
-               straight_curve);                                                                                                                                           \
-                                                                                                                                                                          \
-    /* Blend between Toe and Shoulder */                                                                                                                                  \
-    T t_linear = saturate(toe_offset / (p.log_shoulder_threshold - p.log_toe_threshold));                                                                                 \
-    T t_blend = select((p.log_shoulder_threshold < p.log_toe_threshold), (1.f - t_linear), t_linear);                                                                     \
+#define FILMTONECURVE_GENERATOR(T)                                                                                                                                                      \
+  T ApplyToneCurve(T untonemapped, const Config p) {                                                                                                                                    \
+    T untonemapped_log = log2(untonemapped) * 0.3010300099849701f;                                                                                                                      \
+                                                                                                                                                                                        \
+    /* Straight */                                                                                                                                                                      \
+    T straight_curve = p.FilmSlope * (untonemapped_log + p.log_mid_anchor);                                                                                                             \
+                                                                                                                                                                                        \
+    /* Construct Toe and blend with Straight */                                                                                                                                         \
+    T toe_offset = untonemapped_log - p.log_toe_threshold;                                                                                                                              \
+    T toe_curve =                                                                                                                                                                       \
+        renodx::math::Select((untonemapped_log < p.log_toe_threshold),                                                                                                                  \
+                             (((p.toe_width * 2.f) / (exp2((toe_offset * 1.4426950216293335f) * ((p.FilmSlope * -2.f) / p.toe_width)) + 1.f)) - p.FilmBlackClip),                       \
+                             straight_curve);                                                                                                                                           \
+                                                                                                                                                                                        \
+    /* Construct Shoulder and blend with Straight */                                                                                                                                    \
+    T shoulder_offset = untonemapped_log - p.log_shoulder_threshold;                                                                                                                    \
+    T shoulder_curve =                                                                                                                                                                  \
+        renodx::math::Select((untonemapped_log > p.log_shoulder_threshold),                                                                                                             \
+                             ((1.f + p.FilmWhiteClip) - ((p.shoulder_width * 2.f) / (exp2((shoulder_offset * 1.4426950216293335f) * ((p.FilmSlope * 2.f) / p.shoulder_width)) + 1.f))), \
+                             straight_curve);                                                                                                                                           \
+                                                                                                                                                                                        \
+    /* Blend between Toe and Shoulder */                                                                                                                                                \
+    T t_linear = saturate(toe_offset / (p.log_shoulder_threshold - p.log_toe_threshold));                                                                                               \
+    T t_blend = renodx::math::Select((p.log_shoulder_threshold < p.log_toe_threshold), (1.f - t_linear), t_linear);                                                                     \
     T film_tonemapped = (((t_blend * t_blend) * (shoulder_curve - toe_curve)) * (3.f - (t_blend * 2.f))) + toe_curve;                                                     \
                                                                                                                                                                           \
     return film_tonemapped;                                                                                                                                               \
@@ -104,18 +104,18 @@ float ComputeFilmicSlopeAtInput(const Config p, float x) {
   return (y_plus - y_minus) / (2.0f * eps);
 }
 
-#define FILMTONECURVE_EXTENDED_GENERATOR(T)                                  \
-  T ApplyToneCurveExtended(T untonemapped, T vanilla, const Config p) {      \
-    /* Evaluate Filmic at pivot */                                           \
-    float pivot_input = 0.18f; /* tonemapper is centered around 0.18*/       \
-    float y_offset = 0.18f;                                                  \
-    float pivot_slope = ComputeFilmicSlopeAtInput(p, pivot_input);           \
-                                                                             \
-    /* Linear HDR tail anchored at (pivot_input, pivot_output) */            \
-    T extended_tail = pivot_slope * (untonemapped - pivot_input) + y_offset; \
-                                                                             \
-    /* use vanilla below pivot, extended after*/                             \
-    return select(untonemapped < (T)pivot_input, vanilla, extended_tail);    \
+#define FILMTONECURVE_EXTENDED_GENERATOR(T)                                             \
+  T ApplyToneCurveExtended(T untonemapped, T vanilla, const Config p) {                 \
+    /* Evaluate Filmic at pivot */                                                      \
+    float pivot_input = 0.18f; /* tonemapper is centered around 0.18*/                  \
+    float y_offset = 0.18f;                                                             \
+    float pivot_slope = ComputeFilmicSlopeAtInput(p, pivot_input);                      \
+                                                                                        \
+    /* Linear HDR tail anchored at (pivot_input, pivot_output) */                       \
+    T extended_tail = pivot_slope * (untonemapped - pivot_input) + y_offset;            \
+                                                                                        \
+    /* use vanilla below pivot, extended after*/                                        \
+    return renodx::math::Select(untonemapped < (T)pivot_input, vanilla, extended_tail);    \
   }
 FILMTONECURVE_EXTENDED_GENERATOR(float)
 FILMTONECURVE_EXTENDED_GENERATOR(float3)

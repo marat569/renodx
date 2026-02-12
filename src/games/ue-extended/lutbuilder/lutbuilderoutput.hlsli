@@ -38,3 +38,63 @@ float4 ProcessLutbuilder(float3 untonemapped_ap1, SamplerState lut_sampler, Text
 
   return GenerateOutput(output.x, output.y, output.z, SV_Target, outputdevice);
 }
+
+// 2 SDR Luts
+
+float4 ProcessLutbuilder(float3 untonemapped_ap1, SamplerState lut_sampler1, SamplerState lut_sampler2, Texture2D<float4> lut_texture1, Texture2D<float4> lut_texture2, UECbufferConfig cb_config, float4 SV_Target, uint outputdevice) {
+  float3 tonemapped;
+
+  ApplyFilmToneMapWithBlueCorrect(untonemapped_ap1.r, untonemapped_ap1.g, untonemapped_ap1.b,
+                                  tonemapped.r, tonemapped.g, tonemapped.b, cb_config);
+
+  float3 bt709_tonemapped = renodx::color::bt709::from::AP1(tonemapped);
+
+  float3 linear_output;
+  Sample2LUTsUpgradeToneMap(bt709_tonemapped, lut_sampler1, lut_sampler2, lut_texture1, lut_texture2, linear_output.r, linear_output.g, linear_output.b, cb_config);
+
+  float3 scaled = cb_config.ue_colorscale.xyz * (((cb_config.ue_mappingpolynomial.y + (cb_config.ue_mappingpolynomial.x * linear_output)) * linear_output) + cb_config.ue_mappingpolynomial.z);
+
+  float3 output = ((cb_config.ue_overlaycolor.xyz - scaled) * cb_config.ue_overlaycolor.w) + scaled;
+
+  return GenerateOutput(output.x, output.y, output.z, SV_Target, outputdevice);
+}
+
+// 3 SDR Luts
+
+float4 ProcessLutbuilder(float3 untonemapped_ap1, SamplerState lut_sampler1, SamplerState lut_sampler2, SamplerState lut_sampler3, Texture2D<float4> lut_texture1, Texture2D<float4> lut_texture2, Texture2D<float4> lut_texture3, UECbufferConfig cb_config, float4 SV_Target, uint outputdevice) {
+  float3 tonemapped;
+
+  ApplyFilmToneMapWithBlueCorrect(untonemapped_ap1.r, untonemapped_ap1.g, untonemapped_ap1.b,
+                                  tonemapped.r, tonemapped.g, tonemapped.b, cb_config);
+
+  float3 bt709_tonemapped = renodx::color::bt709::from::AP1(tonemapped);
+
+  float3 linear_output;
+  Sample3LUTsUpgradeToneMap(bt709_tonemapped, lut_sampler1, lut_sampler2, lut_sampler3, lut_texture1, lut_texture2, lut_texture3, linear_output.r, linear_output.g, linear_output.b, cb_config);
+
+  float3 scaled = cb_config.ue_colorscale.xyz * (((cb_config.ue_mappingpolynomial.y + (cb_config.ue_mappingpolynomial.x * linear_output)) * linear_output) + cb_config.ue_mappingpolynomial.z);
+
+  float3 output = ((cb_config.ue_overlaycolor.xyz - scaled) * cb_config.ue_overlaycolor.w) + scaled;
+
+  return GenerateOutput(output.x, output.y, output.z, SV_Target, outputdevice);
+}
+
+// 4 SDR luts
+
+float4 ProcessLutbuilder(float3 untonemapped_ap1, SamplerState lut_sampler1, SamplerState lut_sampler2, SamplerState lut_sampler3, SamplerState lut_sampler4, Texture2D<float4> lut_texture1, Texture2D<float4> lut_texture2, Texture2D<float4> lut_texture3, Texture2D<float4> lut_texture4, UECbufferConfig cb_config, float4 SV_Target, uint outputdevice) {
+  float3 tonemapped;
+
+  ApplyFilmToneMapWithBlueCorrect(untonemapped_ap1.r, untonemapped_ap1.g, untonemapped_ap1.b,
+                                  tonemapped.r, tonemapped.g, tonemapped.b, cb_config);
+
+  float3 bt709_tonemapped = renodx::color::bt709::from::AP1(tonemapped);
+
+  float3 linear_output;
+  Sample4LUTsUpgradeToneMap(bt709_tonemapped, lut_sampler1, lut_sampler2, lut_sampler3, lut_sampler4, lut_texture1, lut_texture2, lut_texture3, lut_texture4, linear_output.r, linear_output.g, linear_output.b, cb_config);
+
+  float3 scaled = cb_config.ue_colorscale.xyz * (((cb_config.ue_mappingpolynomial.y + (cb_config.ue_mappingpolynomial.x * linear_output)) * linear_output) + cb_config.ue_mappingpolynomial.z);
+
+  float3 output = ((cb_config.ue_overlaycolor.xyz - scaled) * cb_config.ue_overlaycolor.w) + scaled;
+
+  return GenerateOutput(output.x, output.y, output.z, SV_Target, outputdevice);
+}

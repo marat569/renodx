@@ -141,10 +141,9 @@ cbuffer cb1 : register(b1) {
 };
 
 float4 main(
-  noperspective float2 TEXCOORD : TEXCOORD,
-  noperspective float4 SV_Position : SV_Position,
-  nointerpolation uint SV_RenderTargetArrayIndex : SV_RenderTargetArrayIndex
-) : SV_Target {
+    noperspective float2 TEXCOORD: TEXCOORD,
+    noperspective float4 SV_Position: SV_Position,
+    nointerpolation uint SV_RenderTargetArrayIndex: SV_RenderTargetArrayIndex) : SV_Target {
   float4 SV_Target;
   float _8[6];
   float _9[6];
@@ -396,11 +395,11 @@ float4 main(
   cb_config.ue_mappingpolynomial = float3(cb0_039x, cb0_039y, cb0_039z);
   cb_config.ue_overlaycolor = float4(cb0_013x, cb0_013y, cb0_013z, cb0_013w);
   cb_config.ue_bluecorrection = cb0_036z;
-
+  cb_config.ue_colorscale = float3(cb0_014x, cb0_014y, cb0_014z);
 
   SV_Target = ProcessLutbuilder(float3(_795, _797, _799), cb_config, SV_Target, cb0_040w);
   return SV_Target;
-  
+
   float _835 = ((mad(0.061360642313957214f, _799, mad(-4.540197551250458e-09f, _797, (_795 * 0.9386394023895264f))) - _795) * cb0_036z) + _795;
   float _836 = ((mad(0.169205904006958f, _799, mad(0.8307942152023315f, _797, (_795 * 6.775371730327606e-08f))) - _797) * cb0_036z) + _797;
   float _837 = (mad(-2.3283064365386963e-10f, _797, (_795 * -9.313225746154785e-10f)) * cb0_036z) + _799;

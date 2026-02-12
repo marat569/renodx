@@ -435,6 +435,7 @@ float4 main(
   cb_config.ue_mappingpolynomial = float3(cb0_026x, cb0_026y, cb0_026z);
   cb_config.ue_overlaycolor = float4(cb0_043x, cb0_043y, cb0_043z, cb0_043w);
   cb_config.ue_bluecorrection = cb0_066z;
+  cb_config.ue_colorscale = float3(cb0_042y, cb0_042z, cb0_042w);
   float4 lutweights[2] = { float4(cb0_038x, cb0_039x, 0.f, 0.f), float4(0.f, 0.f, 0.f, 0.f) };
   cb_config.ue_lutweights = lutweights;  // Only Lutweights[0].xy is used
 

@@ -318,7 +318,7 @@ float4 main(
   cb_config.ue_mappingpolynomial = MappingPolynomial;
   cb_config.ue_overlaycolor = OverlayColor;
   cb_config.ue_bluecorrection = BlueCorrection;
-
+  cb_config.ue_colorscale = ColorScale;
 
   SV_Target = ProcessLutbuilder(float3(_787, _789, _791), cb_config, SV_Target, OutputDevice);
   return SV_Target;

@@ -177,6 +177,7 @@ void main(
   cb_config.ue_mappingpolynomial = asfloat(cb0[26].xyz);
   cb_config.ue_overlaycolor = asfloat(cb0[43].xyzw);
   cb_config.ue_bluecorrection = asfloat(cb0[71].w);
+  cb_config.ue_colorscale = asfloat(cb0[42].yzw);
 
   o0 = ProcessLutbuilder(float3(untonemapped_ap1), cb_config, o0, asuint(cb0[71].x));
   return;

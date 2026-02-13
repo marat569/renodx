@@ -161,10 +161,22 @@ float4 GenerateOutput(float r, float g, float b, inout float4 SV_Target, uint de
   // if (RENODX_TONE_MAP_TYPE == 0 || device == 8u) return false;
 
   float3 final_color = (float3(r, g, b));
+
+  // Displaymap to User Peak in BT2020
+  float peak_ratio = RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
+  if (RENODX_GAMMA_CORRECTION) peak_ratio = renodx::color::correct::Gamma(peak_ratio, true);
+  final_color = renodx::color::bt2020::from::BT709(final_color);  // displaymap in bt2020
+  // final_color = renodx::tonemap::HermiteSplinePerChannelRolloff(max(0, final_color), peak_ratio, 100.f);
+  final_color = renodx::tonemap::neutwo::PerChannel(max(0, final_color), peak_ratio, 100.f);  // Display map to peak
+  final_color = renodx::color::bt709::from::BT2020(final_color);                              // back to 709 for decoding branches
+
+  // Saturate if SDR path
   if (RENODX_TONE_MAP_TYPE == 0.f) final_color = saturate(final_color);
 
+  // Gamma Correction
   final_color = ApplyGammaCorrection(final_color);
 
+  // Encode
   float3 bt2020_color = renodx::color::bt2020::from::BT709(final_color);
   float3 encoded_color = renodx::color::pq::EncodeSafe(bt2020_color, RENODX_DIFFUSE_WHITE_NITS);
 

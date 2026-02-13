@@ -77,9 +77,9 @@ Config Create(
     /* Blend between Toe and Shoulder */                                                                                                                                                \
     T t_linear = saturate(toe_offset / (p.log_shoulder_threshold - p.log_toe_threshold));                                                                                               \
     T t_blend = renodx::math::Select((p.log_shoulder_threshold < p.log_toe_threshold), (1.f - t_linear), t_linear);                                                                     \
-    T film_tonemapped = (((t_blend * t_blend) * (shoulder_curve - toe_curve)) * (3.f - (t_blend * 2.f))) + toe_curve;                                                     \
-                                                                                                                                                                          \
-    return film_tonemapped;                                                                                                                                               \
+    T film_tonemapped = (((t_blend * t_blend) * (shoulder_curve - toe_curve)) * (3.f - (t_blend * 2.f))) + toe_curve;                                                                   \
+                                                                                                                                                                                        \
+    return film_tonemapped;                                                                                                                                                             \
   }
 FILMTONECURVE_GENERATOR(float)
 FILMTONECURVE_GENERATOR(float3)
@@ -115,7 +115,7 @@ float ComputeFilmicSlopeAtInput(const Config p, float x) {
     T extended_tail = pivot_slope * (untonemapped - pivot_input) + y_offset;            \
                                                                                         \
     /* use vanilla below pivot, extended after*/                                        \
-    return renodx::math::Select(untonemapped < (T)pivot_input, vanilla, extended_tail);    \
+    return renodx::math::Select(untonemapped < (T)pivot_input, vanilla, extended_tail); \
   }
 FILMTONECURVE_EXTENDED_GENERATOR(float)
 FILMTONECURVE_EXTENDED_GENERATOR(float3)
@@ -155,21 +155,17 @@ float3 ApplyToneCurveExtendedWithHermite(
       unrealengine::filmtonemap::extended::ApplyToneCurveExtended(untonemapped_rrt_prebluecorrect_ap1, vanilla, film_params);
 
 #if 1
+  // Blend extended with vanilla (0.2 strength) up to 0.5f
   tonemapped_prebluecorrect_ap1 = lerp(
       vanilla,
       lerp(tonemapped_prebluecorrect_ap1, vanilla, 0.2f),
       saturate(vanilla / 0.5f));
-#else
-  float lum_vanilla = renodx::color::y::from::AP1(vanilla);
-  float lum_hdr = renodx::color::y::from::AP1(tonemapped_prebluecorrect_ap1);
-  float blended_lum = lerp(lum_hdr, lum_vanilla, 0.2f);
-  blended_lum = lerp(lum_vanilla, blended_lum, saturate(lum_vanilla / 0.75f));
-  tonemapped_prebluecorrect_ap1 = renodx::color::correct::Luminance(tonemapped_prebluecorrect_ap1, lum_hdr, blended_lum);
 #endif
 
-  float peak_ratio = RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
-  if (RENODX_GAMMA_CORRECTION) peak_ratio = renodx::color::correct::Gamma(peak_ratio, true);
-  tonemapped_prebluecorrect_ap1 = renodx::tonemap::HermiteSplinePerChannelRolloff(max(0, tonemapped_prebluecorrect_ap1), peak_ratio, 100.f);
+  // Move to pre-encode
+  // float peak_ratio = RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
+  // if (RENODX_GAMMA_CORRECTION) peak_ratio = renodx::color::correct::Gamma(peak_ratio, true);
+  // tonemapped_prebluecorrect_ap1 = renodx::tonemap::HermiteSplinePerChannelRolloff(max(0, tonemapped_prebluecorrect_ap1), peak_ratio, 100.f);
 
   return tonemapped_prebluecorrect_ap1;
 }

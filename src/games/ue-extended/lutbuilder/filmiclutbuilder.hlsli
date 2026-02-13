@@ -171,7 +171,8 @@ EXPONENTIALROLLOFF_GENERATOR(float3)
 float3 LUTToneMap(float3 untonemapped, float rolloff_start = 0.25f, float output_max = 1.f) {
   // if (!is_hdr) return saturate(untonemapped);  // no additional tonemap needed for SDR
 
-  float white_clip = (RENODX_TONE_MAP_TYPE == 1.f) ? 100.f : RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
+  // float white_clip = (RENODX_TONE_MAP_TYPE == 1.f) ? 100.f : RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
+  float white_clip = RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
 
   float y_in = renodx::color::y::from::BT709(untonemapped);
   float y_out = exp2(ExponentialRollOffExtended(

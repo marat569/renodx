@@ -570,16 +570,16 @@ float4 main(
   float _87 = (((_74 * COLOR.y) * max(((((Material.PreshaderBuffer[2].y) - _45) * (Material.PreshaderBuffer[1].w)) + _45), 0.0f)) * _80.w);
   float _90 = (((_74 * COLOR.z) * max(((((Material.PreshaderBuffer[2].z) - _46) * (Material.PreshaderBuffer[1].w)) + _46), 0.0f)) * _80.w);
 
-  // Decoding this as PQ, and encoding sRGB seems to be the fix?
-  if (SCUFFED_UI_FIX != 0.f) {
-    float3 color = (float3(_84, _87, _90));
-    color = renodx::color::bt709::from::BT2020(color);
-    color = renodx::color::pq::DecodeSafe(color, RENODX_DIFFUSE_WHITE_NITS);
+// Decoding this as PQ, and encoding sRGB seems to be the fix?
+#if 1
+  float3 color = (float3(_84, _87, _90));
+  color = renodx::color::bt709::from::BT2020(color);
+  color = renodx::color::pq::DecodeSafe(color, RENODX_DIFFUSE_WHITE_NITS);
 
-    _84 = color.x;
-    _87 = color.y;
-    _90 = color.z;
-  }
+  _84 = color.x;
+  _87 = color.y;
+  _90 = color.z;
+#endif
 
   float _108;
   float _109;
@@ -633,13 +633,14 @@ float4 main(
   SV_Target.z = _158;
   SV_Target.w = 0.0f;
 
-  if (SCUFFED_UI_FIX != 0.f) {
-    // Decode sRGB, and Encode back to PQ
-    SV_Target.rgb = renodx::color::srgb::DecodeSafe(SV_Target.rgb);
-    SV_Target.rgb = renodx::color::bt2020::from::BT709(SV_Target.rgb);
-    SV_Target.rgb = renodx::color::pq::EncodeSafe(SV_Target.rgb, RENODX_DIFFUSE_WHITE_NITS);
+#if 1
+  // Decode sRGB, and Encode back to PQ
+  SV_Target.rgb = renodx::color::srgb::DecodeSafe(SV_Target.rgb);
+  SV_Target.rgb = renodx::color::bt2020::from::BT709(SV_Target.rgb);
+  SV_Target.rgb = renodx::color::pq::EncodeSafe(SV_Target.rgb, RENODX_DIFFUSE_WHITE_NITS);
 
-    SV_Target = saturate(SV_Target);
-  }
+  SV_Target = saturate(SV_Target);
+#endif
+
   return SV_Target;
 }

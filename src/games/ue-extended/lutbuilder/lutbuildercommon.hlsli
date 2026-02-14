@@ -1,5 +1,49 @@
 #include "../shared.h"
 
+#ifndef INCLUDE_LUTBUILDER_COMMON
+#define INCLUDE_LUTBUILDER_COMMON
+
+float3 CorrectHueAndChrominanceOKLab(
+    float3 incorrect_color_bt709,
+    float3 reference_color_bt709,
+    float hue_emulation_strength = 0.f,
+    float chrominance_emulation_strength = 0.f,
+    float hue_emulation_ramp_start = 0.18f,
+    float hue_emulation_ramp_end = 1.f) {
+  if (hue_emulation_strength == 0.0 && chrominance_emulation_strength == 0.0) {
+    return incorrect_color_bt709;
+  }
+
+  float3 perceptual_new = renodx::color::oklab::from::BT709(incorrect_color_bt709);
+  float3 perceptual_reference = renodx::color::oklab::from::BT709(reference_color_bt709);
+
+  float chrominance_current = length(perceptual_new.yz);
+  float chrominance_ratio = 1.0;
+
+  if (hue_emulation_strength != 0.0) {
+    float ramp_denom = hue_emulation_ramp_end - hue_emulation_ramp_start;
+    float ramp_t = clamp(renodx::math::DivideSafe(perceptual_new.x - hue_emulation_ramp_start, ramp_denom, 0.0), 0.0, 1.0);
+    hue_emulation_strength *= ramp_t;
+
+    float chrominance_pre = chrominance_current;
+    perceptual_new.yz = lerp(perceptual_new.yz, perceptual_reference.yz, hue_emulation_strength);
+    float chrominance_post = length(perceptual_new.yz);
+    chrominance_ratio = renodx::math::DivideSafe(chrominance_pre, chrominance_post, 1.0);
+    chrominance_current = chrominance_post;
+  }
+
+  if (chrominance_emulation_strength != 0.0) {
+    float reference_chrominance = length(perceptual_reference.yz);
+    float target_chrominance_ratio = renodx::math::DivideSafe(reference_chrominance, chrominance_current, 1.0);
+    chrominance_ratio = lerp(chrominance_ratio, target_chrominance_ratio, chrominance_emulation_strength);
+  }
+
+  perceptual_new.yz *= chrominance_ratio;
+
+  float3 corrected_color_bt709 = renodx::color::bt709::from::OkLab(perceptual_new);
+  return corrected_color_bt709;
+}
+
 float3 GammaCorrectByLuminance(float3 color, bool pow_to_srgb = false) {
   float y_in = renodx::color::y::from::BT709(color);
   float y_out = renodx::color::correct::Gamma(y_in, pow_to_srgb);
@@ -72,29 +116,11 @@ float3 ApplyExposureContrastFlareHighlightsShadowsByLuminance(float3 untonemappe
   return color;
 }
 
-float3 ApplySaturationBlowoutHueCorrectionHighlightSaturationAP1(float3 tonemapped, float3 hue_reference_color, float y, renodx::color::grade::Config config, bool hue_correct_ignore_highlights = false) {
+float3 ApplySaturationBlowoutHighlightSaturationAP1(float3 tonemapped, renodx::color::grade::Config config) {
   float3 color = tonemapped;
-  if (config.saturation != 1.f || config.dechroma != 0.f || config.hue_correction_strength != 0.f || config.blowout != 0.f) {
+  float y = renodx::color::y::from::AP1(color);
+  if (config.saturation != 1.f || config.dechroma != 0.f || config.blowout != 0.f) {
     float3 perceptual_new = renodx::color::oklab::from::BT709(renodx::color::bt709::from::AP1(color));
-
-    float hue_correction_strength = config.hue_correction_strength;
-    if (hue_correction_strength != 0.f) {
-      float3 perceptual_old = renodx::color::oklab::from::BT709(renodx::color::bt709::from::AP1(hue_reference_color));
-
-      if (hue_correct_ignore_highlights) {
-        float highlight_rolloff = saturate((1.f - perceptual_old.x) / 0.18f);  // roll off from 0.18 - 1.0
-        highlight_rolloff *= highlight_rolloff;                                // keep transition smooth
-        hue_correction_strength *= highlight_rolloff;
-      }
-
-      // Save chrominance to apply black
-      float chrominance_pre_adjust = distance(perceptual_new.yz, 0);
-      perceptual_new.yz = lerp(perceptual_new.yz, perceptual_old.yz, hue_correction_strength);
-      float chrominance_post_adjust = distance(perceptual_new.yz, 0);
-
-      // Apply back previous chrominance
-      perceptual_new.yz *= renodx::math::DivideSafe(chrominance_pre_adjust, chrominance_post_adjust, 1.f);
-    }
 
     if (config.dechroma != 0.f) {
       perceptual_new.yz *= lerp(1.f, 0.f, saturate(pow(y / (10000.f / 100.f), (1.f - config.dechroma))));
@@ -131,7 +157,7 @@ renodx::color::grade::Config CreateColorGradingConfig() {
   cg_config.flare = 0.10f * pow(RENODX_TONE_MAP_FLARE, 10.f);
   cg_config.saturation = RENODX_TONE_MAP_SATURATION;
   cg_config.dechroma = RENODX_TONE_MAP_BLOWOUT;
-  cg_config.hue_correction_strength = RENODX_TONE_MAP_HUE_CORRECTION;
+  // cg_config.hue_correction_strength = 0.f;
   cg_config.blowout = -1.f * (RENODX_TONE_MAP_HIGHLIGHT_SATURATION - 1.f);
 
   return cg_config;
@@ -162,13 +188,19 @@ float4 GenerateOutput(float r, float g, float b, inout float4 SV_Target, uint de
 
   float3 final_color = (float3(r, g, b));
 
-  // Displaymap to User Peak in BT2020
-  float peak_ratio = RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
-  if (RENODX_GAMMA_CORRECTION) peak_ratio = renodx::color::correct::Gamma(peak_ratio, true);
-  final_color = renodx::color::bt2020::from::BT709(final_color);  // displaymap in bt2020
-  // final_color = renodx::tonemap::HermiteSplinePerChannelRolloff(max(0, final_color), peak_ratio, 100.f);
-  final_color = renodx::tonemap::neutwo::PerChannel(max(0, final_color), peak_ratio, 100.f);  // Display map to peak
-  final_color = renodx::color::bt709::from::BT2020(final_color);                              // back to 709 for decoding branches
+  // Dont displaymapp SDR
+  if (RENODX_TONE_MAP_TYPE != 0.f) {
+    // Displaymap to User Peak in BT2020
+    float peak_ratio = RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
+    if (RENODX_GAMMA_CORRECTION) peak_ratio = renodx::color::correct::Gamma(peak_ratio, true);
+    final_color = renodx::color::bt2020::from::BT709(final_color);  // displaymap in bt2020
+    // final_color = renodx::tonemap::HermiteSplinePerChannelRolloff(max(0, final_color), peak_ratio, 100.f);
+    final_color = renodx::tonemap::neutwo::MaxChannel(max(0, final_color), peak_ratio, 100.f);  // Display map to peak
+    final_color = renodx::color::bt709::from::BT2020(final_color);
+
+    renodx::color::grade::Config cg_config = CreateColorGradingConfig();
+    final_color = ApplySaturationBlowoutHighlightSaturationAP1(final_color, cg_config);  // back to 709 for decoding branches
+  }
 
   // Saturate if SDR path
   if (RENODX_TONE_MAP_TYPE == 0.f) final_color = saturate(final_color);
@@ -182,3 +214,5 @@ float4 GenerateOutput(float r, float g, float b, inout float4 SV_Target, uint de
 
   return SV_Target = float4(encoded_color / 1.05f, 0.f);
 }
+
+#endif  // INCLUDE_LUTBUILDER_COMMON

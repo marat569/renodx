@@ -1,4 +1,8 @@
+#ifndef INCLUDE_FILMTONEMAP
+#define INCLUDE_FILMTONEMAP
+
 #include "../shared.h"
+#include "./lutbuildercommon.hlsli"
 
 namespace unrealengine {
 
@@ -162,6 +166,11 @@ float3 ApplyToneCurveExtendedWithHermite(
       saturate(vanilla / 0.5f));
 #endif
 
+  // Correct Hue/Chroma
+  float3 bt709_tonemapped_prebluecorrect = renodx::color::bt709::from::AP1(tonemapped_prebluecorrect_ap1);
+  float3 bt709_hue_and_chrominance_source = renodx::color::bt709::from::AP1(vanilla);
+  tonemapped_prebluecorrect_ap1 = renodx::color::ap1::from::BT709(CorrectHueAndChrominanceOKLab(bt709_tonemapped_prebluecorrect, bt709_hue_and_chrominance_source, RENODX_TONE_MAP_HUE_SHIFT, RENODX_TONE_MAP_CHROMA_CORRECT_BLOWOUT, 1.f));
+
   // Move to pre-encode
   // float peak_ratio = RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
   // if (RENODX_GAMMA_CORRECTION) peak_ratio = renodx::color::correct::Gamma(peak_ratio, true);
@@ -169,3 +178,5 @@ float3 ApplyToneCurveExtendedWithHermite(
 
   return tonemapped_prebluecorrect_ap1;
 }
+
+#endif  // INCLUDE_FILMTONEMAP

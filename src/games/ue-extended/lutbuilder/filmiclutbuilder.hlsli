@@ -1,3 +1,6 @@
+#ifndef INCLUDE_FILMIC_LUTBUILDER
+#define INCLUDE_FILMIC_LUTBUILDER
+
 #include "./filmtonemap.hlsli"
 #include "./lutbuildercommon.hlsli"
 
@@ -139,9 +142,10 @@ void ApplyFilmToneMapWithBlueCorrect(float untonemapped_r, float untonemapped_g,
   tonemapped_ap1 = ApplyBlueCorrectionPost(tonemapped_prebluecorrect_ap1, cb_config);
   tonemapped_ap1 = max(0, tonemapped_ap1);
 
-  if (RENODX_TONE_MAP_TYPE != 0.f) {
-    tonemapped_ap1 = ApplySaturationBlowoutHueCorrectionHighlightSaturationAP1(tonemapped_ap1, hue_reference_color, y, cg_config, RENODX_TONE_MAP_HUE_CORRECTION_TYPE);
-  }
+  // Moved to GenerateOutput
+  // if (RENODX_TONE_MAP_TYPE != 0.f) {
+  //   tonemapped_ap1 = ApplySaturationBlowoutHueCorrectionHighlightSaturationAP1(tonemapped_ap1, hue_reference_color, y, cg_config, RENODX_TONE_MAP_HUE_CORRECTION_TYPE);
+  // }
 
   tonemapped_r = tonemapped_ap1.r, tonemapped_g = tonemapped_ap1.g, tonemapped_b = tonemapped_ap1.b;
 
@@ -723,3 +727,5 @@ void Sample4LUTsUpgradeToneMap(
 }
 
 // //#endif  // End Use SDR Luts
+
+#endif  // INCLUDE_FILMIC_LUTBUILDER

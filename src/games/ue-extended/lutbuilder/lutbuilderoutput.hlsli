@@ -1,3 +1,4 @@
+#include "./lutbuildercommon.hlsli"
 #include "./filmiclutbuilder.hlsli"
 
 // No SDR Lut

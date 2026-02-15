@@ -119,6 +119,7 @@ float3 ApplyExposureContrastFlareHighlightsShadowsByLuminance(float3 untonemappe
 float3 ApplySaturationBlowoutHighlightSaturationAP1(float3 tonemapped, renodx::color::grade::Config config) {
   float3 color = tonemapped;
   float y = renodx::color::y::from::AP1(color);
+
   if (config.saturation != 1.f || config.dechroma != 0.f || config.blowout != 0.f) {
     float3 perceptual_new = renodx::color::oklab::from::BT709(renodx::color::bt709::from::AP1(color));
 
@@ -186,6 +187,9 @@ float3 ApplyGammaCorrection(float3 incorrect_color) {
 float4 GenerateOutput(float r, float g, float b, inout float4 SV_Target, uint device) {
   // if (RENODX_TONE_MAP_TYPE == 0 || device == 8u) return false;
 
+  // final_color is in BT709
+  // We displaymap + run Saturation/Dechroma/HighlightsSaturation so SDR Luts dont get griefed
+  // And then go back to BT709 for SDR/HDR path branching
   float3 final_color = (float3(r, g, b));
 
   // Dont displaymapp SDR
@@ -193,13 +197,17 @@ float4 GenerateOutput(float r, float g, float b, inout float4 SV_Target, uint de
     // Displaymap to User Peak in BT2020
     float peak_ratio = RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
     if (RENODX_GAMMA_CORRECTION) peak_ratio = renodx::color::correct::Gamma(peak_ratio, true);
-    final_color = renodx::color::bt2020::from::BT709(final_color);  // displaymap in bt2020
-    // final_color = renodx::tonemap::HermiteSplinePerChannelRolloff(max(0, final_color), peak_ratio, 100.f);
-    final_color = renodx::tonemap::neutwo::MaxChannel(max(0, final_color), peak_ratio, 100.f);  // Display map to peak
-    final_color = renodx::color::bt709::from::BT2020(final_color);
 
+    // Doing stuff in bt2020 is almost always better than BT709
+    float3 bt2020_final_color = renodx::color::bt2020::from::BT709(final_color);                                             // displaymap in bt2020
+    float3 bt2020_displaymapped_color = renodx::tonemap::neutwo::MaxChannel(max(0, bt2020_final_color), peak_ratio, 100.f);  // Display map to peak
+    float3 bt709_displaymapped_color = renodx::color::bt709::from::BT2020(bt2020_displaymapped_color);                       // Back to BT709
+
+    // Colorgrade in AP1, and back to BT709
     renodx::color::grade::Config cg_config = CreateColorGradingConfig();
-    final_color = ApplySaturationBlowoutHighlightSaturationAP1(final_color, cg_config);  // back to 709 for decoding branches
+    float3 bt709_colorgraded_color = renodx::color::bt709::from::AP1(ApplySaturationBlowoutHighlightSaturationAP1(renodx::color::ap1::from::BT709(bt709_displaymapped_color), cg_config));
+
+    final_color = bt709_colorgraded_color;
   }
 
   // Saturate if SDR path

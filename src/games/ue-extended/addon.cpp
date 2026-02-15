@@ -211,7 +211,7 @@ renodx::utils::settings::Settings settings = {
     new renodx::utils::settings::Setting{
         .key = "ColorGradeChromaCorrectBlowout",
         .binding = &shader_injection.tone_map_chroma_correct_blowout,
-        .default_value = 100.f,
+        .default_value = 75.f,
         .label = "Blowout",
         .section = "Tone Mapping & Color Grading",
         .tooltip = "Emulates blowout from per channel tonemapping.",

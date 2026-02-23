@@ -755,6 +755,18 @@ const std::unordered_map<
                 {"Set_Path", 0.f},
             },
         },
+        {
+            "Marvel's Midnight Suns",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
+        {
+            "MK12.exe",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
 
 };
 

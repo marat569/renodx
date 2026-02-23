@@ -1,9 +1,9 @@
-// Found in Spongebob Battle for Bikini Bottem (UE 4.23)
+// Journey to the Savage Planet / Twin Mirror / Tales of Arise
+// 4.21.1.0
 // bookmark
 
 #include "../lutbuilderoutput.hlsli"
 
-// ---- Created with 3Dmigoto v1.3.16 on Fri Feb 20 01:03:27 2026
 cbuffer cb0 : register(b0) {
   float4 cb0[67];
 }
@@ -52,7 +52,7 @@ void main(
   r0.xyw = log2(r0.xyw);
   r0.xyw = float3(6.27739477, 6.27739477, 6.27739477) * r0.xyw;
   r0.xyw = exp2(r0.xyw);
-  r0.xyw = float3(100, 100, 100) * r0.xyw;
+  r0.xyw = float3(10000, 10000, 10000) * r0.xyw;
   r1.xy = v0.xy * float2(1.03225803, 1.03225803) + float2(-0.0161290318, -0.0161290318);
   r1.xyz = float3(-0.434017599, -0.434017599, -0.434017599) + r1.xyz;
   r1.xyz = float3(14, 14, 14) * r1.xyz;
@@ -270,8 +270,8 @@ void main(
   cb_config.ue_filmshoulder = asfloat(cb0[36].z);
   cb_config.ue_filmslope = asfloat(cb0[36].x);
   cb_config.ue_filmwhiteclip = asfloat(cb0[37].x);
-  // cb_config.ue_tonecurveammount = asfloat(cb0[66].z); // Doesnt exist
-  cb_config.ue_tonecurveammount = asfloat(1.f);  // Doesnt exist
+  // cb_config.ue_tonecurveammount = asfloat(cb0[66].z); // Doesn't exist in the code, but a valid cbuffer?
+  cb_config.ue_tonecurveammount = asfloat(1.f);  // 1.f seems to be the default for games without this
   cb_config.ue_mappingpolynomial = asfloat(cb0[26].xyz);
   cb_config.ue_overlaycolor = asfloat(cb0[43].xyzw);
   cb_config.ue_bluecorrection = asfloat(cb0[66].x);
@@ -280,6 +280,7 @@ void main(
   o0 = ProcessLutbuilder(float3(untonemapped_ap1), cb_config, o0, asuint(cb0[65].z));
   return;
 
+  // AP1 => BT709
   r1.x = dot(float3(1.70505154, -0.621790707, -0.0832583979), r0.xyz);
   r1.y = dot(float3(-0.130257145, 1.14080286, -0.0105485283), r0.xyz);
   r1.z = dot(float3(-0.0240032747, -0.128968775, 1.15297174), r0.xyz);
@@ -309,6 +310,7 @@ void main(
     r2.xyz = r2.xyz * cb0[30].www + r3.xyz;
     r2.xyz = r5.xyz * r4.xyz + r2.xyz;
     r2.xyz = float3(-0.00200000009, -0.00200000009, -0.00200000009) + r2.xyz;
+
   } else {
     r3.x = dot(float3(0.938639402, 1.02359565e-10, 0.0613606237), r0.xyz);
     r3.y = dot(float3(8.36008554e-11, 0.830794156, 0.169205874), r0.xyz);
@@ -480,6 +482,7 @@ void main(
     r3.x = dot(float3(1.70505154, -0.621790707, -0.0832583979), r0.xyz);
     r3.y = dot(float3(-0.130257145, 1.14080286, -0.0105485283), r0.xyz);
     r3.z = dot(float3(-0.0240032747, -0.128968775, 1.15297174), r0.xyz);
+
     r2.xyz = max(float3(0, 0, 0), r3.xyz);
   }
   r0.xyz = r2.xyz * r2.xyz;
@@ -493,6 +496,7 @@ void main(
   r0.xyz = log2(r0.xyz);
   r0.xyz = cb0[27].yyy * r0.xyz;
   r2.xyz = exp2(r0.xyz);
+
   [branch]
   if (asuint(cb0[65].z) == 0) {
     r3.xyz = float3(12.9200001, 12.9200001, 12.9200001) * r2.xyz;
@@ -1442,44 +1446,43 @@ void main(
           r0.xyz = exp2(r6.xyz);
         } else {
           r0.w = cmp(asint(cb0[65].z) == 7);
-          if (r0.w != 0) {
-            r6.x = dot(float3(0.613191485, 0.33951208, 0.0473663323), r1.xyz);
-            r6.y = dot(float3(0.0702069029, 0.916335821, 0.0134500116), r1.xyz);
-            r6.z = dot(float3(0.0206188709, 0.109567292, 0.869606733), r1.xyz);
-            r7.x = dot(r4.xyz, r6.xyz);
-            r7.y = dot(r5.xyz, r6.xyz);
-            r7.z = dot(r3.xyz, r6.xyz);
-            r6.xyz = float3(9.99999975e-05, 9.99999975e-05, 9.99999975e-05) * r7.xyz;
-            r6.xyz = log2(r6.xyz);
-            r6.xyz = float3(0.159301758, 0.159301758, 0.159301758) * r6.xyz;
-            r6.xyz = exp2(r6.xyz);
-            r7.xyz = r6.xyz * float3(18.8515625, 18.8515625, 18.8515625) + float3(0.8359375, 0.8359375, 0.8359375);
-            r6.xyz = r6.xyz * float3(18.6875, 18.6875, 18.6875) + float3(1, 1, 1);
-            r6.xyz = rcp(r6.xyz);
-            r6.xyz = r7.xyz * r6.xyz;
-            r6.xyz = log2(r6.xyz);
-            r6.xyz = float3(78.84375, 78.84375, 78.84375) * r6.xyz;
-            r0.xyz = exp2(r6.xyz);
-          } else {
-            r0.w = cmp(asint(cb0[65].z) == 8);
-            r6.x = dot(float3(0.613191485, 0.33951208, 0.0473663323), r2.xyz);
-            r6.y = dot(float3(0.0702069029, 0.916335821, 0.0134500116), r2.xyz);
-            r6.z = dot(float3(0.0206188709, 0.109567292, 0.869606733), r2.xyz);
-            r1.w = dot(r4.xyz, r6.xyz);
-            r2.x = dot(r5.xyz, r6.xyz);
-            r2.y = dot(r3.xyz, r6.xyz);
-            r3.x = log2(r1.w);
-            r3.y = log2(r2.x);
-            r3.z = log2(r2.y);
-            r2.xyz = cb0[27].zzz * r3.xyz;
-            r2.xyz = exp2(r2.xyz);
-            r0.xyz = r0.www ? r1.xyz : r2.xyz;
-          }
+          r6.x = dot(float3(0.613191485, 0.33951208, 0.0473663323), r1.xyz);
+          r6.y = dot(float3(0.0702069029, 0.916335821, 0.0134500116), r1.xyz);
+          r6.z = dot(float3(0.0206188709, 0.109567292, 0.869606733), r1.xyz);
+          r1.x = dot(r4.xyz, r6.xyz);
+          r1.y = dot(r5.xyz, r6.xyz);
+          r1.z = dot(r3.xyz, r6.xyz);
+          r1.xyz = float3(9.99999975e-05, 9.99999975e-05, 9.99999975e-05) * r1.xyz;
+          r1.xyz = log2(r1.xyz);
+          r1.xyz = float3(0.159301758, 0.159301758, 0.159301758) * r1.xyz;
+          r1.xyz = exp2(r1.xyz);
+          r6.xyz = r1.xyz * float3(18.8515625, 18.8515625, 18.8515625) + float3(0.8359375, 0.8359375, 0.8359375);
+          r1.xyz = r1.xyz * float3(18.6875, 18.6875, 18.6875) + float3(1, 1, 1);
+          r1.xyz = rcp(r1.xyz);
+          r1.xyz = r6.xyz * r1.xyz;
+          r1.xyz = log2(r1.xyz);
+          r1.xyz = float3(78.84375, 78.84375, 78.84375) * r1.xyz;
+          r1.xyz = exp2(r1.xyz);
+          r6.x = dot(float3(0.613191485, 0.33951208, 0.0473663323), r2.xyz);
+          r6.y = dot(float3(0.0702069029, 0.916335821, 0.0134500116), r2.xyz);
+          r6.z = dot(float3(0.0206188709, 0.109567292, 0.869606733), r2.xyz);
+          r1.w = dot(r4.xyz, r6.xyz);
+          r2.x = dot(r5.xyz, r6.xyz);
+          r2.y = dot(r3.xyz, r6.xyz);
+          r3.x = log2(r1.w);
+          r3.y = log2(r2.x);
+          r3.z = log2(r2.y);
+          r2.xyz = cb0[27].zzz * r3.xyz;
+          r2.xyz = exp2(r2.xyz);
+          r0.xyz = r0.www ? r1.xyz : r2.xyz;
         }
       }
     }
   }
   o0.xyz = float3(0.952381015, 0.952381015, 0.952381015) * r0.xyz;
   o0.w = 0;
+
+  o0 = saturate(o0);
+
   return;
 }

@@ -1,4 +1,5 @@
 // Found in Returnal (Native HDR, ue 4.25)
+// Bookmark
 
 #include "../lutbuilderoutput.hlsli"
 
@@ -269,10 +270,11 @@ void main(
   cb_config.ue_filmshoulder = asfloat(cb0[36].z);
   cb_config.ue_filmslope = asfloat(cb0[36].x);
   cb_config.ue_filmwhiteclip = asfloat(cb0[37].x);
-  cb_config.ue_tonecurveammount = asfloat(cb0[66].z);
+  // cb_config.ue_tonecurveammount = asfloat(cb0[66].z); // Also doesn't exist here
+  cb_config.ue_tonecurveammount = asfloat(1.f);  // 1.f seems to be the default if older games dont have the code
   cb_config.ue_mappingpolynomial = asfloat(cb0[26].xyz);
   cb_config.ue_overlaycolor = asfloat(cb0[43].xyzw);
-  cb_config.ue_bluecorrection = asfloat(cb0[66].x);
+  cb_config.ue_bluecorrection = asfloat(cb0[67].z);  // cb0[66].x
   cb_config.ue_colorscale = asfloat(cb0[42].yzw);
 
   o0 = ProcessLutbuilder(float3(untonemapped_ap1), cb_config, o0, asuint(cb0[65].z));

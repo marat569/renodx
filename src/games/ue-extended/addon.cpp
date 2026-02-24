@@ -767,6 +767,12 @@ const std::unordered_map<
                 {"Set_Path", 0.f},
             },
         },
+        {
+            "Alone in the Dark",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
 
 };
 

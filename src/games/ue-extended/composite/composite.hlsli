@@ -74,6 +74,13 @@ bool HandleUICompositing(float4 ui_color_gamma, float4 scene_color_pq, inout flo
   float3 composited_color_gamma = ui_color_gamma.rgb + scene_color_gamma * (1.0 - ui_alpha);
   float3 composited_color_linear = renodx::color::gamma::DecodeSafe(composited_color_gamma);
 
+  // #if 1
+  //   // clamp swapchain to peak nits or ui nits by max channel for meme-ui overshoot
+  //   float swapchain_clamp_nits = renodx::math::Select(RENODX_TONE_MAP_TYPE, RENODX_PEAK_WHITE_NITS, RENODX_DIFFUSE_WHITE_NITS);
+  //   float max_channel = max(max(max(composited_color_linear.r, composited_color_linear.g), composited_color_linear.b), swapchain_clamp_nits);
+  //   composited_color_linear.rgb *= swapchain_clamp_nits / max_channel;  // Clamp UI or Videos
+  // #endif
+
   // return ui alpha for better FG support
   if (output_mode == 0u) {  // HDR10
     output_color = OutputHDR10(float4(composited_color_linear, ui_alpha), RENODX_GRAPHICS_WHITE_NITS);

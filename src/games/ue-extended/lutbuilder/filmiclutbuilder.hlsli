@@ -180,6 +180,7 @@ float3 Unclamp(float3 original_gamma, float3 black_gamma, float3 mid_gray_gamma,
 
 float3 ComputeGamutCompressionScaleAndCompress(float3 color_linear, inout float gamut_compression_scale) {
   // if (RENODX_TONE_MAP_TYPE == 4.f || CUSTOM_LUT_GAMUT_RESTORATION == 0.f || !is_hdr) return color_linear;
+  if (CUSTOM_LUT_GAMUT_RESTORATION == 0.f) return color_linear;
 
   const float MID_GRAY_GAMMA = log(1 / (pow(10, 0.75))) / log(0.5f);  // ~2.49f
 
@@ -194,7 +195,8 @@ float3 ComputeGamutCompressionScaleAndCompress(float3 color_linear, inout float 
 }
 
 float3 GamutDecompress(float3 color_linear, float gamut_compression_scale) {
-  // if (RENODX_TONE_MAP_TYPE == 4.f || CUSTOM_LUT_GAMUT_RESTORATION == 0.f || gamut_compression_scale == 1.f || !is_hdr) return color_linear;
+  // if (RENODX_TONE_MAP_TYPE == 4.f || CUSTOM_LUT_GAMUT_RESTORATION == 0.f || !is_hdr) return color_linear;
+  if (CUSTOM_LUT_GAMUT_RESTORATION == 0.f) return color_linear;
 
   const float MID_GRAY_GAMMA = log(1 / (pow(10, 0.75))) / log(0.5f);  // ~2.49f
 

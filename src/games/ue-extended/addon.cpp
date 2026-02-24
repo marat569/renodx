@@ -513,8 +513,8 @@ void OnPresetOff() {
       {"ColorGradeBlowout", 0.f},
       {"ColorGradeFlare", 0.f},
       {"ColorGradeLUTStrength", 100.f},
-      {"ColorGradeLUTScaling", 100.f},
-      {"ColorGradeLUTGamutRestoration", 1.f},
+      {"ColorGradeLUTScaling", 0.f},
+      {"ColorGradeLUTGamutRestoration", 0.f},
       {"FxGrainType", 0.f},
       {"FxGrainStrength", 50.f},
   });

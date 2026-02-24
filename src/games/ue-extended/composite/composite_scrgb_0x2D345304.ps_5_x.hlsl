@@ -1,7 +1,7 @@
 
 #include "./composite.hlsli"
 
-// Found in Alone in the Dark 2024 (Native HDR) -- UE 4.27
+// Found in Alone in the Dark 2024 (Native HDR, scRGB) -- UE 4.27
 
 // ---- Created with 3Dmigoto v1.3.16 on Mon Feb 23 18:34:59 2026
 Texture2D<float4> t1 : register(t1);
@@ -42,7 +42,6 @@ void main(
   r1.z = dot(float3(0.0163962338, 0.0880229846, 0.895499706), r0.xyz);
   r0.xyz = cb0[10].www * r1.xyz;
   r1.xyz = t1.Sample(s1_s, v0.xy).xyz;
-  float4 scene_color_pq = float4(r1.xyz, 1.f);
   // The game's Native HDR is scRGB; so the sample is linear
   // Need to convert to swap colorspace to BT2020 + PQ Encode
   float4 scene_color_linear = float4(r1.xyz, 1.f);

@@ -91,7 +91,7 @@ void main(uint3 vThreadID: SV_DispatchThreadID) {
   r1.zw = r2.xy + -r3.xy;
   r1.xy = r1.xy + r1.zw;
   r1.zw = float2(0.312700003, 0.328999996);
-  r1.xyzw = cb0[44].xxxx ? r1.xyzw : r1.zwxy;
+  r1.xyzw = (asuint(cb0[44].x) != 0u) ? r1.xyzw : r1.zwxy;
   r2.xy = max(float2(1.00000001e-10, 1.00000001e-10), r1.yw);
   r2.zw = float2(1, 1) + -r1.xz;
   r1.yw = r2.zw + -r1.yw;
@@ -171,7 +171,7 @@ void main(uint3 vThreadID: SV_DispatchThreadID) {
   r1.z = dot(float3(-0.0257932581, -0.0986256376, 1.20369434), r0.xyz);
   r1.xyz = r1.xyz + -r0.xyz;
   r1.xyz = r0.www * r1.xyz + r0.xyz;
-  r0.xyz = cb0[44].yyy ? r0.xyz : r1.xyz;
+  r0.xyz = (asuint(cb0[44].y) != 0u) ? r0.xyz : r1.xyz;
   r0.w = dot(r0.xyz, float3(0.272228718, 0.674081743, 0.0536895171));
   r1.xyzw = cb0[50].xyzw * cb0[45].xyzw;
   r2.xyzw = cb0[51].xyzw * cb0[46].xyzw;

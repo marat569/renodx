@@ -641,12 +641,6 @@ const std::unordered_map<
             },
         },
         {
-            "Avowed",
-            {
-                {"Set_Path", 0.f},
-            },
-        },
-        {
             "InfinityNikki",
             {
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
@@ -667,12 +661,6 @@ const std::unordered_map<
                 {"Upgrade_CopyDestinations", 1.f},
                 {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
-            },
-        },
-        {
-            "Lies of P",
-            {
-                {"Set_Path", 0.f},
             },
         },
         {
@@ -704,12 +692,6 @@ const std::unordered_map<
             },
         },
         {
-            "Lost Soul Aside",
-            {
-                {"Set_Path", 0.f},
-            },
-        },
-        {
             "Borderlands3.exe",
             {
                 {"Upgrade_CopyDestinations", 1.f},
@@ -737,6 +719,7 @@ const std::unordered_map<
                 {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
             },
         },
+        // Native HDR on games (Path off)
         {
             "Hell is Us",
             {
@@ -769,6 +752,30 @@ const std::unordered_map<
         },
         {
             "Alone in the Dark",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
+        {
+            "Avowed",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
+        {
+            "Lost Soul Aside",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
+        {
+            "Lies of P",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
+        {
+            "Still Wakes The Deep",
             {
                 {"Set_Path", 0.f},
             },

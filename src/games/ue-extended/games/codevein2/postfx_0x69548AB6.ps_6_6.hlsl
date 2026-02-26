@@ -1,9 +1,4 @@
-#include "./uicommon.hlsli"
-
-// This is the shader responsible for UI Flickering
-// Current fix changes the color a bit, but fixs the artifacting
-
-// clang-format off
+#include "../postfx.hlsli"
 
 struct FViewConstants {
   float4 TranslatedWorldToClip[4];
@@ -512,135 +507,103 @@ struct FViewConstants {
   float3 TLASPreViewTranslationLow;
 };
 
+Texture2D<float4> SceneTexturesStruct_SceneDepthTexture : register(t0);
 
-Texture2D<float4> Material_Texture2D_0 : register(t0);
+Texture2D<float4> SceneTexturesStruct_CustomDepthTexture : register(t1);
 
-Texture2D<float4> ElementTexture : register(t1);
+Texture2D<uint2> SceneTexturesStruct_CustomStencilTexture : register(t2);
 
+Texture2D<float4> Material_Texture2D_0 : register(t3);
 
+Texture2D<float4> PostProcessInput_0_Texture : register(t4);
 
 cbuffer $Globals : register(b0) {
-  float4 GammaAndAlphaValues : packoffset(c000.x);
-  float4 DrawFlags : packoffset(c001.x);
+  float2 PostProcessInput_0_UVViewportMin : packoffset(c000.x);
+  float2 PostProcessInput_0_UVViewportSize : packoffset(c000.z);
+  float2 PostProcessInput_1_UVViewportMin : packoffset(c001.x);
+  float2 PostProcessInput_1_UVViewportSize : packoffset(c001.z);
+  float2 PostProcessInput_2_UVViewportMin : packoffset(c002.x);
+  float2 PostProcessInput_2_UVViewportSize : packoffset(c002.z);
+  float2 PostProcessInput_3_UVViewportMin : packoffset(c003.x);
+  float2 PostProcessInput_3_UVViewportSize : packoffset(c003.z);
+  float2 PostProcessInput_4_UVViewportMin : packoffset(c004.x);
+  float2 PostProcessInput_4_UVViewportSize : packoffset(c004.z);
+  uint2 PostProcessOutput_ViewportMin : packoffset(c005.x);
+  float2 PostProcessOutput_ViewportSizeInverse : packoffset(c005.z);
 };
+
+// clang-format off
 
 cbuffer View : register(b1) {
   FViewConstants View : packoffset(c000.x);
 };
 
-cbuffer Material : register(b2) {
+cbuffer MaterialCollection0 : register(b2) {
+  struct FMaterialCollection0Constants {
+    float4 Vectors[2];
+  } MaterialCollection0 : packoffset(c000.x);
+};
+
+cbuffer Material : register(b3) {
   struct FMaterialConstants {
-    float4 PreshaderBuffer[4];
+    float4 PreshaderBuffer[2];
     uint BindlessSRV_Texture2D_0;
-    uint Padding68;
+    uint Padding36;
     uint BindlessSampler_Texture2D_0Sampler;
-    uint Padding76;
+    uint Padding44;
     uint BindlessSampler_Wrap_WorldGroupSettings;
-    uint Padding84;
+    uint Padding52;
     uint BindlessSampler_Clamp_WorldGroupSettings;
   } Material : packoffset(c000.x);
 };
 
-SamplerState Material_Texture2D_0Sampler : register(s0);
+SamplerState SceneTexturesStruct_PointClampSampler : register(s0);
 
-SamplerState ElementTextureSampler : register(s1);
+SamplerState Material_Clamp_WorldGroupSettings : register(s1);
+
+SamplerState PostProcessInput_0_Sampler : register(s2);
 
 // clang-format on
 
+// This shader might need fixing, seems to work for now
+
 float4 main(
     noperspective float4 SV_Position: SV_Position,
-    linear float4 COLOR: COLOR,
-    linear float4 COLOR_1: COLOR1,
-    linear float4 ORIGINAL_POSITION: ORIGINAL_POSITION,
-    linear float2 TEXCOORD: TEXCOORD,
-    linear float4 TEXCOORD_1: TEXCOORD1) : SV_Target {
+    linear float4 TEXCOORD: TEXCOORD) : SV_Target {
   float4 SV_Target;
-  float _18 = TEXCOORD_1.z + -0.5f;
-  float _19 = TEXCOORD_1.w + -0.5f;
-  float4 _35 = Material_Texture2D_0.Sample(Material_Texture2D_0Sampler, float2((((Material.PreshaderBuffer[0].x) * (dot(float2(_18, _19), float2(1.0f, 0.0f)) + 0.5f)) + (Material.PreshaderBuffer[0].z)), (((Material.PreshaderBuffer[0].y) * (dot(float2(_18, _19), float2(0.0f, 1.0f)) + 0.5f)) + (Material.PreshaderBuffer[0].w))));
+  float _25 = PostProcessOutput_ViewportSizeInverse.y * (SV_Position.y - float((uint)(int)(PostProcessOutput_ViewportMin.y)));
+  float _30 = (SV_Position.x - float((uint)(int)(PostProcessOutput_ViewportMin.x))) * PostProcessOutput_ViewportSizeInverse.x;
+  float4 _42 = PostProcessInput_0_Texture.Sample(PostProcessInput_0_Sampler, float2(((_30 * PostProcessInput_0_UVViewportSize.x) + PostProcessInput_0_UVViewportMin.x), ((_25 * PostProcessInput_0_UVViewportSize.y) + PostProcessInput_0_UVViewportMin.y)));
 
-  float _44 = (Material.PreshaderBuffer[1].x) * _35.x;
-  float _45 = (Material.PreshaderBuffer[1].y) * _35.y;
-  float _46 = (Material.PreshaderBuffer[1].z) * _35.z;
-  float _74 = saturate(((Material.PreshaderBuffer[3].y) * _35.w) * ((Material.PreshaderBuffer[3].x) + (sin((View.GameTime * 6.2831854820251465f) * (Material.PreshaderBuffer[2].w)) * 0.5f)));
-
-  float4 _80 = ElementTexture.Sample(ElementTextureSampler, float2(TEXCOORD_1.x, TEXCOORD_1.y));
-
-  float _84 = (((_74 * COLOR.x) * max(((((Material.PreshaderBuffer[2].x) - _44) * (Material.PreshaderBuffer[1].w)) + _44), 0.0f)) * _80.w);
-  float _87 = (((_74 * COLOR.y) * max(((((Material.PreshaderBuffer[2].y) - _45) * (Material.PreshaderBuffer[1].w)) + _45), 0.0f)) * _80.w);
-  float _90 = (((_74 * COLOR.z) * max(((((Material.PreshaderBuffer[2].z) - _46) * (Material.PreshaderBuffer[1].w)) + _46), 0.0f)) * _80.w);
-
-// Decoding this as PQ, and encoding sRGB seems to be the fix?
-#if 1
-  float3 color = (float3(_84, _87, _90));
-  color = renodx::color::bt709::from::BT2020(color);
-  color = renodx::color::pq::DecodeSafe(color, RENODX_DIFFUSE_WHITE_NITS);
-
-  _84 = color.x;
-  _87 = color.y;
-  _90 = color.z;
-#endif
-
-  float _108;
-  float _109;
-  float _110;
-  float _134;
-  float _145;
-  float _156;
-  float _157;
-  float _158;
-  [branch]
-  if (!(GammaAndAlphaValues.w == 1.0f)) {
-    _108 = saturate((GammaAndAlphaValues.w * (_84 + -0.25f)) + 0.25f);
-    _109 = saturate((GammaAndAlphaValues.w * (_87 + -0.25f)) + 0.25f);
-    _110 = saturate((GammaAndAlphaValues.w * (_90 + -0.25f)) + 0.25f);
-  } else {
-    _108 = _84;
-    _109 = _87;
-    _110 = _90;
+  // _42 = game render
+  // Convert game render from PQ -> Gamma
+  if (PROCESSING_PATH == 0.f) {
+    _42 = ConvertPQToSRGB(_42);
   }
-  [branch]
-  if (!(GammaAndAlphaValues.y == 1.0f)) {
-    float _121 = (pow(_108, GammaAndAlphaValues.x));
-    float _122 = (pow(_109, GammaAndAlphaValues.x));
-    float _123 = (pow(_110, GammaAndAlphaValues.x));
-    if (_121 < 0.0031306699384003878f) {
-      _134 = (_121 * 12.920000076293945f);
-    } else {
-      _134 = (((pow(_121, 0.4166666567325592f)) * 1.0549999475479126f) + -0.054999999701976776f);
-    }
-    if (_122 < 0.0031306699384003878f) {
-      _145 = (_122 * 12.920000076293945f);
-    } else {
-      _145 = (((pow(_122, 0.4166666567325592f)) * 1.0549999475479126f) + -0.054999999701976776f);
-    }
-    if (_123 < 0.0031306699384003878f) {
-      _156 = _134;
-      _157 = _145;
-      _158 = (_123 * 12.920000076293945f);
-    } else {
-      _156 = _134;
-      _157 = _145;
-      _158 = (((pow(_123, 0.4166666567325592f)) * 1.0549999475479126f) + -0.054999999701976776f);
-    }
-  } else {
-    _156 = _108;
-    _157 = _109;
-    _158 = _110;
-  }
-  SV_Target.x = _156;
-  SV_Target.y = _157;
-  SV_Target.z = _158;
+
+  uint2 _68 = SceneTexturesStruct_CustomStencilTexture.Load(int3((uint)(uint((((_30 * View.ViewSizeAndInvSize.x) + View.ViewRectMin.x) * View.BufferSizeAndInvSize.z) * View.BufferSizeAndInvSize.x)), (uint)(uint((((_25 * View.ViewSizeAndInvSize.y) + View.ViewRectMin.y) * View.BufferSizeAndInvSize.w) * View.BufferSizeAndInvSize.y)), 0));
+
+  float _73 = floor(float((uint)(int)(_68.y)) * 0.03125f) * 0.5f;
+  float _77 = frac(abs(_73));
+  float4 _88 = Material_Texture2D_0.Sample(Material_Clamp_WorldGroupSettings, float2(_25, (Material.PreshaderBuffer[0].x)));
+  float _119 = ((((SV_Position.x - float((uint)(int)(PostProcessOutput_ViewportMin.x))) * PostProcessOutput_ViewportSizeInverse.x) * View.ViewSizeAndInvSize.x) + View.ViewRectMin.x) * View.BufferSizeAndInvSize.z;
+  float _120 = ((((SV_Position.y - float((uint)(int)(PostProcessOutput_ViewportMin.y))) * PostProcessOutput_ViewportSizeInverse.y) * View.ViewSizeAndInvSize.y) + View.ViewRectMin.y) * View.BufferSizeAndInvSize.w;
+  float4 _123 = SceneTexturesStruct_SceneDepthTexture.SampleLevel(SceneTexturesStruct_PointClampSampler, float2(_119, _120), 0.0f);
+  float4 _135 = SceneTexturesStruct_CustomDepthTexture.SampleLevel(SceneTexturesStruct_PointClampSampler, float2(_119, _120), 0.0f);
+  float _147 = ((select((_73 >= (-0.0f - _73)), _77, (-0.0f - _77)) * 2.0f) * ((_88.x * ((MaterialCollection0.Vectors[0].w) - (MaterialCollection0.Vectors[0].z))) + (MaterialCollection0.Vectors[0].z))) * saturate((((((View.InvDeviceZToWorldZTransform.x * _123.x) + View.InvDeviceZToWorldZTransform.y) + (1.0f / ((View.InvDeviceZToWorldZTransform.z * _123.x) - View.InvDeviceZToWorldZTransform.w))) - View.InvDeviceZToWorldZTransform.y) - (View.InvDeviceZToWorldZTransform.x * _135.x)) - (1.0f / ((View.InvDeviceZToWorldZTransform.z * _135.x) - View.InvDeviceZToWorldZTransform.w)));
+  float _151 = _42.x - (_147 * _42.x);
+  float _152 = _42.y - (_147 * _42.y);
+  float _153 = _42.z - (_147 * _42.z);
+  // Removed max 0
+  SV_Target.x = ((((Material.PreshaderBuffer[1].x) - _151) * (Material.PreshaderBuffer[0].y)) + _151);
+  SV_Target.y = ((((Material.PreshaderBuffer[1].y) - _152) * (Material.PreshaderBuffer[0].y)) + _152);
+  SV_Target.z = ((((Material.PreshaderBuffer[1].z) - _153) * (Material.PreshaderBuffer[0].y)) + _153);
   SV_Target.w = 0.0f;
 
-#if 1
-  // Decode sRGB, and Encode back to PQ
-  SV_Target.rgb = renodx::color::srgb::DecodeSafe(SV_Target.rgb);
-  SV_Target.rgb = renodx::color::bt2020::from::BT709(SV_Target.rgb);
-  SV_Target.rgb = renodx::color::pq::EncodeSafe(SV_Target.rgb, RENODX_DIFFUSE_WHITE_NITS);
-
-  SV_Target = saturate(SV_Target);
-#endif
+  // Convert output from gamma back to -> PQ
+  if (PROCESSING_PATH == 0.f) {
+    SV_Target.rgb = ConvertSRGBtoPQ(SV_Target.rgb);
+  }
 
   return SV_Target;
 }

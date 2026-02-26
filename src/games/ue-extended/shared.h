@@ -4,12 +4,12 @@
 #define ENABLE_SLIDERS   1
 #define FIX_POST_PROCESS 2
 
-#define RENODX_TONE_MAP_TYPE       shader_injection.tone_map_type  // 0 - Vanilla, 1 - None, 2 - ACES, 3 - RenoDRT, 4 - SDR
-#define RENODX_PEAK_WHITE_NITS     shader_injection.peak_white_nits
-#define RENODX_DIFFUSE_WHITE_NITS  shader_injection.diffuse_white_nits
-#define RENODX_GRAPHICS_WHITE_NITS shader_injection.graphics_white_nits
-#define RENODX_GAMMA_CORRECTION    shader_injection.gamma_correction
-#define RENODX_GAMMA_CORRECTION_UI shader_injection.gamma_correction_ui
+#define RENODX_TONE_MAP_TYPE                   shader_injection.tone_map_type  // 0 - Vanilla, 1 - None, 2 - ACES, 3 - RenoDRT, 4 - SDR
+#define RENODX_PEAK_WHITE_NITS                 shader_injection.peak_white_nits
+#define RENODX_DIFFUSE_WHITE_NITS              shader_injection.diffuse_white_nits
+#define RENODX_GRAPHICS_WHITE_NITS             shader_injection.graphics_white_nits
+#define RENODX_GAMMA_CORRECTION                shader_injection.gamma_correction
+#define RENODX_GAMMA_CORRECTION_UI             shader_injection.gamma_correction_ui
 #define RENODX_TONE_MAP_HUE_CORRECTION_TYPE    shader_injection.tone_map_hue_correction_type  // 0 - Highlights, Midtones, & Shadows, 1 - Midtones & Shadows
 #define RENODX_TONE_MAP_HUE_CORRECTION         shader_injection.tone_map_hue_correction
 #define RENODX_TONE_MAP_PER_CH_PEAK            shader_injection.tone_map_per_ch_peak
@@ -31,6 +31,7 @@
 #define CUSTOM_GRAIN_TYPE     shader_injection.custom_grain_type
 #define CUSTOM_GRAIN_STRENGTH shader_injection.custom_grain_strength
 #define CUSTOM_SHARPNESS      shader_injection.custom_sharpness
+#define TONEMAP_UNDER_UI      shader_injection.tm_under_ui
 #define TEST_TEST             shader_injection.test
 
 // #define FIX_POST_PROCESS                     shader_injection.fix_post_process     // 0 - BT.2020 PQ, 1 - BT.709 piecewise sRGB, 2 - BT.2020 piecewise sRGB
@@ -69,6 +70,8 @@ struct ShaderInjectData {
   float custom_grain_type;
   float custom_grain_strength;
   float custom_sharpness;
+
+  float tm_under_ui;
 
   // float fix_post_process;
 

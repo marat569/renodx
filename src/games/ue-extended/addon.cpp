@@ -356,6 +356,18 @@ renodx::utils::settings::Settings settings = {
         //.is_visible = []() { return (shader_injection.processing_path == 0); },
     },
     new renodx::utils::settings::Setting{
+        .key = "TonemapUnderUI",
+        .binding = &shader_injection.tm_under_ui,
+        .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
+        .default_value = 1.f,
+        .label = "Tonemap Under UI",
+        .section = "Other",
+        .tooltip = "Helps blend UI elements when the scene is bright.",
+        .labels = {"Off", "On"},
+        .is_enabled = []() { return shader_injection.tone_map_type != 0; },
+        //.is_visible = []() { return (shader_injection.processing_path == 0); },
+    },
+    new renodx::utils::settings::Setting{
         .key = "UIGammaCorrection",
         .binding = &shader_injection.gamma_correction_ui,
         .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,

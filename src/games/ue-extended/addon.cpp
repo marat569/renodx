@@ -135,7 +135,7 @@ renodx::utils::settings::Settings settings = {
         .label = "Tonemap Test",
         .section = "Tone Mapping",
         .tooltip = "Beta test for different tonemappers",
-        .labels = {"N2 Max Ch", "NRG", "PsychoTM Beta4"},
+        .labels = {"N2 Max Ch", "N2 LMS"},
     },
 
     new renodx::utils::settings::Setting{

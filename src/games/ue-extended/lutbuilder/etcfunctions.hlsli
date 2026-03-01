@@ -356,4 +356,42 @@ float3 psychotm_test4_onlymap(
   return renodx::color::bt709::from::BT2020(bt2020_toned);
 }
 
+// Minimal LMS per ch (N2)
+// bt709 linear in -> bt709 linear out
+float3 N2LMSPerCH(
+    float3 bt709_linear_input,
+    float peak_value = 1000.f / 203.f) {
+  // smol episolon
+  const float kEps = 1e-6f;
+
+  float3 bt2020 = renodx::color::bt2020::from::BT709(bt709_linear_input);
+
+  // Conversion Matrixes
+  static const float3x3 XYZ_TO_LMS_2006 = renodx::color::XYZ_TO_STOCKMAN_SHARP_LMS_MAT;
+  static const float3x3 XYZ_FROM_LMS_2006 = renodx::math::Invert3x3(XYZ_TO_LMS_2006);
+
+  float3 color_xyz = renodx::color::xyz::from::BT2020(bt2020);
+  float3 color_lms = mul(XYZ_TO_LMS_2006, color_xyz);
+
+  // Fixed white basis: D65.
+  float3 lms_raw = mul(XYZ_TO_LMS_2006, renodx::color::xyz::from::BT2020(bt2020));
+  float3 lms_white = mul(XYZ_TO_LMS_2006, renodx::color::xyz::from::BT2020(1.f));
+
+  float3 lms = lms_raw;
+
+  // Trying out Per-Channel N2 in LMS
+  float3 lms_peak = lms_white * peak_value;
+  float3 peak = max(lms_peak, kEps.xxx);
+  float3 sign_lms = float3(
+      lms.x < 0.f ? -1.f : 1.f,
+      lms.y < 0.f ? -1.f : 1.f,
+      lms.z < 0.f ? -1.f : 1.f);
+  float3 abs_lms = abs(lms);
+  float3 n2_lms = renodx::tonemap::neutwo::PerChannel(abs_lms, peak);
+  float3 lms_toned = sign_lms * n2_lms;
+
+  float3 bt2020_toned = renodx::color::bt2020::from::XYZ(mul(XYZ_FROM_LMS_2006, lms_toned));
+  return renodx::color::bt709::from::BT2020(bt2020_toned);
+}
+
 #endif  // INCLUDE_ETCFUNCTIONS

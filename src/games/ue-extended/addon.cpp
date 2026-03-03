@@ -792,6 +792,12 @@ const std::unordered_map<
                 {"Set_Path", 0.f},
             },
         },
+        {
+            "NINJAGAIDEN2BLACK-Win64-Shipping.exe",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
 
 };
 

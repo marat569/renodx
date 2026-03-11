@@ -21,13 +21,7 @@
 
 namespace {
 
-renodx::mods::shader::CustomShaders custom_shaders = {
-
-    CustomShaderEntry(0xC20B9EB6),  // Final Shader -- Pirates
-    CustomShaderEntry(0x594993B8),  // Final Shader  -- Gaiden and Infinite Wealth
-    CustomShaderEntry(0xC970E2F6),  // Final Shader -- Pirates FSR3 FG
-
-};
+renodx::mods::shader::CustomShaders custom_shaders = {__ALL_CUSTOM_SHADERS};
 
 ShaderInjectData shader_injection;
 

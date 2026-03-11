@@ -25,7 +25,8 @@ cbuffer cb_user : register(b9) {
 SamplerState s0_s : register(s0);
 
 float4 main(
-    noperspective float2 TEXCOORD : TEXCOORD) : SV_Target {
+    noperspective float2 TEXCOORD: TEXCOORD)
+    : SV_Target {
   float4 SV_Target;
   float4 _6 = s0_t.Sample(s0_s, float2((TEXCOORD.x), (TEXCOORD.y)));  // untonemapped srv
 

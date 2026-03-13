@@ -301,7 +301,7 @@ float4 main(
     float _243 = (frac(_50 * 0.44094499945640564f) + _85) / max(0.0010000000474974513f, (VAR_FilmDamage_UVScale.x * VAR_FilmDamage_Size));
     float _244 = (frac(_50 * 0.5511810183525085f) + _83) / max(0.0010000000474974513f, (VAR_FilmDamage_UVScale.y * VAR_FilmDamage_Size));
     float4 _254 = FilmDamage_Texture.SampleGrad(BilinearWrap, float2(_243, _244), float2((ddx_coarse(_243) * cbr.x), (ddx_coarse(_244) * cbr.x)), float2((ddy_coarse(_243) * cbr.y), (ddy_coarse(_244) * cbr.y)), int2(0, 0));
-    _258 = (_254.x * VAR_FilmDamage_Opacity);
+    _258 = (_254.x * VAR_FilmDamage_Opacity * CUSTOM_FILM_DAMAGE_STRENGTH);
   } else {
     _258 = 0.0f;
   }
@@ -723,6 +723,27 @@ float4 main(
     _1574 = _1484;
     _1575 = _1487;
   }
+#if 1
+  ApplyColorCorrectTexturePass(
+      _365,
+      cPassEnabled,
+      _1573,
+      _1574,
+      _1575,
+      fTextureBlendRate,
+      fTextureBlendRate2,
+      fTextureSize,
+      fOneMinusTextureInverseSize,
+      fHalfTextureInverseSize,
+      fColorMatrix,
+      tTextureMap0,
+      tTextureMap1,
+      tTextureMap2,
+      TrilinearClamp,
+      _1802,
+      _1803,
+      _1804);
+#else
   if (_365 && (bool)((cPassEnabled & 4) != 0)) {
     float _1626 = (((log2(select((_1573 < 3.0517578125e-05f), ((_1573 * 0.5f) + 1.52587890625e-05f), _1573)) * 0.05707760155200958f) + 0.5547950267791748f) * fOneMinusTextureInverseSize) + fHalfTextureInverseSize;
     float _1627 = (((log2(select((_1574 < 3.0517578125e-05f), ((_1574 * 0.5f) + 1.52587890625e-05f), _1574)) * 0.05707760155200958f) + 0.5547950267791748f) * fOneMinusTextureInverseSize) + fHalfTextureInverseSize;
@@ -770,6 +791,7 @@ float4 main(
     _1803 = _1574;
     _1804 = _1575;
   }
+#endif
   if (_365 && (bool)((cPassEnabled & 8) != 0)) {
     _1837 = (((cvdR.x * _1802) + (cvdR.y * _1803)) + (cvdR.z * _1804));
     _1838 = (((cvdG.x * _1802) + (cvdG.y * _1803)) + (cvdG.z * _1804));

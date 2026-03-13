@@ -23,7 +23,7 @@
 #endif
 
 cbuffer TonemapParam : register(TONE_MAP_PARAM_REGISTER) {
-  float original_contrast : packoffset(c000.x);
+  float contrast : packoffset(c000.x);
   float linearBegin : packoffset(c000.y);
   float linearLength : packoffset(c000.z);
   float original_toe : packoffset(c000.w);          // overridden
@@ -35,14 +35,6 @@ cbuffer TonemapParam : register(TONE_MAP_PARAM_REGISTER) {
   float invLinearBegin : packoffset(c002.y);
   float madLinearStartContrastFactor : packoffset(c002.z);
 };
-
-float GetHighlightContrast() {
-  float contrast = original_contrast;
-  if (TONE_MAP_TYPE != 0) {
-    contrast *= RENODX_TONE_MAP_HIGHLIGHT_CONTRAST;  // toe
-  }
-  return contrast;
-}
 
 float GetToe() {
   float toe = original_toe;
@@ -65,7 +57,6 @@ float GetLinearStart() {
 #define toe         GetToe()
 #define maxNit      GetMaxNit()
 #define linearStart GetLinearStart()
-#define contrast    GetHighlightContrast()
 
 #ifndef USES_LUTS
 #define USES_LUTS 0
@@ -148,7 +139,9 @@ float3 BlendLUTs(float3 color) {
 }
 
 float3 ApplyColorGradingLUTs(float3 color_input) {
-  float3 color_output = BlendLUTs(color_input);
+  float3 color_output_original = BlendLUTs(color_input);
+
+  float3 color_output = color_output_original;
 
   if (COLOR_GRADE_LUT_SCALING > 0.f) {
     float3 lut_black = BlendLUTs(0.f);
@@ -156,6 +149,13 @@ float3 ApplyColorGradingLUTs(float3 color_input) {
     float lut_black_y = renodx::color::y::from::BT709(lut_black);
     if (lut_black_y > 0.f) {
       float3 lut_mid = BlendLUTs(lut_black_y);
+
+      if (RENODX_GAMMA_CORRECTION != 0.f) {  // account for EOTF emulation in inputs
+        color_output = renodx::color::correct::GammaSafe(color_output);
+        lut_black = renodx::color::correct::GammaSafe(lut_black);
+        lut_mid = renodx::color::correct::GammaSafe(lut_mid);
+        // color_input = renodx::color::correct::GammaSafe(color_input);
+      }
 
       float3 unclamped_gamma = Unclamp(
           renodx::color::srgb::EncodeSafe(color_output),
@@ -165,8 +165,11 @@ float3 ApplyColorGradingLUTs(float3 color_input) {
 
       float3 unclamped_linear = renodx::color::srgb::DecodeSafe(unclamped_gamma);
 
-      // color_output = renodx::lut::RecolorUnclamped(color_output, unclamped_linear, COLOR_GRADE_LUT_SCALING);
-      color_output *= lerp(1.f, renodx::math::DivideSafe(LuminosityFromBT709(unclamped_linear), LuminosityFromBT709(color_output), 1.f), COLOR_GRADE_LUT_SCALING);
+      if (RENODX_GAMMA_CORRECTION != 0.f) {  // inverse EOTF emulation
+        unclamped_linear = renodx::color::correct::GammaSafe(unclamped_linear, true);
+      }
+
+      color_output = color_output_original * lerp(1.f, renodx::math::DivideSafe(LuminosityFromBT709(unclamped_linear), LuminosityFromBT709(color_output_original), 1.f), COLOR_GRADE_LUT_SCALING);
     }
   }
 
@@ -217,7 +220,9 @@ float3 ApplyCustomGrading(float3 ungraded_bt709) {
   const UserGradingConfig cg_config = {
     RENODX_TONE_MAP_EXPOSURE,                             // float exposure;
     RENODX_TONE_MAP_HIGHLIGHTS,                           // float highlights;
+    RENODX_TONE_MAP_HIGHLIGHT_CONTRAST,                   // float highlight_contrast;
     RENODX_TONE_MAP_SHADOWS,                              // float shadows;
+    RENODX_TONE_MAP_SHADOW_CONTRAST,                      // float shadow_contrast;
     RENODX_TONE_MAP_CONTRAST,                             // float contrast;
     0.10f * pow(RENODX_TONE_MAP_FLARE, 10.f),             // float flare;
     RENODX_TONE_MAP_GAMMA,                                // float gamma;
@@ -225,7 +230,7 @@ float3 ApplyCustomGrading(float3 ungraded_bt709) {
     RENODX_TONE_MAP_DECHROMA,                             // float dechroma;
     -1.f * (RENODX_TONE_MAP_HIGHLIGHT_SATURATION - 1.f),  // float highlight_saturation;
     RENODX_TONE_MAP_HUE_SHIFT,                            // float hue_emulation;
-    RENODX_TONE_MAP_BLOWOUT                               // float chrominance_emulation
+    RENODX_TONE_MAP_BLOWOUT                               // float purity_emulation
   };
 
   float luminosity = LuminosityFromBT2020LuminanceNormalized(ungraded_bt2020);
@@ -285,7 +290,7 @@ float3 ApplyToneMap(float3 untonemapped, float2 texcoord) {
       tonemapped,
       texcoord,
       CUSTOM_RANDOM,
-      CUSTOM_GRAIN_STRENGTH * 0.03f);
+      CUSTOM_GRAIN_STRENGTH * 0.06f);
 
   tonemapped *= RENODX_DIFFUSE_WHITE_NITS / RENODX_GRAPHICS_WHITE_NITS;
   if (RENODX_GAMMA_CORRECTION != 0.f) {

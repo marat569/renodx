@@ -1,9 +1,9 @@
 #include "../CBuffers/HDRMapping.hlsli"
 #include "../OCIO.hlsli"
 
-Texture2D<float4> OCIO_lut1d_0 : register(t0);
+Texture2D<float4> OCIO_lut1d_0 : register(t0);  // r16_float - 4096x17x1
 
-Texture3D<float4> OCIO_lut3d_1 : register(t1);
+Texture3D<float4> OCIO_lut3d_1 : register(t1);  // r16g16b16a16_float - 65x65x65
 
 RWTexture3D<float4> OutLUT : register(u0);
 
@@ -78,6 +78,7 @@ void main(
   float _312;
   float _313;
   float _500;
+#if 0
   if (!(!(_14 <= -0.3013699948787689f))) {
     _30 = (exp2((_11 * 0.2780952751636505f) + -8.720000267028809f) + -3.0517578125e-05f);
   } else {
@@ -105,6 +106,17 @@ void main(
       _58 = 65504.0f;
     }
   }
+#else
+  if (RENODX_LUT_SHAPER == 0.f) {
+    _30 = renodx::color::acescc::Decode(_14);
+    _44 = renodx::color::acescc::Decode(_15);
+    _58 = renodx::color::acescc::Decode(_16);
+  } else {
+    _30 = renodx::color::pq::Decode(_14, 100.f);
+    _44 = renodx::color::pq::Decode(_15, 100.f);
+    _58 = renodx::color::pq::Decode(_16, 100.f);
+  }
+#endif
 
 #if 1
   SetExposureAndContrastForOCIOLUT(_30, _44, _58);
@@ -244,8 +256,7 @@ void main(
 
   if (TONE_MAP_TYPE != 0.f) {
     lut_output = renodx::color::pq::Decode(lut_output, 100.f);
-
-    if (true) {  // scale peak when lut is clamped
+    if (RENODX_TONE_MAP_PEAK_SCALING != 0.f) {  // scale peak when lut is clamped
       float3 lut_peak_output = renodx::color::pq::Decode(
           min(1.f, SampleOCIO(renodx::math::FLT16_MAX, renodx::math::FLT16_MAX, renodx::math::FLT16_MAX,
                               OCIO_lut1d_0, BilinearClamp, OCIO_lut3d_1, TrilinearClamp)),
@@ -268,10 +279,10 @@ void main(
       }
       lut_output = renodx::color::bt2020::from::BT709(lut_output);
     }
-    // lut_output = renodx::tonemap::neutwo::MaxChannel(lut_output, RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS, 100.f);
-    lut_output = ApplyNeutwoByMaxChannel(
-        max(0, lut_output), RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS,
-        100.f, 0.18f, 0.18f, 0.0001f / RENODX_DIFFUSE_WHITE_NITS);
+    // lut_output = ApplyNeutwoByMaxChannel(
+    //     max(0, lut_output), RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS,
+    //     100.f, 0.18f, 0.18f, 0.0001f / RENODX_DIFFUSE_WHITE_NITS);
+    lut_output = renodx::tonemap::neutwo::MaxChannel(lut_output, RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS);
     lut_output = renodx::color::pq::Encode(lut_output, RENODX_DIFFUSE_WHITE_NITS);
     OutLUT[SV_DispatchThreadID] = float4(lut_output, 1.f);
     return;

@@ -185,7 +185,10 @@ void main(
   cb_config.ue_bluecorrection = asfloat(cb0[36].z);
   cb_config.ue_colorscale = asfloat(cb0[14].xyz);
 
-  o0 = ProcessLutbuilder(float3(untonemapped_ap1), cb_config, o0, asuint(cb0[40].w));
+  float4 lutweights[2] = { float4(asfloat(cb0[5].x), asfloat(cb0[5].y), 0.f, 0.f), float4(0.f, 0.f, 0.f, 0.f) };
+  cb_config.ue_lutweights = lutweights;  // Only Lutweights[0].xy is used
+
+  o0 = ProcessLutbuilder(float3(untonemapped_ap1), s0_s, t0, cb_config, o0, asuint(cb0[40].w));
 
   return;
 

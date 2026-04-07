@@ -575,6 +575,13 @@ void AddWuchangUpgrades() {
       .old_format = reshade::api::format::r10g10b10a2_unorm,
       .new_format = reshade::api::format::r16g16b16a16_float,
       .use_resource_view_cloning = true,
+      .usage_include = reshade::api::resource_usage::render_target | reshade::api::resource_usage::copy_dest,
+  });
+
+  renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      .old_format = reshade::api::format::r10g10b10a2_unorm,
+      .new_format = reshade::api::format::r16g16b16a16_float,
+      .use_resource_view_cloning = true,
       .aspect_ratio = 2560.f / 1024.f,
   });
 }
@@ -692,13 +699,6 @@ const std::unordered_map<
         },
 
         {
-            "Project_Plague",
-            {
-                {"Upgrade_CopyDestinations", 1.f},
-                {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
-            },
-        },
-        {
             "Banishers: Ghosts of New Eden",
             {
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
@@ -795,6 +795,18 @@ const std::unordered_map<
         },
         {
             "NINJAGAIDEN2BLACK-Win64-Shipping.exe",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
+        {
+            "Project_Plague",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
+        {
+            "Life is Strange: Reunion",
             {
                 {"Set_Path", 0.f},
             },

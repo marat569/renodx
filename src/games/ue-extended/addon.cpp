@@ -811,6 +811,12 @@ const std::unordered_map<
                 {"Set_Path", 0.f},
             },
         },
+        {
+            "Life Is Strange: Double Exposure",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
 
 };
 

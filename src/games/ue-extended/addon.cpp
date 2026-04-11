@@ -823,6 +823,12 @@ const std::unordered_map<
                 {"Set_Path", 0.f},
             },
         },
+        {
+            "SILENT HILL f",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
 
 };
 

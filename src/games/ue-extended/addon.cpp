@@ -827,6 +827,8 @@ const std::unordered_map<
             "SILENT HILL f",
             {
                 {"Set_Path", 0.f},
+                {"ForceBorderless", 0.f},
+                {"PreventFullscreen", 0.f},
             },
         },
 

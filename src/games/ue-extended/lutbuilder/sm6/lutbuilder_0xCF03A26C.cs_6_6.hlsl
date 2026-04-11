@@ -12,7 +12,6 @@ struct FWorkingColorSpaceConstants {
   int FWorkingColorSpaceConstants_384;
 };
 
-
 RWTexture3D<float4> u0 : register(u0);
 
 cbuffer cb0 : register(b0) {
@@ -152,11 +151,10 @@ cbuffer cb1 : register(b1) {
 
 [numthreads(4, 4, 4)]
 void main(
-  uint3 SV_DispatchThreadID : SV_DispatchThreadID,
-  uint3 SV_GroupID : SV_GroupID,
-  uint3 SV_GroupThreadID : SV_GroupThreadID,
-  uint SV_GroupIndex : SV_GroupIndex
-) {
+    uint3 SV_DispatchThreadID: SV_DispatchThreadID,
+    uint3 SV_GroupID: SV_GroupID,
+    uint3 SV_GroupThreadID: SV_GroupThreadID,
+    uint SV_GroupIndex: SV_GroupIndex) {
   float _9[6];
   float _10[6];
   float _11[6];
@@ -349,7 +347,7 @@ void main(
       float4 output = ProcessLutbuilder(float3(_816, _818, _820), cb_config, u0[int3((uint)(SV_DispatchThreadID.x), (uint)(SV_DispatchThreadID.y), (uint)(SV_DispatchThreadID.z))], 3u);
       u0[int3((uint)(SV_DispatchThreadID.x), (uint)(SV_DispatchThreadID.y), (uint)(SV_DispatchThreadID.z))] = output;
       return;
-      
+
       float _856 = ((mad(0.061360642313957214f, _820, mad(-4.540197551250458e-09f, _818, (_816 * 0.9386394023895264f))) - _816) * cb0_038z) + _816;
       float _857 = ((mad(0.169205904006958f, _820, mad(0.8307942152023315f, _818, (_816 * 6.775371730327606e-08f))) - _818) * cb0_038z) + _818;
       float _858 = (mad(-2.3283064365386963e-10f, _818, (_816 * -9.313225746154785e-10f)) * cb0_038z) + _820;
@@ -1255,7 +1253,10 @@ void main(
   float _419 = (_408 / _415) + -1.0f;
   float _420 = (_411 / _415) + -1.0f;
   float _421 = (_414 / _415) + -1.0f;
-  float _433 = (1.0f - exp2(((_415 * _415) * -4.0f) * cb0_038w)) * (1.0f - exp2(dot(float3(_419, _420, _421), float3(_419, _420, _421)) * -4.0f));
+
+  // float _433 = (1.0f - exp2(((_415 * _415) * -4.0f) * cb0_038w)) * (1.0f - exp2(dot(float3(_419, _420, _421), float3(_419, _420, _421)) * -4.0f));
+  float _433 = (1.0f - exp2(((_415 * _415) * -4.0f) * 0.f)) * (1.0f - exp2(dot(float3(_419, _420, _421), float3(_419, _420, _421)) * -4.0f));
+
   float _449 = ((mad(-0.06368321925401688f, _414, mad(-0.3292922377586365f, _411, (_408 * 1.3704125881195068f))) - _408) * _433) + _408;
   float _450 = ((mad(-0.010861365124583244f, _414, mad(1.0970927476882935f, _411, (_408 * -0.08343357592821121f))) - _411) * _433) + _411;
   float _451 = ((mad(1.2036951780319214f, _414, mad(-0.09862580895423889f, _411, (_408 * -0.02579331398010254f))) - _414) * _433) + _414;
@@ -1287,6 +1288,23 @@ void main(
   float _816 = ((_702 * (((cb0_021x + cb0_036x) + _599) + (((cb0_020x * cb0_035x) * _608) * exp2(log2(exp2(((cb0_018x * cb0_033x) * _626) * log2(max(0.0f, ((((cb0_017x * cb0_032x) * _635) * _526) + _452)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_019x * cb0_034x) * _617)))))) + (_590 * (((cb0_021x + cb0_026x) + _466) + (((cb0_020x * cb0_025x) * _480) * exp2(log2(exp2(((cb0_018x * cb0_023x) * _508) * log2(max(0.0f, ((((cb0_017x * cb0_022x) * _522) * _526) + _452)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_019x * cb0_024x) * _494))))))) + ((((cb0_021x + cb0_031x) + _711) + (((cb0_020x * cb0_030x) * _720) * exp2(log2(exp2(((cb0_018x * cb0_028x) * _738) * log2(max(0.0f, ((((cb0_017x * cb0_027x) * _747) * _526) + _452)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_019x * cb0_029x) * _729))))) * _805);
   float _818 = ((_702 * (((cb0_021y + cb0_036y) + _599) + (((cb0_020y * cb0_035y) * _608) * exp2(log2(exp2(((cb0_018y * cb0_033y) * _626) * log2(max(0.0f, ((((cb0_017y * cb0_032y) * _635) * _527) + _452)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_019y * cb0_034y) * _617)))))) + (_590 * (((cb0_021y + cb0_026y) + _466) + (((cb0_020y * cb0_025y) * _480) * exp2(log2(exp2(((cb0_018y * cb0_023y) * _508) * log2(max(0.0f, ((((cb0_017y * cb0_022y) * _522) * _527) + _452)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_019y * cb0_024y) * _494))))))) + ((((cb0_021y + cb0_031y) + _711) + (((cb0_020y * cb0_030y) * _720) * exp2(log2(exp2(((cb0_018y * cb0_028y) * _738) * log2(max(0.0f, ((((cb0_017y * cb0_027y) * _747) * _527) + _452)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_019y * cb0_029y) * _729))))) * _805);
   float _820 = ((_702 * (((cb0_021z + cb0_036z) + _599) + (((cb0_020z * cb0_035z) * _608) * exp2(log2(exp2(((cb0_018z * cb0_033z) * _626) * log2(max(0.0f, ((((cb0_017z * cb0_032z) * _635) * _528) + _452)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_019z * cb0_034z) * _617)))))) + (_590 * (((cb0_021z + cb0_026z) + _466) + (((cb0_020z * cb0_025z) * _480) * exp2(log2(exp2(((cb0_018z * cb0_023z) * _508) * log2(max(0.0f, ((((cb0_017z * cb0_022z) * _522) * _528) + _452)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_019z * cb0_024z) * _494))))))) + ((((cb0_021z + cb0_031z) + _711) + (((cb0_020z * cb0_030z) * _720) * exp2(log2(exp2(((cb0_018z * cb0_028z) * _738) * log2(max(0.0f, ((((cb0_017z * cb0_027z) * _747) * _528) + _452)) * 5.55555534362793f)) * 0.18000000715255737f) * (1.0f / ((cb0_019z * cb0_029z) * _729))))) * _805);
+
+  UECbufferConfig cb_config = CreateCbufferConfig();
+  cb_config.ue_filmblackclip = cb0_040x;
+  cb_config.ue_filmtoe = cb0_039z;
+  cb_config.ue_filmshoulder = cb0_039w;
+  cb_config.ue_filmslope = cb0_039y;
+  cb_config.ue_filmwhiteclip = cb0_040y;
+  cb_config.ue_tonecurveammount = cb0_039x;
+  cb_config.ue_mappingpolynomial = float3(cb0_041x, cb0_041y, cb0_041z);
+  cb_config.ue_overlaycolor = float4(cb0_015x, cb0_015y, cb0_015z, cb0_015w);
+  cb_config.ue_bluecorrection = cb0_038z;
+  cb_config.ue_colorscale = float3(cb0_016x, cb0_016y, cb0_016z);
+
+  float4 output = ProcessLutbuilder(float3(_816, _818, _820), cb_config, u0[int3((uint)(SV_DispatchThreadID.x), (uint)(SV_DispatchThreadID.y), (uint)(SV_DispatchThreadID.z))], 3u);
+  u0[int3((uint)(SV_DispatchThreadID.x), (uint)(SV_DispatchThreadID.y), (uint)(SV_DispatchThreadID.z))] = output;
+  return;
+
   float _856 = ((mad(0.061360642313957214f, _820, mad(-4.540197551250458e-09f, _818, (_816 * 0.9386394023895264f))) - _816) * cb0_038z) + _816;
   float _857 = ((mad(0.169205904006958f, _820, mad(0.8307942152023315f, _818, (_816 * 6.775371730327606e-08f))) - _818) * cb0_038z) + _818;
   float _858 = (mad(-2.3283064365386963e-10f, _818, (_816 * -9.313225746154785e-10f)) * cb0_038z) + _820;

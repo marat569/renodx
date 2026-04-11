@@ -1588,7 +1588,9 @@ void AddAdvancedSettings() {
             "On",
         },
         .is_global = true,
-        .is_visible = []() { return ((settings[0]->GetValue() >= 2) && (shader_injection.processing_path == 1.f)); },
+        //.is_visible = []() { return ((settings[0]->GetValue() >= 2) && (shader_injection.processing_path == 1.f)); },
+        .is_visible = []() { return (settings[0]->GetValue() >= 2); },
+
     };
     add_setting(lut_dump_setting);
 

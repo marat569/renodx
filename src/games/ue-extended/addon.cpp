@@ -817,6 +817,12 @@ const std::unordered_map<
                 {"Set_Path", 0.f},
             },
         },
+        {
+            "METAL GEAR SOLID Δ SNAKE EATER",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
 
 };
 

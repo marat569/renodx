@@ -818,7 +818,7 @@ const std::unordered_map<
             },
         },
         {
-            "METAL GEAR SOLID Δ SNAKE EATER",
+            "MGSDelta-Win64-Shipping.exe",
             {
                 {"Set_Path", 0.f},
             },

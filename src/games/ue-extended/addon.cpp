@@ -134,7 +134,7 @@ renodx::utils::settings::Settings settings = {
         .key = "ToneMapScaling",
         .binding = &shader_injection.tone_map_scaling,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 0.f,
+        .default_value = 1.f,
         .label = "Tonemap Scaling",
         .section = "Tone Mapping",
         .tooltip = "Max Channel: Hand-tuned to match the original tonemapper's behavior.\n"
@@ -159,7 +159,7 @@ renodx::utils::settings::Settings settings = {
     new renodx::utils::settings::Setting{
         .key = "ToneMapHueShift",
         .binding = &shader_injection.tone_map_hue_shift,
-        .default_value = 100.f,
+        .default_value = 50.f,
         .label = "Hue Shift",
         .section = "Scene Grading",
         .tooltip = "Hue-shift emulation strength.",
@@ -172,7 +172,7 @@ renodx::utils::settings::Settings settings = {
     new renodx::utils::settings::Setting{
         .key = "ColorGradeChromaCorrectBlowout",
         .binding = &shader_injection.tone_map_chroma_correct_blowout,
-        .default_value = 100.f,
+        .default_value = 0.f,
         .label = "Blowout",
         .section = "Scene Grading",
         .tooltip = "Emulates blowout from per channel tonemapping.",
@@ -387,19 +387,6 @@ renodx::utils::settings::Settings settings = {
 
     // new renodx::utils::settings::Setting{
     //     .value_type = renodx::utils::settings::SettingValueType::BUTTON,
-    //     .label = "Reset All",
-    //     .section = "Options",
-    //     .group = "button-line-1",
-    //     .on_change = []() {
-    //       for (auto* setting : settings) {
-    //         if (setting->key.empty()) continue;
-    //         if (!setting->can_reset) continue;
-    //         renodx::utils::settings::UpdateSetting(setting->key, setting->default_value);
-    //       }
-    //     },
-    // },
-    // new renodx::utils::settings::Setting{
-    //     .value_type = renodx::utils::settings::SettingValueType::BUTTON,
     //     .label = "Match SDR",
     //     .section = "Options",
     //     .group = "button-line-1",
@@ -460,7 +447,30 @@ renodx::utils::settings::Settings info_settings = {
         .label = "Reset All",
         .section = "Options",
         .group = "button-line-1",
-        .on_change = []() { renodx::utils::settings::ResetSettings(); },
+        .on_change = []() {
+          for (auto* setting : settings) {
+            if (setting->key.empty()) continue;
+            if (!setting->can_reset) continue;
+            renodx::utils::settings::UpdateSetting(setting->key, setting->default_value);
+          }
+        },
+    },
+
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
+        .label = "Safe Grade",
+        .section = "Options",
+        .group = "button-line-1",
+        .tooltip = "Safe grade that is closer to the game's SDR look. \r\n This is only meant to be used if something feels off with default settings.",
+        .on_change = []() {
+          renodx::utils::settings::ResetSettings();
+          renodx::utils::settings::UpdateSettings({
+              {"ToneMapScaling", 0.f},
+              {"ToneMapPerChPeak", 5.f},
+              {"ToneMapHueShift", 100.f},
+              {"ColorGradeChromaCorrectBlowout", 100.f},
+          });
+        },
     },
 
     new renodx::utils::settings::Setting{

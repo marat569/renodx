@@ -33,6 +33,8 @@ ShaderInjectData shader_injection;
 
 float current_settings_mode = 0;
 
+// bool is_hdr_path = (shader_injection.processing_path == 0.f);
+
 renodx::utils::settings::Settings settings = {
     new renodx::utils::settings::Setting{
         .key = "SettingsMode",
@@ -835,6 +837,12 @@ const std::unordered_map<
         },
         {
             "Hellblade2",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
+        {
+            "Ghostwire: Tokyo",
             {
                 {"Set_Path", 0.f},
             },

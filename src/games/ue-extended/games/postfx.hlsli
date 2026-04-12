@@ -14,8 +14,8 @@ float3 ToneMapMaxCLL(float3 color, float rolloff_start = 0.75f, float output_max
   return min(output_max, color * scale);
 }
 
-float4 SampleAndConvertToSRGBWithToneMap(inout float3 unclamped_linear_sample, inout float3 tonemapped_linear_sample, Texture2D<float4> scene_texture, SamplerState sampler, float2 location) {
-  float4 pq_color = scene_texture.Sample(sampler, location);
+float4 SampleAndConvertToSRGBWithToneMap(inout float3 unclamped_linear_sample, inout float3 tonemapped_linear_sample, Texture2D<float4> scene_texture, SamplerState sampler_s, float2 location) {
+  float4 pq_color = scene_texture.Sample(sampler_s, location);
   float tex_alpha = pq_color.a;
 
   float3 linear_color = renodx::color::pq::DecodeSafe(pq_color.rgb, RENODX_DIFFUSE_WHITE_NITS);
@@ -29,8 +29,8 @@ float4 SampleAndConvertToSRGBWithToneMap(inout float3 unclamped_linear_sample, i
   return float4(renodx::color::gamma::EncodeSafe(linear_color), tex_alpha);
 }
 
-float4 SampleAndConvertToSRGB(Texture2D<float4> scene_texture, SamplerState sampler, float2 location) {
-  float4 pq_color = scene_texture.Sample(sampler, location);
+float4 SampleAndConvertToSRGB(Texture2D<float4> scene_texture, SamplerState sampler_s, float2 location) {
+  float4 pq_color = scene_texture.Sample(sampler_s, location);
   float tex_alpha = pq_color.a;
 
   float3 linear_color = renodx::color::pq::DecodeSafe(pq_color.rgb, RENODX_DIFFUSE_WHITE_NITS);
@@ -75,13 +75,17 @@ float4 ConditionalConvertSRGBToBT2020(float4 srgb_color) {
   return float4(srgb_color.rgb, srgb_color.a);
 }
 
-float4 ConvertPQToSRGB(float4 pq_color) {
+float3 ConvertPQToSRGB(float3 pq_color) {
   float3 srgb_color;
-  srgb_color = renodx::color::pq::DecodeSafe(pq_color.rgb, RENODX_DIFFUSE_WHITE_NITS);
+  srgb_color = renodx::color::pq::DecodeSafe(pq_color, RENODX_DIFFUSE_WHITE_NITS);
   srgb_color = renodx::color::bt709::from::BT2020(srgb_color);
   srgb_color = renodx::color::gamma::EncodeSafe(srgb_color);
 
-  return float4(srgb_color.rgb, pq_color.a);
+  return float3(srgb_color);
+}
+
+float4 ConvertPQToSRGB(float4 pq_color) {
+  return float4(ConvertPQToSRGB(pq_color.rgb), pq_color.a);
 }
 
 float3 ConvertSRGBtoPQ(float3 srgb_color) {

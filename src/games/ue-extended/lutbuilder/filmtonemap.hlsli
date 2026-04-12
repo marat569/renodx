@@ -160,10 +160,16 @@ float3 ApplyToneCurveExtendedWithHermite(
 
   //
 #if 1
-  tonemapped_prebluecorrect_ap1 = lerp(
-      vanilla,
-      tonemapped_prebluecorrect_ap1,
-      saturate(vanilla / 0.2f));
+  // We need to lerp torwards vanilla because highlights are way too bright in UE
+  // Since the TM is anchored around 0.18, its a non issue
+
+  // tonemapped_prebluecorrect_ap1 = lerp(
+  //     vanilla,
+  //     tonemapped_prebluecorrect_ap1,
+  //     saturate(vanilla / 0.2f));
+
+  tonemapped_prebluecorrect_ap1 = lerp(vanilla, tonemapped_prebluecorrect_ap1, 0.25f);
+
 #endif
 
   // Correct Hue/Chroma

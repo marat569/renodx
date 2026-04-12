@@ -277,7 +277,7 @@ float4 GenerateOutput(float3 final_color, float3 untonemapped_ap1, inout float4 
 
     float3 bt709_graded_color;
     // N2 Max CH
-    if (TEST_TEST == 0.f) {
+    if (RENODX_TONE_MAP_SCALING == 0.f) {
       // Doing stuff in bt2020 is almost always better than BT709
       float3 bt2020_final_color = renodx::color::bt2020::from::BT709(final_color);
       float3 bt2020_displaymapped_color = renodx::tonemap::neutwo::MaxChannel(max(0, bt2020_final_color), peak_ratio, 100.f);  // Displaymap Max-Ch to peak
@@ -288,7 +288,7 @@ float4 GenerateOutput(float3 final_color, float3 untonemapped_ap1, inout float4 
       bt709_graded_color = renodx::color::bt709::from::BT2020(bt2020_graded_color);  // Back to BT709
 
       // N2 LMS per-ch
-    } else if (TEST_TEST == 1.f) {
+    } else if (RENODX_TONE_MAP_SCALING == 1.f) {
       float3 bt709_mapped_color = N2LMSPerCH(final_color, peak_ratio);
       float3 bt2020_color_mapped = renodx::color::bt2020::from::BT709(bt709_mapped_color);
       renodx::color::grade::Config cg_config = CreateColorGradingConfig();

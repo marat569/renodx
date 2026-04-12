@@ -129,14 +129,16 @@ renodx::utils::settings::Settings settings = {
     // },
 
     new renodx::utils::settings::Setting{
-        .key = "TestTest",
-        .binding = &shader_injection.test,
+        .key = "ToneMapScaling",
+        .binding = &shader_injection.tone_map_scaling,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
         .default_value = 0.f,
-        .label = "Tonemap Test",
+        .label = "Tonemap Scaling",
         .section = "Tone Mapping",
-        .tooltip = "Beta test for different tonemappers",
-        .labels = {"N2 Max Ch", "N2 LMS"},
+        .tooltip = "Max Channel: Hand-tuned to match the original tonemapper's behavior.\n"
+                   "LMS: Based on emulating human vision.",
+        .labels = {"Max Channel", "LMS"},
+        .is_enabled = []() { return shader_injection.tone_map_type == 1.f; },
     },
 
     new renodx::utils::settings::Setting{

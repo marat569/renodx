@@ -27,12 +27,12 @@
 #define CUSTOM_LUT_SCALING                     shader_injection.custom_lut_scaling
 #define CUSTOM_LUT_GAMUT_RESTORATION           shader_injection.custom_lut_gamut_restoration
 
-#define CUSTOM_RANDOM         shader_injection.custom_random
-#define CUSTOM_GRAIN_TYPE     shader_injection.custom_grain_type
-#define CUSTOM_GRAIN_STRENGTH shader_injection.custom_grain_strength
-#define CUSTOM_SHARPNESS      shader_injection.custom_sharpness
-#define TONEMAP_UNDER_UI      shader_injection.tm_under_ui
-#define TEST_TEST             shader_injection.test
+#define CUSTOM_RANDOM           shader_injection.custom_random
+#define CUSTOM_GRAIN_TYPE       shader_injection.custom_grain_type
+#define CUSTOM_GRAIN_STRENGTH   shader_injection.custom_grain_strength
+#define CUSTOM_SHARPNESS        shader_injection.custom_sharpness
+#define TONEMAP_UNDER_UI        shader_injection.tm_under_ui
+#define RENODX_TONE_MAP_SCALING shader_injection.tone_map_scaling
 
 // #define FIX_POST_PROCESS                     shader_injection.fix_post_process     // 0 - BT.2020 PQ, 1 - BT.709 piecewise sRGB, 2 - BT.2020 piecewise sRGB
 #define OVERRIDE_BLACK_CLIP shader_injection.override_black_clip   // 0 - Off, 1 - 0.0001 nits
@@ -78,7 +78,7 @@ struct ShaderInjectData {
   float processing_path;
   float processing_use_scrgb;
 
-  float test;
+  float tone_map_scaling;
 };
 
 #ifndef __cplusplus

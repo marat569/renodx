@@ -833,6 +833,12 @@ const std::unordered_map<
                 {"PreventFullscreen", 0.f},
             },
         },
+        {
+            "Hellblade2",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
 
 };
 

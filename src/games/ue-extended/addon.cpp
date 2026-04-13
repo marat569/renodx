@@ -442,19 +442,6 @@ const std::unordered_map<std::string, reshade::api::format> UPGRADE_TARGETS = {
 };
 
 renodx::utils::settings::Settings info_settings = {
-    new renodx::utils::settings::Setting{
-        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
-        .label = "Reset All",
-        .section = "Options",
-        .group = "button-line-1",
-        .on_change = []() {
-          for (auto* setting : settings) {
-            if (setting->key.empty()) continue;
-            if (!setting->can_reset) continue;
-            renodx::utils::settings::UpdateSetting(setting->key, setting->default_value);
-          }
-        },
-    },
 
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::BUTTON,
@@ -470,6 +457,30 @@ renodx::utils::settings::Settings info_settings = {
               {"ToneMapHueShift", 100.f},
               {"ColorGradeChromaCorrectBlowout", 100.f},
           });
+        },
+    },
+
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
+        .label = "Reset Grading",
+        .section = "Options",
+        .group = "button-line-1",
+        .tooltip = "Reset settings only related to tonemap settings and color grading to their default values.",
+        .on_change = []() { renodx::utils::settings::ResetSettings(); },
+    },
+
+    new renodx::utils::settings::Setting{
+        .value_type = renodx::utils::settings::SettingValueType::BUTTON,
+        .label = "Reset All",
+        .section = "Options",
+        .group = "button-line-1",
+        .tooltip = "Reset ALL settings to default values, including advanced settings.",
+        .on_change = []() {
+          for (auto* setting : settings) {
+            if (setting->key.empty()) continue;
+            if (!setting->can_reset) continue;
+            renodx::utils::settings::UpdateSetting(setting->key, setting->default_value);
+          }
         },
     },
 

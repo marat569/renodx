@@ -168,7 +168,7 @@ float3 ApplyToneCurveExtendedWithHermite(
   //     tonemapped_prebluecorrect_ap1,
   //     saturate(vanilla / 0.2f));
 
-  tonemapped_prebluecorrect_ap1 = lerp(vanilla, tonemapped_prebluecorrect_ap1, 0.25f);
+  tonemapped_prebluecorrect_ap1 = lerp(tonemapped_prebluecorrect_ap1, vanilla, 0.25f);
 
 #endif
 

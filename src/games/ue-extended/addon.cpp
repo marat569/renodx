@@ -868,6 +868,12 @@ const std::unordered_map<
                 {"Set_Path", 0.f},
             },
         },
+        {
+            "S.T.A.L.K.E.R. 2",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
 
 };
 

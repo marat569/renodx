@@ -55,7 +55,7 @@ float4 SampleAndConvertToSRGBWithToneMap(inout float3 unclamped_linear_sample,
     linear_color = renodx::color::bt709::from::BT2020(linear_color);
   unclamped_linear_sample =
       linear_color;  // output uncapped for UpgradeToneMap()
-  linear_color = saturate(ToneMapMaxCLL(linear_color));
+  linear_color = saturate(MaxChTonemapToOne(linear_color));
   tonemapped_linear_sample = linear_color;  // output capped for UpgradeToneMap()
 
   if (RENODX_TONE_MAP_TYPE == 0.f || FIX_POST_PROCESS == 0.f)
@@ -151,8 +151,10 @@ float3 ConvertSRGBtoPQAndUpgradeToneMap(float3 srgb_color,
   tonemapped_linear = renodx::color::bt709::from::BT2020(tonemapped_linear);
 
   tonemapped_linear = renodx::tonemap::UpgradeToneMap(
-      tonemapped_linear, (MaxChTonemapToOne(tonemapped_linear)),
-      (linear_color), 1.f);
+      tonemapped_linear,                     // HDR color from the lutbuilder, decoded to linear bt709
+      MaxChTonemapToOne(tonemapped_linear),  // Lutbuilder output tonemapped to 1 as our SDR reference color
+      MaxChTonemapToOne(linear_color),       // Output of the PostFX shader
+      1.f);
 
   return renodx::color::pq::EncodeSafe(
       renodx::color::bt2020::from::BT709(tonemapped_linear),

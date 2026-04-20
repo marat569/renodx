@@ -17,6 +17,11 @@ float3 ToneMapMaxCLL(float3 color, float rolloff_start = 0.75f,
   return min(output_max, color * scale);
 }
 
+// Tonemap to 1 using N2 Max Channel
+float3 MaxChTonemapToOne(float3 color) {
+  return renodx::tonemap::neutwo::MaxChannel(color);
+}
+
 // We use color::correct::GammaSafe() in the lutbuilder for gamma correction
 // So with gamma correction on, we need to gamma::Encode or gamma::Decode to create an sRGB color
 // Not everybody plays with gamma correction on/SDR EOTF emulation, so we need to account for that
@@ -115,7 +120,7 @@ float3 ConvertPQToSRGBWithTonemap(float3 pq_color) {
   srgb_color =
       renodx::color::pq::DecodeSafe(pq_color, RENODX_DIFFUSE_WHITE_NITS);
   srgb_color = renodx::color::bt709::from::BT2020(srgb_color);
-  srgb_color = saturate(ToneMapMaxCLL(srgb_color));
+  srgb_color = (MaxChTonemapToOne(srgb_color));
   srgb_color = ConditionalSrgbEncode(srgb_color);
 
   return float3(srgb_color);
@@ -146,8 +151,9 @@ float3 ConvertSRGBtoPQAndUpgradeToneMap(float3 srgb_color,
   tonemapped_linear = renodx::color::bt709::from::BT2020(tonemapped_linear);
 
   tonemapped_linear = renodx::tonemap::UpgradeToneMap(
-      tonemapped_linear, saturate(ToneMapMaxCLL(tonemapped_linear)),
-      saturate(linear_color), 1.f);
+      tonemapped_linear, (MaxChTonemapToOne(tonemapped_linear)),
+      (linear_color), 1.f);
+
   return renodx::color::pq::EncodeSafe(
       renodx::color::bt2020::from::BT709(tonemapped_linear),
       RENODX_DIFFUSE_WHITE_NITS);

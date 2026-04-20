@@ -663,9 +663,10 @@ float4 main(
   float _191 = select((_125.x >= 0.5f), (1.0f - (((1.0f - _125.x) * 2.0f) * (1.0f - _167))), ((_125.x * 2.0f) * _167)) * _103;
   float _192 = select((_125.y >= 0.5f), (1.0f - (((1.0f - _125.y) * 2.0f) * (1.0f - _168))), ((_125.y * 2.0f) * _168)) * _103;
   float _193 = select((_125.z >= 0.5f), (1.0f - (((1.0f - _125.z) * 2.0f) * (1.0f - _169))), ((_125.z * 2.0f) * _169)) * _103;
-  SV_Target.x = max(((((Material_PreshaderBuffer[7].x) - _191) * (Material_PreshaderBuffer[6].w)) + _191), 0.0f);
-  SV_Target.y = max(((((Material_PreshaderBuffer[7].y) - _192) * (Material_PreshaderBuffer[6].w)) + _192), 0.0f);
-  SV_Target.z = max(((((Material_PreshaderBuffer[7].z) - _193) * (Material_PreshaderBuffer[6].w)) + _193), 0.0f);
+  // Removed max 0
+  SV_Target.x = ((((Material_PreshaderBuffer[7].x) - _191) * (Material_PreshaderBuffer[6].w)) + _191);
+  SV_Target.y = ((((Material_PreshaderBuffer[7].y) - _192) * (Material_PreshaderBuffer[6].w)) + _192);
+  SV_Target.z = ((((Material_PreshaderBuffer[7].z) - _193) * (Material_PreshaderBuffer[6].w)) + _193);
   SV_Target.w = 0.0f;
   // Back to PQ
   if (PROCESSING_PATH == 0.f) {

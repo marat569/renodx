@@ -642,9 +642,8 @@ SamplerState Material_Wrap_WorldGroupSettings : register(s0);
 SamplerState PostProcessInput_0_Sampler : register(s1);
 
 float4 main(
-  noperspective float4 SV_Position : SV_Position,
-  linear float4 TEXCOORD : TEXCOORD
-) : SV_Target {
+    noperspective float4 SV_Position: SV_Position,
+    linear float4 TEXCOORD: TEXCOORD) : SV_Target {
   float4 SV_Target;
   float _26 = (SV_Position.x - float((uint)(int)(PostProcessOutput_ViewportMin.x))) * PostProcessOutput_ViewportSizeInverse.x;
   float _27 = (SV_Position.y - float((uint)(int)(PostProcessOutput_ViewportMin.y))) * PostProcessOutput_ViewportSizeInverse.y;
@@ -664,7 +663,7 @@ float4 main(
   float3 tonemapped_pq = _136.rgb;
   // SV_Target = float4(_136.x, _136.y, _136.z, 0.0f);
   // return SV_Target;
-  
+
   if (PROCESSING_PATH == 0.f) {
     _136 = ConvertPQToSRGBWithTonemap(_136);
   }
@@ -699,11 +698,12 @@ float4 main(
   float _318 = ((_193 + _111) + (_179 * (Material_PreshaderBuffer[6].x))) + (_299 * ((_252 - _193) + ((_255 - _252) * (Material_PreshaderBuffer[4].x))));
   float _321 = ((_194 + _111) + (_179 * (Material_PreshaderBuffer[6].y))) + (_299 * ((_253 - _194) + ((_255 - _253) * (Material_PreshaderBuffer[4].x))));
   float _324 = ((_195 + _111) + (_179 * (Material_PreshaderBuffer[6].z))) + (_299 * ((_254 - _195) + ((_255 - _254) * (Material_PreshaderBuffer[4].x))));
-  SV_Target.x = max(((((Material_PreshaderBuffer[7].x) - _318) * (Material_PreshaderBuffer[6].w)) + _318), 0.0f);
-  SV_Target.y = max(((((Material_PreshaderBuffer[7].y) - _321) * (Material_PreshaderBuffer[6].w)) + _321), 0.0f);
-  SV_Target.z = max(((((Material_PreshaderBuffer[7].z) - _324) * (Material_PreshaderBuffer[6].w)) + _324), 0.0f);
+  // Removed Max(0)
+  SV_Target.x = ((((Material_PreshaderBuffer[7].x) - _318) * (Material_PreshaderBuffer[6].w)) + _318);
+  SV_Target.y = ((((Material_PreshaderBuffer[7].y) - _321) * (Material_PreshaderBuffer[6].w)) + _321);
+  SV_Target.z = ((((Material_PreshaderBuffer[7].z) - _324) * (Material_PreshaderBuffer[6].w)) + _324);
   SV_Target.w = 0.0f;
-  
+
   // Convert output from gamma back to -> PQ
   if (PROCESSING_PATH == 0.f) {
     SV_Target.rgb = ConvertSRGBtoPQAndUpgradeToneMap(SV_Target.rgb, tonemapped_pq);

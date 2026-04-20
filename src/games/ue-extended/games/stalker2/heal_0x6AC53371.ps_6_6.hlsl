@@ -194,9 +194,10 @@ float4 main(
   float _47 = _46 * _35.x;
   float _48 = _46 * _35.y;
   float _49 = _46 * _35.z;
-  SV_Target.x = max(((((Material_PreshaderBuffer[2].x) - _47) * (Material_PreshaderBuffer[1].z)) + _47), 0.0f);
-  SV_Target.y = max(((((Material_PreshaderBuffer[2].y) - _48) * (Material_PreshaderBuffer[1].z)) + _48), 0.0f);
-  SV_Target.z = max(((((Material_PreshaderBuffer[2].z) - _49) * (Material_PreshaderBuffer[1].z)) + _49), 0.0f);
+  // Removed max(0, )
+  SV_Target.x = ((((Material_PreshaderBuffer[2].x) - _47) * (Material_PreshaderBuffer[1].z)) + _47);
+  SV_Target.y = ((((Material_PreshaderBuffer[2].y) - _48) * (Material_PreshaderBuffer[1].z)) + _48);
+  SV_Target.z = ((((Material_PreshaderBuffer[2].z) - _49) * (Material_PreshaderBuffer[1].z)) + _49);
   SV_Target.w = 0.0f;
 
   // Convert output from gamma back to -> PQ

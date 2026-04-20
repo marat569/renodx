@@ -194,7 +194,7 @@ float4 main(
 
   // SV_Target = float4(_136.x, _136.y, _136.z, 0.0f);
   // return SV_Target;
-  
+
   if (PROCESSING_PATH == 0.f) {
     // Convert PQ -> sRGB
     _136.rgb = ConvertPQToSRGBWithTonemap(_136.rgb);
@@ -404,9 +404,10 @@ float4 main(
   float _336 = _333 + _318;
   float _337 = _334 + _321;
   float _338 = _335 + _324;
-  float _339 = max(_336, 0.0f);
-  float _340 = max(_337, 0.0f);
-  float _341 = max(_338, 0.0f);
+  // Removed Max(0)
+  float _339 = _336;
+  float _340 = _337;
+  float _341 = _338;
 
   SV_Target.x = _339;
   SV_Target.y = _340;

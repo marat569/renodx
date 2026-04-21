@@ -3,6 +3,17 @@
 
 #include "../shared.h"
 
+// Lerp in LMS
+// BT709 linear In -- BT709 Linear Out
+float3 LerpInLMS(float3 bt709_a, float3 bt709_b, float t) {
+  float3 lms_a = renodx::color::lms::from::BT709(bt709_a);
+  float3 lms_b = renodx::color::lms::from::BT709(bt709_b);
+
+  float3 blended = lerp(lms_a, lms_b, saturate(t));
+
+  return renodx::color::bt709::from::LMS(blended);
+}
+
 // NRG
 float3 NeutwoBT709WhiteForEnergy(float3 bt709_linear, float peak = 1.f) {
   float peak_ref = max(peak, 1e-6f);

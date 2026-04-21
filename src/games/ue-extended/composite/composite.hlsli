@@ -1,6 +1,15 @@
 #include "../shared.h"
 #include "./lilium_rcas.hlsli"
 
+// Used for scRGB composite shaders, since HandleUICompositing() expects a PQ color
+float3 LinearSceneToPq(float3 linear_scene) {
+  linear_scene.xyz =
+      renodx::color::bt2020::from::BT709(linear_scene.xyz);
+  // scRGB composite shaders use a scale of 80
+  return linear_scene.xyz = renodx::color::pq::EncodeSafe(
+             linear_scene.xyz, 80.f);
+}
+
 float4 OutputscRGB(float4 color, float scale) {
   return float4(color.rgb *= scale / 80.f, color.a);
 }

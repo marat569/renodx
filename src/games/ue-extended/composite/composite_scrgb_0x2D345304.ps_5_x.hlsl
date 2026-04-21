@@ -45,10 +45,7 @@ void main(
   // The game's Native HDR is scRGB; so the sample is linear
   // Need to convert to swap colorspace to BT2020 + PQ Encode
   float4 scene_color_linear = float4(r1.xyz, 1.f);
-  scene_color_linear.xyz =
-      renodx::color::bt2020::from::BT709(scene_color_linear.xyz);
-  scene_color_linear.xyz = renodx::color::pq::EncodeSafe(
-      scene_color_linear.xyz, 80.f);
+  scene_color_linear.xyz = LinearSceneToPq(scene_color_linear.xyz);
 
   if (HandleUICompositing(ui_color_gamma, scene_color_linear, o0, v0.xy, t1,
                           s1_s, 1u)) {

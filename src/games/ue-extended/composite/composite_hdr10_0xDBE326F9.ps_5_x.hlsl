@@ -1,5 +1,6 @@
 // Found in Like a Dragon Ishin
 // UE 4.27 HDR10 Ini HDR
+// Spawns in both scRGB and HDR10 without proper params
 
 #include "./composite.hlsli"
 

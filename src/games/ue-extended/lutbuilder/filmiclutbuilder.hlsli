@@ -4,6 +4,11 @@
 #include "./filmtonemap.hlsli"
 #include "./lutbuildercommon.hlsli"
 
+// Tonemap to 1 using N2 Max Channel
+float3 MaxChTonemapToOne(float3 color) {
+  return renodx::tonemap::neutwo::MaxChannel(color);
+}
+
 // Create cbuffer struct
 
 struct UECbufferConfig {
@@ -337,6 +342,7 @@ float3 Sample2Packed1DLuts(
   }
 
   color_srgb = saturate(color_srgb);
+
   float _928 = color_srgb.r;
   float _939 = color_srgb.g;
   float _950 = color_srgb.b;
@@ -455,6 +461,7 @@ float3 Sample3Packed1DLuts(
   }
 
   color_srgb = saturate(color_srgb);
+
   float _1189 = color_srgb.r, _1200 = color_srgb.g, _1211 = color_srgb.b;
 
   float _1215 = (_1200 * 0.9375f) + 0.03125f;
@@ -600,6 +607,7 @@ float3 Sample4Packed1DLuts(
   }
 
   color_srgb = saturate(color_srgb);
+
   float _884 = color_srgb.r, _895 = color_srgb.g, _906 = color_srgb.b;
 
   float _910 = (_895 * 0.9375f) + 0.03125f;

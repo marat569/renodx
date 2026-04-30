@@ -820,7 +820,6 @@ float4 main(
   cb_config.ue_colorscale = float3(cb0_016x, cb0_016y, cb0_016z);
 
   SV_Target = ProcessLutbuilder(float3(_805, _807, _809), cb_config, SV_Target, asuint(cb0_044w));
-  SV_Target.xyz = renodx::color::srgb::DecodeSafe(SV_Target.xyz);
   return SV_Target;
 
   _845 = ((mad(0.061360642313957214f, _809, mad(-4.540197551250458e-09f, _807, (_805 * 0.9386394023895264f))) - _805) * cb0_038z) + _805;

@@ -1,16 +1,28 @@
-// Text, hp bar
+// Lock on indicator
 
 #include "../../common.hlsli"
 
-StructuredBuffer<float4> t0 : register(t0);
+Texture3D<float4> t0 : register(t0);
 
-StructuredBuffer<float4> t1 : register(t1);
+Texture2D<float4> t1 : register(t1);
 
-Texture2DArray<float4> t2 : register(t2);
+Texture2D<float4> t2 : register(t2);
 
-Texture2DArray<float> t3 : register(t3);
+StructuredBuffer<float4> t3 : register(t3);
 
-Texture2D<float4> t4 : register(t4);
+Texture2DArray<float4> t4 : register(t4);
+
+Texture2DArray<float> t5 : register(t5);
+
+Texture2D<float4> t6 : register(t6);
+
+Texture2D<float4> t7 : register(t7);
+
+Texture2D<float4> t8 : register(t8);
+
+Texture2D<float4> t9 : register(t9);
+
+Texture2D<float4> t10 : register(t10);
 
 cbuffer cb0 : register(b0) {
   float4 View_000[4] : packoffset(c000.x);
@@ -566,6 +578,65 @@ cbuffer cb0 : register(b0) {
 };
 
 cbuffer cb1 : register(b1) {
+  int Primitive_000 : packoffset(c000.x);
+  int Primitive_004 : packoffset(c000.y);
+  int Primitive_008 : packoffset(c000.z);
+  int Primitive_012 : packoffset(c000.w);
+  float3 Primitive_016 : packoffset(c001.x);
+  int Primitive_028 : packoffset(c001.w);
+  float4 Primitive_032[4] : packoffset(c002.x);
+  float4 Primitive_096[4] : packoffset(c006.x);
+  float4 Primitive_160[4] : packoffset(c010.x);
+  float4 Primitive_224[4] : packoffset(c014.x);
+  float4 Primitive_288[4] : packoffset(c018.x);
+  float3 Primitive_352 : packoffset(c022.x);
+  float Primitive_364 : packoffset(c022.w);
+  float4 Primitive_368 : packoffset(c023.x);
+  float3 Primitive_384 : packoffset(c024.x);
+  float Primitive_396 : packoffset(c024.w);
+  float3 Primitive_400 : packoffset(c025.x);
+  float Primitive_412 : packoffset(c025.w);
+  float3 Primitive_416 : packoffset(c026.x);
+  int Primitive_428 : packoffset(c026.w);
+  float3 Primitive_432 : packoffset(c027.x);
+  int Primitive_444 : packoffset(c027.w);
+  float4 Primitive_448 : packoffset(c028.x);
+  float3 Primitive_464 : packoffset(c029.x);
+  int Primitive_476 : packoffset(c029.w);
+  float3 Primitive_480 : packoffset(c030.x);
+  int Primitive_492 : packoffset(c030.w);
+  int Primitive_496 : packoffset(c031.x);
+  int Primitive_500 : packoffset(c031.y);
+  int Primitive_504 : packoffset(c031.z);
+  int Primitive_508 : packoffset(c031.w);
+  float3 Primitive_512 : packoffset(c032.x);
+  float Primitive_524 : packoffset(c032.w);
+  float3 Primitive_528 : packoffset(c033.x);
+  float Primitive_540 : packoffset(c033.w);
+  float3 Primitive_544 : packoffset(c034.x);
+  int Primitive_556 : packoffset(c034.w);
+  float3 Primitive_560 : packoffset(c035.x);
+  int Primitive_572 : packoffset(c035.w);
+  int Primitive_576 : packoffset(c036.x);
+  int Primitive_580 : packoffset(c036.y);
+  float2 Primitive_584 : packoffset(c036.z);
+  int Primitive_592 : packoffset(c037.x);
+  int Primitive_596 : packoffset(c037.y);
+  float2 Primitive_600 : packoffset(c037.z);
+  float Primitive_608 : packoffset(c038.x);
+  float Primitive_612 : packoffset(c038.y);
+  float Primitive_616 : packoffset(c038.z);
+  float Primitive_620 : packoffset(c038.w);
+  int2 Primitive_624 : packoffset(c039.x);
+  int2 Primitive_632 : packoffset(c039.z);
+  int Primitive_640 : packoffset(c040.x);
+  float Primitive_644 : packoffset(c040.y);
+  int Primitive_648 : packoffset(c040.z);
+  int Primitive_652 : packoffset(c040.w);
+  float4 Primitive_656[9] : packoffset(c041.x);
+};
+
+cbuffer cb2 : register(b2) {
   int TranslucentBasePass_000 : packoffset(c000.x);
   int TranslucentBasePass_004 : packoffset(c000.y);
   int TranslucentBasePass_008 : packoffset(c000.z);
@@ -1145,264 +1216,576 @@ cbuffer cb1 : register(b1) {
   int TranslucentBasePass_4656 : packoffset(c291.x);
 };
 
-cbuffer cb2 : register(b2) {
-  float4 Material_000[6] : packoffset(c000.x);
-  int Material_096 : packoffset(c006.x);
-  int Material_100 : packoffset(c006.y);
-  int Material_104 : packoffset(c006.z);
-  int Material_108 : packoffset(c006.w);
-  int Material_112 : packoffset(c007.x);
-  int Material_116 : packoffset(c007.y);
-  int Material_120 : packoffset(c007.z);
+cbuffer cb3 : register(b3) {
+  int NiagaraSpriteVF_000 : packoffset(c000.x);
+  int NiagaraSpriteVF_004 : packoffset(c000.y);
+  int NiagaraSpriteVF_008 : packoffset(c000.z);
+  int NiagaraSpriteVF_012 : packoffset(c000.w);
+  float4 NiagaraSpriteVF_016 : packoffset(c001.x);
+  float4 NiagaraSpriteVF_032 : packoffset(c002.x);
+  float4 NiagaraSpriteVF_048 : packoffset(c003.x);
+  float4 NiagaraSpriteVF_064 : packoffset(c004.x);
+  float3 NiagaraSpriteVF_080 : packoffset(c005.x);
+  float NiagaraSpriteVF_092 : packoffset(c005.w);
+  float4 NiagaraSpriteVF_096 : packoffset(c006.x);
+  float NiagaraSpriteVF_112 : packoffset(c007.x);
+  float NiagaraSpriteVF_116 : packoffset(c007.y);
+  float NiagaraSpriteVF_120 : packoffset(c007.z);
+  float NiagaraSpriteVF_124 : packoffset(c007.w);
+  float2 NiagaraSpriteVF_128 : packoffset(c008.x);
+  float2 NiagaraSpriteVF_136 : packoffset(c008.z);
+  int NiagaraSpriteVF_144 : packoffset(c009.x);
+  int NiagaraSpriteVF_148 : packoffset(c009.y);
+  int NiagaraSpriteVF_152 : packoffset(c009.z);
+  int NiagaraSpriteVF_156 : packoffset(c009.w);
+  int NiagaraSpriteVF_160 : packoffset(c010.x);
+  int NiagaraSpriteVF_164 : packoffset(c010.y);
+  int NiagaraSpriteVF_168 : packoffset(c010.z);
+  int NiagaraSpriteVF_172 : packoffset(c010.w);
+  int NiagaraSpriteVF_176 : packoffset(c011.x);
+  int NiagaraSpriteVF_180 : packoffset(c011.y);
+  int NiagaraSpriteVF_184 : packoffset(c011.z);
+  int NiagaraSpriteVF_188 : packoffset(c011.w);
+  int NiagaraSpriteVF_192 : packoffset(c012.x);
+  int NiagaraSpriteVF_196 : packoffset(c012.y);
+  int NiagaraSpriteVF_200 : packoffset(c012.z);
+  int NiagaraSpriteVF_204 : packoffset(c012.w);
+  int NiagaraSpriteVF_208 : packoffset(c013.x);
+  int NiagaraSpriteVF_212 : packoffset(c013.y);
+  int NiagaraSpriteVF_216 : packoffset(c013.z);
+  int NiagaraSpriteVF_220 : packoffset(c013.w);
+  int NiagaraSpriteVF_224 : packoffset(c014.x);
+  int NiagaraSpriteVF_228 : packoffset(c014.y);
+  int NiagaraSpriteVF_232 : packoffset(c014.z);
+  int NiagaraSpriteVF_236 : packoffset(c014.w);
+  int NiagaraSpriteVF_240 : packoffset(c015.x);
+  int NiagaraSpriteVF_244 : packoffset(c015.y);
+  int NiagaraSpriteVF_248 : packoffset(c015.z);
+  int NiagaraSpriteVF_252 : packoffset(c015.w);
+  float4 NiagaraSpriteVF_256 : packoffset(c016.x);
+  float4 NiagaraSpriteVF_272 : packoffset(c017.x);
+  float2 NiagaraSpriteVF_288 : packoffset(c018.x);
+  float2 NiagaraSpriteVF_296 : packoffset(c018.z);
+  float2 NiagaraSpriteVF_304 : packoffset(c019.x);
+  float NiagaraSpriteVF_312 : packoffset(c019.z);
+  float NiagaraSpriteVF_316 : packoffset(c019.w);
+  float3 NiagaraSpriteVF_320 : packoffset(c020.x);
+  float NiagaraSpriteVF_332 : packoffset(c020.w);
+  float3 NiagaraSpriteVF_336 : packoffset(c021.x);
+  float NiagaraSpriteVF_348 : packoffset(c021.w);
+  float3 NiagaraSpriteVF_352 : packoffset(c022.x);
+  float NiagaraSpriteVF_364 : packoffset(c022.w);
+  float NiagaraSpriteVF_368 : packoffset(c023.x);
+  float NiagaraSpriteVF_372 : packoffset(c023.y);
+  float NiagaraSpriteVF_376 : packoffset(c023.z);
+  float NiagaraSpriteVF_380 : packoffset(c023.w);
+  float4 NiagaraSpriteVF_384 : packoffset(c024.x);
+  float NiagaraSpriteVF_400 : packoffset(c025.x);
+  float NiagaraSpriteVF_404 : packoffset(c025.y);
+  float NiagaraSpriteVF_408 : packoffset(c025.z);
+  float NiagaraSpriteVF_412 : packoffset(c025.w);
+  float NiagaraSpriteVF_416 : packoffset(c026.x);
+  float NiagaraSpriteVF_420 : packoffset(c026.y);
+  float NiagaraSpriteVF_424 : packoffset(c026.z);
+  float NiagaraSpriteVF_428 : packoffset(c026.w);
+  float4 NiagaraSpriteVF_432 : packoffset(c027.x);
+  float4 NiagaraSpriteVF_448 : packoffset(c028.x);
+  float4 NiagaraSpriteVF_464 : packoffset(c029.x);
+  float4 NiagaraSpriteVF_480 : packoffset(c030.x);
+  float4 NiagaraSpriteVF_496 : packoffset(c031.x);
+  float4 NiagaraSpriteVF_512 : packoffset(c032.x);
+  float4 NiagaraSpriteVF_528 : packoffset(c033.x);
+  float4 NiagaraSpriteVF_544 : packoffset(c034.x);
+  int NiagaraSpriteVF_560 : packoffset(c035.x);
+  int NiagaraSpriteVF_564 : packoffset(c035.y);
+  int NiagaraSpriteVF_568 : packoffset(c035.z);
+  int NiagaraSpriteVF_572 : packoffset(c035.w);
+  float4 NiagaraSpriteVF_576 : packoffset(c036.x);
+  int NiagaraSpriteVF_592 : packoffset(c037.x);
+};
+
+cbuffer cb4 : register(b4) {
+  float4 MaterialCollection0_000[4] : packoffset(c000.x);
+};
+
+cbuffer cb5 : register(b5) {
+  float4 Material_000[19] : packoffset(c000.x);
+  int Material_304 : packoffset(c019.x);
+  int Material_308 : packoffset(c019.y);
+  int Material_312 : packoffset(c019.z);
+  int Material_316 : packoffset(c019.w);
+  int Material_320 : packoffset(c020.x);
+  int Material_324 : packoffset(c020.y);
+  int Material_328 : packoffset(c020.z);
+  int Material_332 : packoffset(c020.w);
+  int Material_336 : packoffset(c021.x);
+  int Material_340 : packoffset(c021.y);
+  int Material_344 : packoffset(c021.z);
+  int Material_348 : packoffset(c021.w);
+  int Material_352 : packoffset(c022.x);
+  int Material_356 : packoffset(c022.y);
+  int Material_360 : packoffset(c022.z);
+  int Material_364 : packoffset(c022.w);
+  int Material_368 : packoffset(c023.x);
+  int Material_372 : packoffset(c023.y);
+  int Material_376 : packoffset(c023.z);
+  int Material_380 : packoffset(c023.w);
+  int Material_384 : packoffset(c024.x);
+  int Material_388 : packoffset(c024.y);
+  int Material_392 : packoffset(c024.z);
 };
 
 SamplerState s0 : register(s0);
 
 SamplerState s1 : register(s1);
 
+SamplerState s2 : register(s2);
+
+SamplerState s3 : register(s3);
+
+SamplerState s4 : register(s4);
+
+SamplerState s5 : register(s5);
+
+SamplerState s6 : register(s6);
+
+SamplerState s7 : register(s7);
+
 // DXIL FirstbitHi: returns bit position counting from MSB (leading zeros count)
-uint firstbithigh_msb(int value) {
-  return (value == 0) ? 0xFFFFFFFF : (31u - firstbithigh(value));
-}
-uint firstbithigh_msb(uint value) {
-  return (value == 0) ? 0xFFFFFFFF : (31u - firstbithigh(value));
-}
+uint firstbithigh_msb(int value) { return (value == 0) ? 0xFFFFFFFF : (31u - firstbithigh(value)); }
+uint firstbithigh_msb(uint value) { return (value == 0) ? 0xFFFFFFFF : (31u - firstbithigh(value)); }
 
 float4 main(
-    linear float4 TEXCOORD10_centroid: TEXCOORD10_centroid,
-    linear float4 TEXCOORD11_centroid: TEXCOORD11_centroid,
-    linear float4 TEXCOORD: TEXCOORD,
-    nointerpolation uint PRIMITIVE_ID: PRIMITIVE_ID,
-    nointerpolation bool SV_IsFrontFace: SV_IsFrontFace,
-    linear float3 TEXCOORD_9: TEXCOORD9,
-    precise noperspective float4 SV_Position: SV_Position) : SV_Target {
+  linear float4 TEXCOORD_10 : TEXCOORD10,
+  linear float4 TEXCOORD_11 : TEXCOORD11,
+  nointerpolation float4 PARTICLE_DYNAMIC_PARAM : PARTICLE_DYNAMIC_PARAM,
+  nointerpolation float4 PARTICLE_DYNAMIC_PARAM_1 : PARTICLE_DYNAMIC_PARAM1,
+  linear float4 TEXCOORD : TEXCOORD,
+  linear float4 TEXCOORD_1 : TEXCOORD1,
+  nointerpolation float4 PARTICLE_VELOCITY : PARTICLE_VELOCITY,
+  linear float4 TEXCOORD_7 : TEXCOORD7,
+  linear float3 TEXCOORD_9 : TEXCOORD9,
+  precise noperspective float4 SV_Position : SV_Position,
+  nointerpolation bool SV_IsFrontFace : SV_IsFrontFace
+) : SV_Target {
   float4 SV_Target;
-  float _76;
-  float _77;
-  float _78;
-  float _79;
-  float _80;
-  float _81;
-  float _82;
-  float _83;
-  float _84;
-  float _85;
-  float _89;
+  float _86;
+  float _88;
   float _90;
-  float _91;
-  float4 _94;
-  float _129;
-  float _132;
-  float _133;
-  float _134;
-  float _135;
-  float _153;
-  float _154;
-  float _155;
-  float _156;
-  float _268;
-  float _269;
-  float _270;
-  float _271;
-  float _314;
-  int _329;
-  bool _355;
-  float _356;
-  float _357;
-  float _358;
-  float _359;
-  float _372;
-  float _373;
-  float _374;
-  uint _162;
+  float _149;
+  float _165;
   float _166;
   float _167;
   float _168;
+  float _169;
+  float _170;
   float _171;
   float _172;
   float _173;
-  float _176;
-  float _177;
+  float _174;
   float _178;
   float _179;
   float _180;
   float _181;
   float _182;
-  float _191;
-  float _194;
-  float _197;
-  float _243;
-  float _260;
-  float _279;
-  float _280;
-  float _281;
-  float _289;
-  float _293;
-  float _297;
-  float _318;
-  float _319;
-  int _330;
-  float _332;
-  float _337;
-  float4 _346;
-  float _364;
-  _76 = mad(1.0f, (View_704[3].w), mad(SV_Position.z, (View_704[2].w), mad(SV_Position.y, (View_704[1].w), (SV_Position.x * (View_704[0].w)))));
-  _77 = mad(1.0f, (View_704[3].x), mad(SV_Position.z, (View_704[2].x), mad(SV_Position.y, (View_704[1].x), (SV_Position.x * (View_704[0].x))))) / _76;
-  _78 = mad(1.0f, (View_704[3].y), mad(SV_Position.z, (View_704[2].y), mad(SV_Position.y, (View_704[1].y), (SV_Position.x * (View_704[0].y))))) / _76;
-  _79 = mad(1.0f, (View_704[3].z), mad(SV_Position.z, (View_704[2].z), mad(SV_Position.y, (View_704[1].z), (SV_Position.x * (View_704[0].z))))) / _76;
-  _80 = _77 - View_1984.x;
-  _81 = _78 - View_1984.y;
-  _82 = _79 - View_1984.z;
-  _83 = mad(View_1936.x, 2097152.0f, _80);
-  _84 = mad(View_1936.y, 2097152.0f, _81);
-  _85 = mad(View_1936.z, 2097152.0f, _82);
-  _89 = _80 - mad((-0.0f - View_1936.x), 2097152.0f, _83);
-  _90 = _81 - mad((-0.0f - View_1936.y), 2097152.0f, _84);
-  _91 = _82 - mad((-0.0f - View_1936.z), 2097152.0f, _85);
-  _94 = t4.Sample(s0, float2(TEXCOORD.x, TEXCOORD.y));
-  _129 = t1[0].x;
-  _132 = exp2(-0.0f - log2(_129));
-  _133 = (((Material_000[1].x) * select((_94.x <= 2.980232949312267e-08f), 0.0f, exp2(log2(_94.x) * (Material_000[0].x)))) * (Material_000[1].w)) * _132;
-  _134 = (((Material_000[1].y) * select((_94.y <= 2.980232949312267e-08f), 0.0f, exp2(log2(_94.y) * (Material_000[0].x)))) * (Material_000[1].w)) * _132;
-  _135 = (((Material_000[1].z) * select((_94.z <= 2.980232949312267e-08f), 0.0f, exp2(log2(_94.z) * (Material_000[0].x)))) * (Material_000[1].w)) * _132;
-  _153 = saturate((Material_000[3].x) * _94.w);
-  _154 = max(((((Material_000[2].y) - _133) * (Material_000[2].x)) + _133), 0.0f);
-  _155 = max(((((Material_000[2].z) - _134) * (Material_000[2].x)) + _134), 0.0f);
-  _156 = max(((((Material_000[2].w) - _135) * (Material_000[2].x)) + _135), 0.0f);
+  float _183;
+  float _185;
+  bool _192;
+  float _203;
+  float _214;
+  float _219;
+  float _220;
+  float _221;
+  float _228;
+  float _229;
+  float _240;
+  float4 _255;
+  float _265;
+  float _266;
+  float _267;
+  float _273;
+  float _274;
+  float4 _294;
+  float _312;
+  float _313;
+  float _314;
+  float _320;
+  float _321;
+  float _322;
+  float _328;
+  float _329;
+  float4 _355;
+  float _382;
+  float _383;
+  float _384;
+  float _388;
+  float _389;
+  float _390;
+  float _391;
+  float _394;
+  float _395;
+  float _400;
+  float _403;
+  float _406;
+  float _427;
+  float _428;
+  float _459;
+  float _460;
+  float _462;
+  float _464;
+  float _470;
+  float _487;
+  float _488;
+  float _489;
+  float _495;
+  float _505;
+  float _506;
+  float _507;
+  float _509;
+  float _510;
+  float _511;
+  float _534;
+  float _538;
+  float _540;
+  float _542;
+  float _544;
+  float _565;
+  float _566;
+  float _568;
+  float _581;
+  float _594;
+  float _620;
+  float _632;
+  float _648;
+  float _656;
+  float _676;
+  float _682;
+  float _686;
+  float _692;
+  float _826;
+  float _827;
+  float _828;
+  float _829;
+  float _854;
+  float _855;
+  float _856;
+  float _857;
+  float _963;
+  float _964;
+  float _965;
+  float _966;
+  float _1012;
+  int _1027;
+  bool _1053;
+  float _1054;
+  float _1055;
+  float _1056;
+  float _1057;
+  float _1070;
+  float _1071;
+  float _1072;
+  float _711;
+  float _712;
+  float _713;
+  float _714;
+  float _715;
+  float _716;
+  float _730;
+  float _732;
+  float _734;
+  float _746;
+  float _751;
+  float _752;
+  float _760;
+  float _761;
+  float4 _789;
+  float4 _807;
+  float _818;
+  float _839;
+  float _845;
+  float _858;
+  float _859;
+  float _860;
+  float _875;
+  float _876;
+  float _877;
+  float _878;
+  float _879;
+  float _880;
+  float _938;
+  float _955;
+  float _980;
+  float _981;
+  float _982;
+  float _989;
+  float _992;
+  float _995;
+  float _1016;
+  float _1017;
+  int _1028;
+  float _1030;
+  float _1035;
+  float4 _1044;
+  float _1062;
+  _86 = -0.0f - View_1152.x;
+  _88 = -0.0f - View_1152.y;
+  _90 = -0.0f - View_1152.z;
+  _149 = SV_Position.w * SV_Position.z;
+  _165 = mad(1.0f, (View_704[3].w), mad(SV_Position.z, (View_704[2].w), mad(SV_Position.y, (View_704[1].w), (SV_Position.x * (View_704[0].w)))));
+  _166 = mad(1.0f, (View_704[3].x), mad(SV_Position.z, (View_704[2].x), mad(SV_Position.y, (View_704[1].x), (SV_Position.x * (View_704[0].x))))) / _165;
+  _167 = mad(1.0f, (View_704[3].y), mad(SV_Position.z, (View_704[2].y), mad(SV_Position.y, (View_704[1].y), (SV_Position.x * (View_704[0].y))))) / _165;
+  _168 = mad(1.0f, (View_704[3].z), mad(SV_Position.z, (View_704[2].z), mad(SV_Position.y, (View_704[1].z), (SV_Position.x * (View_704[0].z))))) / _165;
+  _169 = _166 - View_1984.x;
+  _170 = _167 - View_1984.y;
+  _171 = _168 - View_1984.z;
+  _172 = mad(View_1936.x, 2097152.0f, _169);
+  _173 = mad(View_1936.y, 2097152.0f, _170);
+  _174 = mad(View_1936.z, 2097152.0f, _171);
+  _178 = _169 - mad((-0.0f - View_1936.x), 2097152.0f, _172);
+  _179 = _170 - mad((-0.0f - View_1936.y), 2097152.0f, _173);
+  _180 = _171 - mad((-0.0f - View_1936.z), 2097152.0f, _174);
+  _181 = -0.0f - _166;
+  _182 = -0.0f - _167;
+  _183 = -0.0f - _168;
+  _185 = rsqrt(dot(float3(_181, _182, _183), float3(_181, _182, _183)));
+  _192 = ((View_448[3].w) >= 1.0f);
+  _203 = (View_2604 * select((SV_IsFrontFace != 0), 1.0f, -1.0f)) * select(((Primitive_000 & 64) != 0), -1.0f, 1.0f);
+  _214 = ((1.0f - View_2616) * (MaterialCollection0_000[2].x)) + View_2616;
+  _219 = ((_214 * (Material_000[0].y)) + (Material_000[0].z)) * 3.1415929794311523f;
+  _220 = cos(_219);
+  _221 = sin(_219);
+  _228 = ((Material_000[0].w) * TEXCOORD_1.x) + -0.5f;
+  _229 = ((Material_000[1].x) * TEXCOORD_1.y) + -0.5f;
+  _240 = _214 * select(((NiagaraSpriteVF_184 & 16) == 0), 1.0f, PARTICLE_DYNAMIC_PARAM_1.x);
+  _255 = t6.Sample(s0, float2((((select(((NiagaraSpriteVF_184 & 1) == 0), 0.5f, (PARTICLE_DYNAMIC_PARAM.x + 0.5f)) + (Material_000[0].x)) + dot(float2(_220, (-0.0f - _221)), float2(_228, _229))) + (_240 * (Material_000[1].z))), (((select(((NiagaraSpriteVF_184 & 2) == 0), 0.5f, (PARTICLE_DYNAMIC_PARAM.y + 0.5f)) + dot(float2(_221, _220), float2(_228, _229))) + (Material_000[1].y)) + (_240 * (Material_000[1].w)))));
+  _265 = (((Material_000[2].x) * _214) + (Material_000[2].y)) * 3.1415929794311523f;
+  _266 = cos(_265);
+  _267 = sin(_265);
+  _273 = ((Material_000[2].z) * TEXCOORD_1.x) + -0.5f;
+  _274 = ((Material_000[2].w) * TEXCOORD_1.y) + -0.5f;
+  _294 = t7.SampleBias(s5, float2((((dot(float2(_266, (-0.0f - _267)), float2(_273, _274)) + 0.5f) + (Material_000[3].x)) + ((Material_000[3].z) * _214)), (((dot(float2(_267, _266), float2(_273, _274)) + 0.5f) + (Material_000[3].y)) + ((Material_000[3].w) * _214))), View_2628, int2(0, 0));
+  _312 = ((((Material_000[4].x) * _294.x) - (Material_000[4].x)) * (Material_000[4].w)) + (Material_000[4].x);
+  _313 = ((((Material_000[4].y) * _294.y) - (Material_000[4].y)) * (Material_000[4].w)) + (Material_000[4].y);
+  _314 = ((((Material_000[4].z) * _294.z) - (Material_000[4].z)) * (Material_000[4].w)) + (Material_000[4].z);
+  _320 = (((Material_000[5].x) * _214) + (Material_000[5].y)) * 3.1415929794311523f;
+  _321 = cos(_320);
+  _322 = sin(_320);
+  _328 = ((Material_000[5].z) * TEXCOORD_1.x) + -0.5f;
+  _329 = ((Material_000[5].w) * TEXCOORD_1.y) + -0.5f;
+  _355 = t9.Sample(s7, float2((((float4)(t8.SampleBias(s6, float2((((dot(float2(_321, (-0.0f - _322)), float2(_328, _329)) + 0.5f) + (Material_000[6].x)) + ((Material_000[6].z) * _214)), (((dot(float2(_322, _321), float2(_328, _329)) + 0.5f) + (Material_000[6].y)) + ((Material_000[6].w) * _214))), View_2628, int2(0, 0)))).x), (Material_000[7].x)));
+  _382 = (((Material_000[7].w) * _214) + (Material_000[8].x)) * 3.1415929794311523f;
+  _383 = cos(_382);
+  _384 = sin(_382);
+  _388 = (TEXCOORD_1.x * 2.0f) + -1.0f;
+  _389 = (TEXCOORD_1.y * 2.0f) + -1.0f;
+  _390 = abs(_389);
+  _391 = abs(_388);
+  _394 = min(_391, _390) / max(_391, _390);
+  _395 = _394 * _394;
+  _400 = ((((_395 * 0.08729290217161179f) + -0.30189499258995056f) * _395) + 1.0f) * _394;
+  _403 = select((_390 > _391), (1.5707963705062866f - _400), _400);
+  _406 = select((_388 < 0.0f), (3.1415927410125732f - _403), _403);
+  _427 = ((((Material_000[8].y) * (frac(select((_389 < 0.0f), (-0.0f - _406), _406) * 0.1591549515724182f) - TEXCOORD_1.x)) + TEXCOORD_1.x) * (Material_000[8].z)) + -0.5f;
+  _428 = ((((Material_000[8].y) * (sqrt((_389 * _389) + (_388 * _388)) - TEXCOORD_1.y)) + TEXCOORD_1.y) * (Material_000[8].w)) + -0.5f;
+  _459 = (Material_000[10].y) - select(((NiagaraSpriteVF_184 & 8) == 0), 0.0f, PARTICLE_DYNAMIC_PARAM.w);
+  _460 = -1.0f - (Material_000[10].x);
+  _462 = ((Material_000[10].x) * (((float4)(t10.Sample(s0, float2((((dot(float2(_383, (-0.0f - _384)), float2(_427, _428)) + 0.5f) + (Material_000[9].x)) + ((Material_000[9].z) * _214)), (((select(((NiagaraSpriteVF_184 & 64) == 0), 0.5f, (PARTICLE_DYNAMIC_PARAM_1.z + 0.5f)) + dot(float2(_384, _383), float2(_427, _428))) + (Material_000[9].y)) + ((Material_000[9].w) * _214)))))).x)) - (Material_000[10].x);
+  _464 = saturate(_462 - (_460 * _459));
+  _470 = _464 - saturate(_462 - (_460 * (_459 - (Material_000[10].z))));
+  _487 = (Material_000[12].x) * TEXCOORD.x;
+  _488 = (Material_000[12].x) * TEXCOORD.y;
+  _489 = (Material_000[12].x) * TEXCOORD.z;
+  _495 = (MaterialCollection0_000[1].x) * (MaterialCollection0_000[0].x);
+  _505 = (((_495 * _487) - _487) * (MaterialCollection0_000[1].w)) + _487;
+  _506 = (((_495 * _488) - _488) * (MaterialCollection0_000[1].w)) + _488;
+  _507 = (((_495 * _489) - _489) * (MaterialCollection0_000[1].w)) + _489;
+  _509 = _505 * (Material_000[12].y);
+  _510 = _506 * (Material_000[12].y);
+  _511 = _507 * (Material_000[12].y);
+  _534 = t3[0].x;
+  _538 = exp2(-0.0f - ((Material_000[12].w) * log2(_534)));
+  _540 = (_538 * ((((Material_000[11].x) * _470) * (Material_000[11].w)) + ((((((Material_000[7].y) * _355.x) - _312) * (Material_000[7].z)) + _312) * _255.x))) * ((((_509 - _505) + ((_505 - _509) * _203)) * (Material_000[12].z)) + _505);
+  _542 = (_538 * ((((Material_000[11].y) * _470) * (Material_000[11].w)) + ((((((Material_000[7].y) * _355.y) - _313) * (Material_000[7].z)) + _313) * _255.y))) * ((((_510 - _506) + ((_506 - _510) * _203)) * (Material_000[12].z)) + _506);
+  _544 = (_538 * ((((Material_000[11].z) * _470) * (Material_000[11].w)) + ((((((Material_000[7].y) * _355.z) - _314) * (Material_000[7].z)) + _314) * _255.z))) * ((((_511 - _507) + ((_507 - _511) * _203)) * (Material_000[12].z)) + _507);
+  _565 = ((Material_000[14].x) * (TEXCOORD_1.z - TEXCOORD_1.x)) + TEXCOORD_1.x;
+  _566 = ((Material_000[14].x) * (TEXCOORD_1.w - TEXCOORD_1.y)) + TEXCOORD_1.y;
+  _568 = 1.0f - _565;
+  _581 = 1.0f - _566;
+  _594 = (((((((_568 * (Material_000[14].y)) + _565) * (_568 + ((Material_000[14].z) * _565))) + -1.0f) * (Material_000[14].w)) + 1.0f) * (Material_000[15].w)) * (((((_581 + ((Material_000[15].y) * _566)) * (((Material_000[15].x) * _581) + _566)) + -1.0f) * (Material_000[15].z)) + 1.0f);
+  _620 = (((saturate((((Material_000[16].y) * (saturate(select((_594 <= 2.980232949312267e-08f), 0.0f, exp2(log2(_594) * (Material_000[16].x)))) + -1.0f)) + 1.0f) * _255.w) + select(((NiagaraSpriteVF_184 & 4) == 0), -0.0f, (-0.0f - PARTICLE_DYNAMIC_PARAM.z))) - (Material_000[16].z)) * TEXCOORD.w) * (((Material_000[11].w) * (_464 + -1.0f)) + 1.0f);
+  _632 = select(_192, (((View_1248.x * _149) + View_1248.y) + (1.0f / ((View_1248.z * _149) - View_1248.w))), SV_Position.w);
+  _648 = (Material_000[17].y) * saturate(dot(float3(select(_192, (-0.0f - View_1168.x), (_185 * _181)), select(_192, (-0.0f - View_1168.y), (_185 * _182)), select(_192, (-0.0f - View_1168.z), (_185 * _183))), float3(((Material_000[17].x) * TEXCOORD_11.x), ((Material_000[17].x) * TEXCOORD_11.y), ((Material_000[17].x) * TEXCOORD_11.z))));
+  _656 = ((1.0f - saturate((1.0f - ((Material_000[16].w) * abs(_632))) * 1.1111111640930176f)) * _620) * select((_648 <= 2.980232949312267e-08f), 0.0f, exp2(log2(_648) * (Material_000[17].z)));
+  _676 = saturate((Material_000[17].w) * (((View_1248.y - _632) + (View_1248.x * (((float4)(t2.SampleLevel(s4, float2((((((SV_Position.w * 2.0f) * (((SV_Position.x - View_2368.x) * View_2384.z) + -0.5f)) / SV_Position.w) * View_1264.x) + View_1264.w), (((((SV_Position.w * -2.0f) * (((SV_Position.y - View_2368.y) * View_2384.w) + -0.5f)) / SV_Position.w) * View_1264.y) + View_1264.z)), 0.0f))).x))) + (1.0f / ((View_1248.z * (((float4)(t2.SampleLevel(s4, float2((((((SV_Position.w * 2.0f) * (((SV_Position.x - View_2368.x) * View_2384.z) + -0.5f)) / SV_Position.w) * View_1264.x) + View_1264.w), (((((SV_Position.w * -2.0f) * (((SV_Position.y - View_2368.y) * View_2384.w) + -0.5f)) / SV_Position.w) * View_1264.y) + View_1264.z)), 0.0f))).x)) - View_1248.w))));
+  _682 = ((Material_000[18].x) * ((_676 * _656) - _620)) + _620;
+  _686 = ((_656 - _682) * (Material_000[18].y)) + _682;
+  _692 = saturate((((_676 * _620) - _686) * (Material_000[18].z)) + _686);
+  if (TranslucentBasePass_1996 > 0.0f) {
+    _711 = _172 - View_1152.x;
+    _712 = _173 - View_1152.y;
+    _713 = _174 - View_1152.z;
+    _714 = _711 - _172;
+    _715 = _712 - _173;
+    _716 = _713 - _174;
+    _730 = (_178 + _711) + ((_86 - _714) + (_172 - (_711 - _714)));
+    _732 = (_179 + _712) + ((_88 - _715) + (_173 - (_712 - _715)));
+    _734 = (_180 + _713) + ((_90 - _716) + (_174 - (_713 - _716)));
+    _746 = (View_064[3].w) + mad(_734, (View_064[2].w), mad(_732, (View_064[1].w), (_730 * (View_064[0].w))));
+    _751 = ((((View_064[3].x) + mad(_734, (View_064[2].x), mad(_732, (View_064[1].x), (_730 * (View_064[0].x))))) / _746) * 0.5f) + 0.5f;
+    _752 = 0.5f - ((((View_064[3].y) + mad(_734, (View_064[2].y), mad(_732, (View_064[1].y), (_730 * (View_064[0].y))))) / _746) * 0.5f);
+    _760 = min((_751 * TranslucentBasePass_1872.x), TranslucentBasePass_1880.x);
+    _761 = min((_752 * TranslucentBasePass_1872.y), TranslucentBasePass_1880.y);
+    if (!((bool)(View_3276 == 0.0f) && (bool)((View_5120.x & 32) == 0))) {
+      _789 = t0.SampleLevel(s2, float3(min((_751 * View_4144.x), View_4152.x), min((_752 * View_4144.y), View_4152.y), min(((View_4064.z * View_4048.z) * log2((_746 * View_4064.x) + View_4064.y)), 1.0f)), 0.0f);
+      if (((bool)((bool)(_760 >= 0.0f) && (bool)(_761 >= 0.0f))) && (bool)(TranslucentBasePass_2000 > 0.0f)) {
+        _807 = t1.SampleLevel(s3, float2(_760, _761), 0.0f);
+        _818 = saturate((SV_Position.w - View_4160) / (View_4168 + 0.0010000000474974513f));
+        _826 = ((_807.x * View_2508) * _818);
+        _827 = ((_807.y * View_2508) * _818);
+        _828 = ((_807.z * View_2508) * _818);
+        _829 = ((_818 * (_807.w + -1.0f)) + 1.0f);
+      } else {
+        _826 = 0.0f;
+        _827 = 0.0f;
+        _828 = 0.0f;
+        _829 = 1.0f;
+      }
+      _839 = saturate((SV_Position.w - TranslucentBasePass_2004) * 1e+08f);
+      _845 = (((_829 * _789.w) + -1.0f) * _839) + 1.0f;
+      _854 = ((_845 * TEXCOORD_7.x) + (_839 * ((_826 * _789.w) + (_789.x * View_2508))));
+      _855 = ((_845 * TEXCOORD_7.y) + (_839 * ((_827 * _789.w) + (_789.y * View_2508))));
+      _856 = ((_845 * TEXCOORD_7.z) + (_839 * ((_828 * _789.w) + (_789.z * View_2508))));
+      _857 = (_845 * TEXCOORD_7.w);
+    } else {
+      _854 = 0.0f;
+      _855 = 0.0f;
+      _856 = 0.0f;
+      _857 = 1.0f;
+    }
+  } else {
+    _854 = TEXCOORD_7.x;
+    _855 = TEXCOORD_7.y;
+    _856 = TEXCOORD_7.z;
+    _857 = TEXCOORD_7.w;
+  }
+  _858 = max(((((Material_000[13].y) - _540) * (Material_000[13].x)) + _540), 0.0f);
+  _859 = max(((((Material_000[13].z) - _542) * (Material_000[13].x)) + _542), 0.0f);
+  _860 = max(((((Material_000[13].w) - _544) * (Material_000[13].x)) + _544), 0.0f);
   [branch]
   if (View_2584 > 0.0f) {
-    _162 = PRIMITIVE_ID * 44;
-    _166 = t0[((uint)(_162 + 18u))].x;
-    _167 = t0[((uint)(_162 + 18u))].y;
-    _168 = t0[((uint)(_162 + 18u))].z;
-    _171 = t0[((uint)(_162 + 19u))].x;
-    _172 = t0[((uint)(_162 + 19u))].y;
-    _173 = t0[((uint)(_162 + 19u))].z;
-    _176 = t0[((uint)(_162 + 17u))].w;
-    _177 = _166 * 2097152.0f;
-    _178 = _167 * 2097152.0f;
-    _179 = _168 * 2097152.0f;
-    _180 = _177 + _171;
-    _181 = _178 + _172;
-    _182 = _179 + _173;
-    _191 = t0[((uint)(_162 + 26u))].w;
-    _194 = t0[((uint)(_162 + 27u))].w;
-    _197 = t0[((uint)(_162 + 32u))].x;
-    if (((bool)((bool)(abs((_83 - _180) + (_89 - (_171 - (_180 - _177)))) > (_176 + 1.0f)) || (bool)(abs((_84 - _181) + (_90 - (_172 - (_181 - _178)))) > (_191 + 1.0f)))) || (bool)(abs((_85 - _182) + (_91 - (_173 - (_182 - _179)))) > (_194 + 1.0f))) {
-      _243 = float((bool)(bool)(frac(dot(float3((frac(frac(_89 * 1.52587890625e-05f) + frac(_83 * 1.52587890625e-05f)) * 65536.0f), (frac(frac(_90 * 1.52587890625e-05f) + frac(_84 * 1.52587890625e-05f)) * 65536.0f), (frac(frac(_91 * 1.52587890625e-05f) + frac(_85 * 1.52587890625e-05f)) * 65536.0f)), float3(0.001154000055976212f, 0.001154000055976212f, 0.001154000055976212f))) > 0.5f));
-      _268 = 1.0f;
-      _269 = (1.0f - _243);
-      _270 = 1.0f;
-      _271 = _243;
+    _875 = Primitive_368.x * 2097152.0f;
+    _876 = Primitive_368.y * 2097152.0f;
+    _877 = Primitive_368.z * 2097152.0f;
+    _878 = Primitive_384.x + _875;
+    _879 = Primitive_384.y + _876;
+    _880 = Primitive_384.z + _877;
+    if (((bool)((bool)(abs((_172 - _878) + (_178 - (Primitive_384.x - (_878 - _875)))) > (Primitive_364 + 1.0f)) || (bool)(abs((_173 - _879) + (_179 - (Primitive_384.y - (_879 - _876)))) > (Primitive_524 + 1.0f)))) || (bool)(abs((_174 - _880) + (_180 - (Primitive_384.z - (_880 - _877)))) > (Primitive_540 + 1.0f))) {
+      _938 = float((bool)(bool)(frac(dot(float3((frac(frac(_178 * 1.52587890625e-05f) + frac(_172 * 1.52587890625e-05f)) * 65536.0f), (frac(frac(_179 * 1.52587890625e-05f) + frac(_173 * 1.52587890625e-05f)) * 65536.0f), (frac(frac(_180 * 1.52587890625e-05f) + frac(_174 * 1.52587890625e-05f)) * 65536.0f)), float3(0.001154000055976212f, 0.001154000055976212f, 0.001154000055976212f))) > 0.5f));
+      _963 = 1.0f;
+      _964 = (1.0f - _938);
+      _965 = 1.0f;
+      _966 = _938;
     } else {
-      if (_197 > 0.0f) {
-        _260 = 1.0f - saturate(abs(max(abs(_77 - TEXCOORD_9.x), max(abs(_78 - TEXCOORD_9.y), abs(_79 - TEXCOORD_9.z))) - _197) * 20.0f);
-        _268 = float((int)(((int)(uint)((bool)(_260 > 0.0f))) - ((int)(uint)((bool)(_260 < 0.0f)))));
-        _269 = _260;
-        _270 = 0.0f;
-        _271 = _260;
+      if (Primitive_644 > 0.0f) {
+        _955 = 1.0f - saturate(abs(max(abs(_166 - TEXCOORD_9.x), max(abs(_167 - TEXCOORD_9.y), abs(_168 - TEXCOORD_9.z))) - Primitive_644) * 20.0f);
+        _963 = float((int)(((int)(uint)((bool)(_955 > 0.0f))) - ((int)(uint)((bool)(_955 < 0.0f)))));
+        _964 = _955;
+        _965 = 0.0f;
+        _966 = _955;
       } else {
-        _268 = _153;
-        _269 = _154;
-        _270 = _155;
-        _271 = _156;
+        _963 = _692;
+        _964 = _858;
+        _965 = _859;
+        _966 = _860;
       }
     }
   } else {
-    _268 = _153;
-    _269 = _154;
-    _270 = _155;
-    _271 = _156;
+    _963 = _692;
+    _964 = _858;
+    _965 = _859;
+    _966 = _860;
   }
-  _279 = min((View_2504 * _269), View_5112);
-  _280 = min((View_2504 * _270), View_5112);
-  _281 = min((View_2504 * _271), View_5112);
+  _980 = min((View_2504 * ((_964 * _857) + _854)), View_5112);
+  _981 = min((View_2504 * ((_965 * _857) + _855)), View_5112);
+  _982 = min((((_966 * _857) + _856) * View_2504), View_5112);
   if (TranslucentBasePass_3132 == 1) {
-    _289 = (((-0.0f - View_1152.x) - View_1280.x) + _83) + _89;
-    _293 = (((-0.0f - View_1152.y) - View_1280.y) + _84) + _90;
-    _297 = (((-0.0f - View_1152.z) - View_1280.z) + _85) + _91;
-    do {
-      _355 = false;
-      _356 = _279;
-      _357 = _280;
-      _358 = _281;
-      _359 = _268;
-      [branch]
-      if (!(TranslucentBasePass_3120 == 0)) {
-        do {
-          _314 = SV_Position.x;
-          if ((int)TranslucentBasePass_3124 > (int)0) {
-            _314 = float((int)(int(SV_Position.x * 0.5f)));
-          }
-          _318 = View_2432.z * _314;
-          _319 = View_2432.w * SV_Position.y;
-          [branch]
-          if ((bool)(((t3.SampleLevel(s1, float3(_318, _319, 0.0f), 0.0f)).x) >= 0.0f) && (bool)((int)TranslucentBasePass_3120 > (int)0)) {
-            _329 = TranslucentBasePass_3120;
-            bool _loop_break_0 = false;
-            while (true) {
-              _330 = _329 + -1;
-              _332 = float((int)(_330));
-              _337 = select((_330 == 0), ((t3.SampleLevel(s1, float3(_318, _319, 0.0f), 0.0f)).x), ((t3.SampleLevel(s1, float3(_318, _319, _332), 0.0f)).x));
-              if ((bool)(_337 >= 0.0f) && (bool)((sqrt(((_293 * _293) + (_289 * _289)) + (_297 * _297)) - _337) > TranslucentBasePass_3128)) {
-                _346 = t2.SampleLevel(s1, float3(_318, _319, _332), 0.0f);
-                _355 = true;
-                _356 = _346.x;
-                _357 = _346.y;
-                _358 = _346.z;
-                _359 = _346.w;
-              } else {
-                if ((int)_329 > (int)1) {
-                  _329 = _330;
-                  _loop_break_0 = true;
-                  break;
-                } else {
-                  _355 = false;
-                  _356 = _279;
-                  _357 = _280;
-                  _358 = _281;
-                  _359 = _268;
-                }
-              }
-              break;
-            }
-          } else {
-            _355 = false;
-            _356 = _279;
-            _357 = _280;
-            _358 = _281;
-            _359 = _268;
-          }
-        } while (false);
-      }
-      [branch]
-      if (_355) {
-        _364 = 1.0f - _359;
-        _372 = ((_364 * _279) + (_359 * _356));
-        _373 = ((_364 * _280) + (_359 * _357));
-        _374 = ((_364 * _281) + (_359 * _358));
+    _989 = ((_86 - View_1280.x) + _172) + _178;
+    _992 = ((_88 - View_1280.y) + _173) + _179;
+    _995 = ((_90 - View_1280.z) + _174) + _180;
+    [branch]
+    if (!(TranslucentBasePass_3120 == 0)) {
+      if ((int)TranslucentBasePass_3124 > (int)0) {
+        _1012 = float((int)(int(SV_Position.x * 0.5f)));
       } else {
-        _372 = _279;
-        _373 = _280;
-        _374 = _281;
+        _1012 = SV_Position.x;
       }
-    } while (false);
+      _1016 = View_2432.z * _1012;
+      _1017 = View_2432.w * SV_Position.y;
+      [branch]
+      if ((bool)(((t5.SampleLevel(s1, float3(_1016, _1017, 0.0f), 0.0f)).x) >= 0.0f) && (bool)((int)TranslucentBasePass_3120 > (int)0)) {
+        _1027 = TranslucentBasePass_3120;
+        while(true) {
+          _1028 = _1027 + -1;
+          _1030 = float((int)(_1028));
+          _1035 = select((_1028 == 0), ((t5.SampleLevel(s1, float3(_1016, _1017, 0.0f), 0.0f)).x), ((t5.SampleLevel(s1, float3(_1016, _1017, _1030), 0.0f)).x));
+          if ((bool)(_1035 >= 0.0f) && (bool)((sqrt(((_992 * _992) + (_989 * _989)) + (_995 * _995)) - _1035) > TranslucentBasePass_3128)) {
+            _1044 = t4.SampleLevel(s1, float3(_1016, _1017, _1030), 0.0f);
+            _1053 = true;
+            _1054 = _1044.x;
+            _1055 = _1044.y;
+            _1056 = _1044.z;
+            _1057 = _1044.w;
+          } else {
+            if ((int)_1027 > (int)1) {
+              _1027 = _1028;
+              continue;
+            } else {
+              _1053 = false;
+              _1054 = _980;
+              _1055 = _981;
+              _1056 = _982;
+              _1057 = _963;
+            }
+          }
+          break;
+        }
+      } else {
+        _1053 = false;
+        _1054 = _980;
+        _1055 = _981;
+        _1056 = _982;
+        _1057 = _963;
+      }
+    } else {
+      _1053 = false;
+      _1054 = _980;
+      _1055 = _981;
+      _1056 = _982;
+      _1057 = _963;
+    }
+    [branch]
+    if (_1053) {
+      _1062 = 1.0f - _1057;
+      _1070 = ((_1062 * _980) + (_1057 * _1054));
+      _1071 = ((_1062 * _981) + (_1057 * _1055));
+      _1072 = ((_1062 * _982) + (_1057 * _1056));
+    } else {
+      _1070 = _980;
+      _1071 = _981;
+      _1072 = _982;
+    }
   } else {
-    _372 = _279;
-    _373 = _280;
-    _374 = _281;
+    _1070 = _980;
+    _1071 = _981;
+    _1072 = _982;
   }
-  SV_Target.x = _372;
-  SV_Target.y = _373;
-  SV_Target.z = _374;
-
-  // Decode to PQ, BT2020 from BT709, Encode back to PQ with Game Brightness as scaling)
+  SV_Target.x = _1070;
+  SV_Target.y = _1071;
+  SV_Target.z = _1072;
 
   if (PROCESSING_PATH == 0.f) {
-  SV_Target.xyz = renodx::color::pq::DecodeSafe(SV_Target.xyz);
-  SV_Target.xyz = renodx::color::bt2020::from::BT709(SV_Target.xyz);
-  SV_Target.xyz = renodx::color::pq::EncodeSafe(SV_Target.xyz, RENODX_GRAPHICS_WHITE_NITS);
+    SV_Target.xyz = renodx::color::pq::EncodeSafe(SV_Target.xyz, RENODX_GRAPHICS_WHITE_NITS);
   }
-  SV_Target.w = _268;
+  SV_Target.w = _963;
   return SV_Target;
 }

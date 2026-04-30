@@ -312,6 +312,24 @@ void main(
       break;
   }
 
+  float3 untonemapped_ap1 = r0.xyz;
+
+  UECbufferConfig cb_config = CreateCbufferConfig();
+  cb_config.ue_filmblackclip = asfloat(cb0[32].w);
+  cb_config.ue_filmtoe = asfloat(cb0[32].y);
+  cb_config.ue_filmshoulder = asfloat(cb0[32].z);
+  cb_config.ue_filmslope = asfloat(cb0[32].x);
+  cb_config.ue_filmwhiteclip = asfloat(cb0[33].x);
+  cb_config.ue_tonecurveammount = asfloat(1.f);  // old UE version; 1.f = no tonecurve
+  cb_config.ue_mappingpolynomial = asfloat(cb0[19].xyz);
+  cb_config.ue_overlaycolor = asfloat(cb0[39].xyzw);
+  cb_config.ue_bluecorrection = asfloat(0.f);  // old UE version; 0.f = no bluecorrect
+  cb_config.ue_colorscale = asfloat(cb0[38].yzw);
+
+  o0 = ProcessLutbuilder(float3(untonemapped_ap1), cb_config, o0, asuint(cb0[31].w));
+
+  return;
+
   r4.x = dot(r4.xyz, r0.xyz);
   r4.y = dot(r5.xyz, r0.xyz);
   r4.z = dot(r6.xyz, r0.xyz);
@@ -344,24 +362,6 @@ void main(
     default:
       break;
   }
-
-  float3 untonemapped_ap1 = r0.xyz;
-
-  UECbufferConfig cb_config = CreateCbufferConfig();
-  cb_config.ue_filmblackclip = asfloat(cb0[32].w);
-  cb_config.ue_filmtoe = asfloat(cb0[32].y);
-  cb_config.ue_filmshoulder = asfloat(cb0[32].z);
-  cb_config.ue_filmslope = asfloat(cb0[32].x);
-  cb_config.ue_filmwhiteclip = asfloat(cb0[33].x);
-  cb_config.ue_tonecurveammount = asfloat(1.f);  // old UE version; 1.f = no tonecurve
-  cb_config.ue_mappingpolynomial = asfloat(cb0[19].xyz);
-  cb_config.ue_overlaycolor = asfloat(cb0[39].xyzw);
-  cb_config.ue_bluecorrection = asfloat(0.f);  // old UE version; 0.f = no bluecorrect
-  cb_config.ue_colorscale = asfloat(cb0[38].yzw);
-
-  o0 = ProcessLutbuilder(float3(untonemapped_ap1), cb_config, o0, asuint(cb0[31].w));
-
-  return;
 
   r0.w = cmp(cb0[31].w == 0.000000);
   if (r0.w != 0) {

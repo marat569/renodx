@@ -860,6 +860,7 @@ const std::unordered_map<
             "Hellblade2",
             {
                 {"Set_Path", 0.f},
+                {"ToneMapGammaCorrection", 0.f},
             },
         },
         {
@@ -870,6 +871,18 @@ const std::unordered_map<
         },
         {
             "S.T.A.L.K.E.R. 2",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
+        {
+            "NTE",
+            {
+                {"Set_Path", 0.f},
+            },
+        },
+        {
+            "CodeVein2",
             {
                 {"Set_Path", 0.f},
             },

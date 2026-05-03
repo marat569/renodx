@@ -1784,6 +1784,9 @@ float4 main(
   SV_Target.z = _1072;
 
   if (PROCESSING_PATH == 0.f) {
+    SV_Target.xyz = renodx::color::pq::DecodeSafe(SV_Target.xyz);
+    SV_Target.xyz = renodx::color::bt709::from::BT2020(SV_Target.xyz);
+    SV_Target.xyz = renodx::tonemap::neutwo::MaxChannel(SV_Target.xyz);
     SV_Target.xyz = renodx::color::pq::EncodeSafe(SV_Target.xyz, RENODX_GRAPHICS_WHITE_NITS);
   }
   SV_Target.w = _963;

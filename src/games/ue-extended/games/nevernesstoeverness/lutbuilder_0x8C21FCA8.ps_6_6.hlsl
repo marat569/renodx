@@ -809,9 +809,9 @@ float4 main(
   
   UECbufferConfig cb_config = CreateCbufferConfig();
   cb_config.ue_filmblackclip = 0.0f;
-  cb_config.ue_filmtoe = 0.55f;
+  cb_config.ue_filmtoe = 0.3f;
   cb_config.ue_filmshoulder = 0.26f;
-  cb_config.ue_filmslope = 0.88f;
+  cb_config.ue_filmslope = 1.9f;
   cb_config.ue_filmwhiteclip = 0.04f;
   cb_config.ue_tonecurveammount = 1.f;
   cb_config.ue_mappingpolynomial = float3(cb0_043x, cb0_043y, cb0_043z);

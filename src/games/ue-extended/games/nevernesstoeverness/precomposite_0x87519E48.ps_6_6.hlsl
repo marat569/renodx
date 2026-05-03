@@ -70,7 +70,7 @@ float4 main(
     color = renodx::color::pq::DecodeSafe(color, RENODX_DIFFUSE_WHITE_NITS);
     color = renodx::color::bt709::from::BT2020(color);
     color = renodx::color::correct::GammaSafe(color, true);
-    color = renodx::tonemap::neutwo::MaxChannel(color, 1.5f);
+    color = renodx::tonemap::neutwo::MaxChannel(color, 1.0f, 2.5f);
     _65 = color.x;
     _66 = color.y;
     _67 = color.z;
@@ -115,28 +115,5 @@ float4 main(
   SV_Target.y = _114;
   SV_Target.z = _115;
   SV_Target.w = select((($Globals_016.x) != 0.0f), (COLOR.w * 0.44999998807907104f), COLOR.w);
-  // Debug stages: set to 0u for normal output, 1u+ to visualize intermediate stages.
-  const uint DebugStage = 0u;
-  if (DebugStage != 0u) {
-    float3 debugColor = float3(_113, _114, _115);
-    if (DebugStage == 1u) {
-      debugColor = _19.xyz;
-    } else if (DebugStage == 2u) {
-      debugColor = float3(_40, _41, _42);
-    } else if (DebugStage == 3u) {
-      debugColor = float3(_65, _66, _67);
-    } else if (DebugStage == 4u) {
-      debugColor = float3(_78, _79, _80);
-    } else if (DebugStage == 5u) {
-      debugColor = float3(_113, _114, _115);
-    }
-    SV_Target.xyz = debugColor;
-    /*
-    SV_Target.xyz = renodx::color::pq::DecodeSafe(SV_Target.xyz, RENODX_DIFFUSE_WHITE_NITS);
-    SV_Target.xyz = renodx::color::bt709::from::BT2020(SV_Target.xyz);
-    SV_Target.xyz = renodx::color::correct::GammaSafe(SV_Target.xyz, true);
-    */
-    SV_Target.w = 1.0f;
-  }
   return SV_Target;
 }

@@ -106,6 +106,19 @@ renodx::utils::settings::Settings settings = {
         .labels = {"Off", "2.2"},
     },
 
+    new renodx::utils::settings::Setting{
+        .key = "BlendFactor",
+        .binding = &shader_injection.blend_factor,
+        .default_value = 50.f,
+        .label = "Blend Factor",
+        .section = "Tone Mapping",
+        .tooltip = "Controls average scene brightness.",
+        .min = 0.f,
+        .max = 100.f,
+        .is_enabled = []() { return shader_injection.tone_map_type == 1.f; },
+        .parse = [](float value) { return value * 0.01f; },
+    },
+
     // new renodx::utils::settings::Setting{
     //     .key = "ToneMapHueCorrectionType",
     //     .binding = &shader_injection.tone_map_hue_correction_type,

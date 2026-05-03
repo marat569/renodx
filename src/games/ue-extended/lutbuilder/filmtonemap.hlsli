@@ -158,29 +158,30 @@ float3 ApplyToneCurveExtendedWithHermite(
   float3 tonemapped_prebluecorrect_ap1 =
       unrealengine::filmtonemap::extended::ApplyToneCurveExtended(untonemapped_rrt_prebluecorrect_ap1, vanilla, film_params);
 
-  //
-#if 1
-  // We need to lerp torwards vanilla because highlights are way too bright in UE
-  // Since the TM is anchored around 0.18, its a non issue
+  // Correct Hue/Chroma source colors
+
+  float3 bt709_vanilla = renodx::color::bt709::from::AP1(vanilla);
+  // Reinhard Piecewise Per-Channel to variable peak (default 5) on the extended color
+  float3 bt709_per_ch = renodx::color::bt709::from::AP1(renodx::tonemap::ReinhardPiecewise(tonemapped_prebluecorrect_ap1, RENODX_TONE_MAP_PER_CH_PEAK, 0.18f));
+  float3 bt709_hue_and_chrominance_source = bt709_per_ch;
+
+  // Lerp Extended with vanilla based on ingame slider to dimm the scene
+  // UE games are extremely bright, and lerping torwards vanilla helps reduce average picture brightness
+  // Note: Vanilla is not clipped SDR
 
   // tonemapped_prebluecorrect_ap1 = lerp(
   //     vanilla,
   //     tonemapped_prebluecorrect_ap1,
   //     saturate(vanilla / 0.2f));
 
-  tonemapped_prebluecorrect_ap1 = lerp(tonemapped_prebluecorrect_ap1, vanilla, 0.25f);
+  tonemapped_prebluecorrect_ap1 = lerp(tonemapped_prebluecorrect_ap1,
+                                       vanilla,
+                                       saturate(lerp(0.5f, 0.2f, saturate(BLEND_FACTOR))));
 
-#endif
-
-  // Correct Hue/Chroma
+  // Map hue and chroma using the reference colors above on the final image
+  // Mostly used for Max Channel displaymap to simulate blowout
+  // LMS per-ch displaymapping can do just fine with no chroma/blowout, and just a bit of hue correction
   float3 bt709_tonemapped_prebluecorrect = renodx::color::bt709::from::AP1(tonemapped_prebluecorrect_ap1);
-  float3 bt709_vanilla = renodx::color::bt709::from::AP1(vanilla);
-  // Reinhard Piecewise Per-Channel to variable peak (default 5) on the extended color
-  float3 bt709_per_ch = renodx::color::bt709::from::AP1(renodx::tonemap::ReinhardPiecewise(tonemapped_prebluecorrect_ap1, RENODX_TONE_MAP_PER_CH_PEAK, 0.18f));
-
-  float3 bt709_hue_and_chrominance_source = bt709_per_ch;
-
-  // Only on Hue Vanilla Input Color
 
   float hue_shift_strength = RENODX_TONE_MAP_HUE_SHIFT;
   float chroma_correct_strength = RENODX_TONE_MAP_CHROMA_CORRECT_BLOWOUT;

@@ -33,6 +33,7 @@
 #define CUSTOM_SHARPNESS        shader_injection.custom_sharpness
 #define TONEMAP_UNDER_UI        shader_injection.tm_under_ui
 #define RENODX_TONE_MAP_SCALING shader_injection.tone_map_scaling
+#define BLEND_FACTOR            shader_injection.blend_factor
 
 // #define FIX_POST_PROCESS                     shader_injection.fix_post_process     // 0 - BT.2020 PQ, 1 - BT.709 piecewise sRGB, 2 - BT.2020 piecewise sRGB
 #define OVERRIDE_BLACK_CLIP shader_injection.override_black_clip   // 0 - Off, 1 - 0.0001 nits
@@ -79,6 +80,7 @@ struct ShaderInjectData {
   float processing_use_scrgb;
 
   float tone_map_scaling;
+  float blend_factor;
 };
 
 #ifndef __cplusplus

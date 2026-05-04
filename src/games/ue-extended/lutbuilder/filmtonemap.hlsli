@@ -176,7 +176,7 @@ float3 ApplyToneCurveExtendedWithHermite(
 
   tonemapped_prebluecorrect_ap1 = lerp(tonemapped_prebluecorrect_ap1,
                                        vanilla,
-                                       saturate(lerp(0.5f, 0.2f, saturate(BLEND_FACTOR))));
+                                       saturate(lerp(0.75f, 0.f, saturate(BLEND_FACTOR))));
 
   // Map hue and chroma using the reference colors above on the final image
   // Mostly used for Max Channel displaymap to simulate blowout

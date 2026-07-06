@@ -44,3 +44,12 @@ bin/**
 .env
 .vscode/mcp.json
 .kiro/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+.python-version
+.venv/
+venv/

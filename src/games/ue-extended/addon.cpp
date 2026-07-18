@@ -162,8 +162,9 @@ renodx::utils::settings::Settings settings = {
         .label = "Tonemap Scaling",
         .section = "Tone Mapping",
         .tooltip = "Max Channel: Hand-tuned to match the original tonemapper's behavior.\n"
-                   "LMS: Based on emulating human vision.",
-        .labels = {"Max Channel", "LMS"},
+                   "LMS: Based on emulating human vision.\n"
+                   "AP1 (Per Ch): Emulate UE, with Blue Correct",
+        .labels = {"Max Channel", "LMS", "AP1 (Per Ch)"},
         .is_enabled = []() { return shader_injection.tone_map_type == 1.f; },
     },
 

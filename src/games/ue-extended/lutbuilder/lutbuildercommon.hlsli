@@ -261,7 +261,28 @@ float3 ScaleScene(float3 color) {
   return color;
 }
 
-float4 GenerateOutput(float3 final_color, float3 untonemapped_ap1, inout float4 SV_Target, uint device) {
+// AP1 -> AP0 -> Blue Corrected AP0 -> AP1
+float3 ApplyBlueCorrectionPre(float3 untonemapped_ap1, float strength) {
+  float r = untonemapped_ap1.r, g = untonemapped_ap1.g, b = untonemapped_ap1.b;
+
+  float corrected_r = ((mad(0.061360642313957214f, b, mad(-4.540197551250458e-09f, g, (r * 0.9386394023895264f))) - r) * strength) + r;
+  float corrected_g = ((mad(0.169205904006958f, b, mad(0.8307942152023315f, g, (r * 6.775371730327606e-08f))) - g) * strength) + g;
+  float corrected_b = (mad(-2.3283064365386963e-10f, g, (r * -9.313225746154785e-10f)) * strength) + b;
+
+  return float3(corrected_r, corrected_g, corrected_b);
+}
+
+float3 ApplyBlueCorrectionPost(float3 tonemapped, float strength) {
+  float _1131 = tonemapped.r, _1132 = tonemapped.g, _1133 = tonemapped.b;
+  // return tonemapped;
+
+  float _1149 = ((mad(-0.06537103652954102f, _1133, mad(1.451815478503704e-06f, _1132, (_1131 * 1.065374732017517f))) - _1131) * strength) + _1131;
+  float _1150 = ((mad(-0.20366770029067993f, _1133, mad(1.2036634683609009f, _1132, (_1131 * -2.57161445915699e-07f))) - _1132) * strength) + _1132;
+  float _1151 = ((mad(0.9999996423721313f, _1133, mad(2.0954757928848267e-08f, _1132, (_1131 * 1.862645149230957e-08f))) - _1133) * strength) + _1133;
+  return float3(_1149, _1150, _1151);
+}
+
+float4 GenerateOutput(float3 final_color, float3 untonemapped_ap1, inout float4 SV_Target, uint device, float blue_correct_strength) {
   // if (RENODX_TONE_MAP_TYPE == 0 || device == 8u) return false;
 
   // final_color is in BT709
@@ -291,6 +312,17 @@ float4 GenerateOutput(float3 final_color, float3 untonemapped_ap1, inout float4 
     } else if (RENODX_TONE_MAP_SCALING == 1.f) {
       float3 bt709_mapped_color = N2LMSPerCH(final_color, peak_ratio);
       float3 bt2020_color_mapped = renodx::color::bt2020::from::BT709(bt709_mapped_color);
+      renodx::color::grade::Config cg_config = CreateColorGradingConfig();
+      float3 bt2020_graded_color = ApplySaturationBlowoutHighlightSaturationBT2020(bt2020_color_mapped, untonemapped_ap1, cg_config);
+      bt709_graded_color = renodx::color::bt709::from::BT2020(bt2020_graded_color);
+      // Per CH AP1 with Blue Correct
+    } else if (RENODX_TONE_MAP_SCALING == 2.f) {
+      float3 ap1_color = renodx::color::ap1::from::BT709(final_color);
+      float3 blue_correct_pre = ApplyBlueCorrectionPre(ap1_color, blue_correct_strength);                          // Apply blue correct
+      float3 ap1_mapped_color = renodx::tonemap::neutwo::PerChannel(max(0, blue_correct_pre), peak_ratio, 100.f);  // Displaymap Per Ch Ap1
+      float3 blue_correst_inverse = ApplyBlueCorrectionPost(ap1_mapped_color, blue_correct_strength);              // Inverse Blue Correct
+      // Colorgrade in BT2020, and back to BT709
+      float3 bt2020_color_mapped = renodx::color::bt2020::from::AP1(blue_correst_inverse);
       renodx::color::grade::Config cg_config = CreateColorGradingConfig();
       float3 bt2020_graded_color = ApplySaturationBlowoutHighlightSaturationBT2020(bt2020_color_mapped, untonemapped_ap1, cg_config);
       bt709_graded_color = renodx::color::bt709::from::BT2020(bt2020_graded_color);

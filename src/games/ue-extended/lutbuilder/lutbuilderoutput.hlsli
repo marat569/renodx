@@ -51,7 +51,7 @@ float4 ProcessLutbuilder(float3 untonemapped_ap1, UECbufferConfig cb_config, flo
     return ProcessOutputDevice89(untonemapped_ap1, output, outputdevice, cb_config);
   }
 
-  return GenerateOutput(output.xyz, untonemapped_ap1, SV_Target, outputdevice);
+  return GenerateOutput(output.xyz, untonemapped_ap1, SV_Target, outputdevice, cb_config.ue_bluecorrection);
 }
 
 // 1 SDR Lut
@@ -75,7 +75,7 @@ float4 ProcessLutbuilder(float3 untonemapped_ap1, SamplerState lut_sampler, Text
     return ProcessOutputDevice89(untonemapped_ap1, output, outputdevice, cb_config);
   }
 
-  return GenerateOutput(output.xyz, untonemapped_ap1, SV_Target, outputdevice);
+  return GenerateOutput(output.xyz, untonemapped_ap1, SV_Target, outputdevice, cb_config.ue_bluecorrection);
 }
 
 // 2 SDR Luts
@@ -99,7 +99,7 @@ float4 ProcessLutbuilder(float3 untonemapped_ap1, SamplerState lut_sampler1, Sam
     return ProcessOutputDevice89(untonemapped_ap1, output, outputdevice, cb_config);
   }
 
-  return GenerateOutput(output.xyz, untonemapped_ap1, SV_Target, outputdevice);
+  return GenerateOutput(output.xyz, untonemapped_ap1, SV_Target, outputdevice, cb_config.ue_bluecorrection);
 }
 
 // 3 SDR Luts
@@ -123,7 +123,7 @@ float4 ProcessLutbuilder(float3 untonemapped_ap1, SamplerState lut_sampler1, Sam
     return ProcessOutputDevice89(untonemapped_ap1, output, outputdevice, cb_config);
   }
 
-  return GenerateOutput(output.xyz, untonemapped_ap1, SV_Target, outputdevice);
+  return GenerateOutput(output.xyz, untonemapped_ap1, SV_Target, outputdevice, cb_config.ue_bluecorrection);
 }
 
 // 4 SDR luts
@@ -147,5 +147,5 @@ float4 ProcessLutbuilder(float3 untonemapped_ap1, SamplerState lut_sampler1, Sam
     return ProcessOutputDevice89(untonemapped_ap1, output, outputdevice, cb_config);
   }
 
-  return GenerateOutput(output.xyz, untonemapped_ap1, SV_Target, outputdevice);
+  return GenerateOutput(output.xyz, untonemapped_ap1, SV_Target, outputdevice, cb_config.ue_bluecorrection);
 }

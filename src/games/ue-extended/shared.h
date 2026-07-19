@@ -35,6 +35,7 @@
 #define CUSTOM_HIDE_UI        shader_injection.custom_hide_ui
 
 #define RENODX_TONE_MAP_SCALING shader_injection.tone_map_scaling
+#define FORCE_BLUE_CORRECT      shader_injection.force_blue_correct
 #define BLEND_FACTOR            shader_injection.blend_factor
 
 // #define FIX_POST_PROCESS                     shader_injection.fix_post_process     // 0 - BT.2020 PQ, 1 - BT.709 piecewise sRGB, 2 - BT.2020 piecewise sRGB
@@ -83,6 +84,7 @@ struct ShaderInjectData {
   float processing_use_scrgb;
 
   float tone_map_scaling;
+  float force_blue_correct;
   float blend_factor;
 };
 

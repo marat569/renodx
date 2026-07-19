@@ -263,6 +263,12 @@ float3 ScaleScene(float3 color) {
 
 // AP1 -> AP0 -> Blue Corrected AP0 -> AP1
 float3 ApplyBlueCorrectionPre(float3 untonemapped_ap1, float strength) {
+  // AP1 displaymapping is kind of griefed without blue correct
+  // Force it regardless of cbuffer
+  if (FORCE_BLUE_CORRECT == 1.f) {
+    strength = 1.f;
+  }
+
   float r = untonemapped_ap1.r, g = untonemapped_ap1.g, b = untonemapped_ap1.b;
 
   float corrected_r = ((mad(0.061360642313957214f, b, mad(-4.540197551250458e-09f, g, (r * 0.9386394023895264f))) - r) * strength) + r;
@@ -273,6 +279,12 @@ float3 ApplyBlueCorrectionPre(float3 untonemapped_ap1, float strength) {
 }
 
 float3 ApplyBlueCorrectionPost(float3 tonemapped, float strength) {
+  // AP1 displaymapping is kind of griefed without blue correct
+  // Force it regardless of cbuffer
+  if (FORCE_BLUE_CORRECT == 1.f) {
+    strength = 1.f;
+  }
+
   float _1131 = tonemapped.r, _1132 = tonemapped.g, _1133 = tonemapped.b;
   // return tonemapped;
 

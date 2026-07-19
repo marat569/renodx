@@ -104,7 +104,7 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Sets the visibility of UI and HUD elements.\n"
                    "Only works with native HDR games.",
         .labels = {"Hide", "Show"},
-        .is_enabled = []() { return shader_injection.tone_map_type != 0 && shader_injection.processing_path == 0.f; },
+        .is_enabled = []() { return shader_injection.processing_path == 0.f; },
     },
     new renodx::utils::settings::Setting{
         .key = "ToneMapGammaCorrection",
@@ -166,6 +166,18 @@ renodx::utils::settings::Settings settings = {
                    "AP1 (Per Ch): Emulate UE, with Blue Correct",
         .labels = {"Max Channel", "LMS", "AP1 (Per Ch)"},
         .is_enabled = []() { return shader_injection.tone_map_type == 1.f; },
+    },
+
+    new renodx::utils::settings::Setting{
+        .key = "ForceBlueCorrect",
+        .binding = &shader_injection.force_blue_correct,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 1.f,
+        .label = "Force Blue Correct",
+        .section = "Tone Mapping",
+        .tooltip = "Force Blue Correct when using AP1 Tonemap Scaling.",
+        .labels = {"Off", "On"},
+        .is_enabled = []() { return shader_injection.tone_map_type == 1.f && shader_injection.tone_map_scaling == 2.f; },
     },
 
     new renodx::utils::settings::Setting{

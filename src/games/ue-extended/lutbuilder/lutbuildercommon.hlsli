@@ -266,7 +266,7 @@ float3 ApplyBlueCorrectionPre(float3 untonemapped_ap1, float strength) {
   // AP1 displaymapping is kind of griefed without blue correct
   // Force it regardless of cbuffer
   if (FORCE_BLUE_CORRECT == 1.f) {
-    strength = 1.f;
+    strength = 0.6f;
   }
 
   float r = untonemapped_ap1.r, g = untonemapped_ap1.g, b = untonemapped_ap1.b;
@@ -282,7 +282,7 @@ float3 ApplyBlueCorrectionPost(float3 tonemapped, float strength) {
   // AP1 displaymapping is kind of griefed without blue correct
   // Force it regardless of cbuffer
   if (FORCE_BLUE_CORRECT == 1.f) {
-    strength = 1.f;
+    strength = 0.6f;
   }
 
   float _1131 = tonemapped.r, _1132 = tonemapped.g, _1133 = tonemapped.b;

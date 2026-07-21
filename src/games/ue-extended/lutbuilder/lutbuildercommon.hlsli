@@ -265,6 +265,7 @@ float3 ScaleScene(float3 color) {
 float3 ApplyBlueCorrectionPre(float3 untonemapped_ap1, float strength) {
   // AP1 displaymapping is kind of griefed without blue correct
   // Force it regardless of cbuffer
+  // Pumbo: Default value for blue correct strength = 0.6, thats where it looks best; and should be untouched
   if (FORCE_BLUE_CORRECT == 1.f) {
     strength = 0.6f;
   }

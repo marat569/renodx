@@ -94,23 +94,39 @@ float3 LerpToneMapStrength(float3 tonemapped, float3 preRRT, UECbufferConfig cb_
 }
 
 // AP1 -> AP0 -> Blue Corrected AP0 -> AP1
+// Pumbo: Default value for blue correct strength = 0.6, thats where it looks best; and should be untouched
 float3 ApplyBlueCorrectionPre(float3 untonemapped_ap1, UECbufferConfig cb_config) {
+  float strength = cb_config.ue_bluecorrection;
+
+  // Override blue correct cbuffer with known good value
+  // Adds blue correct to older UE games without it
+  // Should always yield better results
+  if (FORCE_BLUE_CORRECT == 1.f) {
+    strength = 0.6f;
+  }
+
   float r = untonemapped_ap1.r, g = untonemapped_ap1.g, b = untonemapped_ap1.b;
 
-  float corrected_r = ((mad(0.061360642313957214f, b, mad(-4.540197551250458e-09f, g, (r * 0.9386394023895264f))) - r) * cb_config.ue_bluecorrection) + r;
-  float corrected_g = ((mad(0.169205904006958f, b, mad(0.8307942152023315f, g, (r * 6.775371730327606e-08f))) - g) * cb_config.ue_bluecorrection) + g;
-  float corrected_b = (mad(-2.3283064365386963e-10f, g, (r * -9.313225746154785e-10f)) * cb_config.ue_bluecorrection) + b;
+  float corrected_r = ((mad(0.061360642313957214f, b, mad(-4.540197551250458e-09f, g, (r * 0.9386394023895264f))) - r) * strength) + r;
+  float corrected_g = ((mad(0.169205904006958f, b, mad(0.8307942152023315f, g, (r * 6.775371730327606e-08f))) - g) * strength) + g;
+  float corrected_b = (mad(-2.3283064365386963e-10f, g, (r * -9.313225746154785e-10f)) * strength) + b;
 
   return float3(corrected_r, corrected_g, corrected_b);
 }
 
 float3 ApplyBlueCorrectionPost(float3 tonemapped, UECbufferConfig cb_config) {
+  float strength = cb_config.ue_bluecorrection;
+
+  if (FORCE_BLUE_CORRECT == 1.f) {
+    strength = 0.6f;
+  }
+
   float _1131 = tonemapped.r, _1132 = tonemapped.g, _1133 = tonemapped.b;
   // return tonemapped;
 
-  float _1149 = ((mad(-0.06537103652954102f, _1133, mad(1.451815478503704e-06f, _1132, (_1131 * 1.065374732017517f))) - _1131) * cb_config.ue_bluecorrection) + _1131;
-  float _1150 = ((mad(-0.20366770029067993f, _1133, mad(1.2036634683609009f, _1132, (_1131 * -2.57161445915699e-07f))) - _1132) * cb_config.ue_bluecorrection) + _1132;
-  float _1151 = ((mad(0.9999996423721313f, _1133, mad(2.0954757928848267e-08f, _1132, (_1131 * 1.862645149230957e-08f))) - _1133) * cb_config.ue_bluecorrection) + _1133;
+  float _1149 = ((mad(-0.06537103652954102f, _1133, mad(1.451815478503704e-06f, _1132, (_1131 * 1.065374732017517f))) - _1131) * strength) + _1131;
+  float _1150 = ((mad(-0.20366770029067993f, _1133, mad(1.2036634683609009f, _1132, (_1131 * -2.57161445915699e-07f))) - _1132) * strength) + _1132;
+  float _1151 = ((mad(0.9999996423721313f, _1133, mad(2.0954757928848267e-08f, _1132, (_1131 * 1.862645149230957e-08f))) - _1133) * strength) + _1133;
   return float3(_1149, _1150, _1151);
 }
 

@@ -122,7 +122,7 @@ void ApplyFilmToneMapWithBlueCorrect(float3 untonemapped,
         unrealengine::filmtonemap::ApplyToneCurve(untonemapped_rrt_prebluecorrect_ap1, cb_config.ue_filmslope, cb_config.ue_filmtoe, cb_config.ue_filmshoulder, cb_config.ue_filmblackclip, cb_config.ue_filmwhiteclip);
   } else if (RENODX_TONE_MAP_TYPE == 1.f) {
     tonemapped_prebluecorrect_ap1 =
-      ApplyToneCurveExtendedWithHermite(untonemapped_rrt_prebluecorrect_ap1, untonemapped_prebluecorrect_ap1, cb_config.ue_filmslope, cb_config.ue_filmtoe, cb_config.ue_filmshoulder, cb_config.ue_filmblackclip, cb_config.ue_filmwhiteclip);
+        ApplyToneCurveExtendedWithHermite(untonemapped_rrt_prebluecorrect_ap1, untonemapped_prebluecorrect_ap1, cb_config.ue_filmslope, cb_config.ue_filmtoe, cb_config.ue_filmshoulder, cb_config.ue_filmblackclip, cb_config.ue_filmwhiteclip);
   }
 
   tonemapped_prebluecorrect_ap1 = ApplyPostToneMapDesaturation(tonemapped_prebluecorrect_ap1);
@@ -181,8 +181,8 @@ float3 UnclampYfAnchored(float3 original_gamma, float3 black_gamma, float3 mid_g
   float3 unclamped_working = max(0.f, original_working - black_floor * anchor_weight);
 
   return use_lms
-      ? renodx::color::bt709::from::LMS(unclamped_working * lms_white)
-      : renodx::color::bt709::from::AP1(unclamped_working);
+             ? renodx::color::bt709::from::LMS(unclamped_working * lms_white)
+             : renodx::color::bt709::from::AP1(unclamped_working);
 }
 
 float3 Unclamp(float3 original_gamma, float3 black_gamma, float3 mid_gray_gamma, float3 neutral_gamma) {

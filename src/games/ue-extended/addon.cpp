@@ -165,14 +165,14 @@ renodx::utils::settings::Settings settings = {
         .label = "Tonemap Scaling",
         .section = "Tone Mapping",
         .tooltip = "Max Channel: Hand-tuned to match the original tonemapper's behavior.\n"
-               "AP1: Applies grading and display mapping per channel in AP1.\n"
-               "LMS: Applies grading, filmic extension, and display mapping per channel in normalized LMS.",
+                   "AP1: Applies grading and display mapping per channel in AP1.\n"
+                   "LMS: Applies grading, filmic extension, and display mapping per channel in normalized LMS.",
         .labels = {"Max Channel", "AP1", "LMS"},
         .is_enabled = []() { return shader_injection.tone_map_type == 1.f; },
         .is_visible = []() { return current_settings_mode >= 1.f; },
     },
 
-      new renodx::utils::settings::Setting{
+    new renodx::utils::settings::Setting{
         .key = "ToneMapHueRestore",
         .binding = &shader_injection.tone_map_hue_restore,
         .default_value = 50.f,
@@ -184,7 +184,7 @@ renodx::utils::settings::Settings settings = {
         .is_enabled = []() { return shader_injection.tone_map_type == 1.f && shader_injection.tone_map_scaling == 2.f; },
         .parse = [](float value) { return value * 0.01f; },
         .is_visible = []() { return current_settings_mode >= 1.f; },
-      },
+    },
 
     new renodx::utils::settings::Setting{
         .key = "ForceBlueCorrect",
@@ -286,17 +286,17 @@ renodx::utils::settings::Settings settings = {
         .is_visible = []() { return current_settings_mode >= 1.f; },
     },
     new renodx::utils::settings::Setting{
-      .key = "ToneMapContrastMethod",
-      .binding = &shader_injection.tone_map_contrast_method,
-      .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-      .default_value = 0.f,
-      .label = "Contrast Method",
-      .section = "Custom Color Grading",
-      .tooltip = "Adaptation: Uses an anchored adaptation response.\n"
-           "Power: Uses an anchored power curve.",
-      .labels = {"Adaptation", "Power"},
-      .is_enabled = []() { return shader_injection.tone_map_type != 0; },
-      .is_visible = []() { return current_settings_mode >= 1.f; },
+        .key = "ToneMapContrastMethod",
+        .binding = &shader_injection.tone_map_contrast_method,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .label = "Contrast Method",
+        .section = "Custom Color Grading",
+        .tooltip = "Adaptation: Uses an anchored adaptation response.\n"
+                   "Power: Uses an anchored power curve.",
+        .labels = {"Adaptation", "Power"},
+        .is_enabled = []() { return shader_injection.tone_map_type != 0; },
+        .is_visible = []() { return current_settings_mode >= 1.f; },
     },
     new renodx::utils::settings::Setting{
         .key = "ColorGradeContrast",
@@ -387,13 +387,13 @@ renodx::utils::settings::Settings settings = {
         .binding = &shader_injection.custom_lut_scaling_method,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
         .default_value = 0.f,
-      .label = "LUT Scaling Mode",
+        .label = "LUT Scaling Mode",
         .section = "Color Grading LUTs",
-      .tooltip = "Perceptual: Always scales the LUT to true black, and attempts to remap the LUT color back onto the image. This is how LUT Scaling worked originally.\n"
-           "Simple: Scales the LUT to the lowest point possible while maintaining the original look of the LUT.",
-      .labels = {"Perceptual", "Simple"},
+        .tooltip = "Perceptual: Always scales the LUT to true black, and attempts to remap the LUT color back onto the image. This is how LUT Scaling worked originally.\n"
+                   "Simple: Scales the LUT to the lowest point possible while maintaining the original look of the LUT.",
+        .labels = {"Perceptual", "Simple"},
         .is_enabled = []() { return shader_injection.tone_map_type != 0 && shader_injection.custom_lut_scaling != 0.f; },
-      .is_visible = []() { return current_settings_mode >= 1.f; },
+        .is_visible = []() { return current_settings_mode >= 1.f; },
     },
     new renodx::utils::settings::Setting{
         .key = "ColorGradeLUTGamutRestoration",
@@ -553,8 +553,7 @@ renodx::utils::settings::Settings info_settings = {
               {"ToneMapPerChPeak", 5.f},
               {"ToneMapHueShift", 100.f},
               {"ColorGradeChromaCorrectBlowout", 100.f},
-          });
-        },
+          }); },
         .is_visible = []() { return current_settings_mode >= 0.f; },
     },
 
@@ -579,8 +578,7 @@ renodx::utils::settings::Settings info_settings = {
             if (setting->key.empty()) continue;
             if (!setting->can_reset) continue;
             renodx::utils::settings::UpdateSetting(setting->key, setting->default_value);
-          }
-        },
+          } },
         .is_visible = []() { return current_settings_mode >= 0.f; },
     },
 
@@ -590,9 +588,7 @@ renodx::utils::settings::Settings info_settings = {
         .section = "Links",
         .group = "button-line-2",
         .tint = 0x5865F2,
-        .on_change = []() {
-          renodx::utils::platform::LaunchURL("https://discord.gg/", "F6AUTeWJHM");
-        },
+        .on_change = []() { renodx::utils::platform::LaunchURL("https://discord.gg/", "F6AUTeWJHM"); },
         .is_visible = []() { return current_settings_mode >= 0.f; },
     },
     new renodx::utils::settings::Setting{
@@ -601,9 +597,7 @@ renodx::utils::settings::Settings info_settings = {
         .section = "Links",
         .group = "button-line-2",
         .tint = 0x2B3137,
-        .on_change = []() {
-          renodx::utils::platform::LaunchURL("https://github.com/clshortfuse/renodx/wiki/Mods");
-        },
+        .on_change = []() { renodx::utils::platform::LaunchURL("https://github.com/clshortfuse/renodx/wiki/Mods"); },
         .is_visible = []() { return current_settings_mode >= 0.f; },
     },
     new renodx::utils::settings::Setting{
@@ -612,9 +606,7 @@ renodx::utils::settings::Settings info_settings = {
         .section = "Links",
         .group = "button-line-2",
         .tint = 0x2B3137,
-        .on_change = []() {
-          renodx::utils::platform::LaunchURL("https://github.com/clshortfuse/renodx");
-        },
+        .on_change = []() { renodx::utils::platform::LaunchURL("https://github.com/clshortfuse/renodx"); },
         .is_visible = []() { return current_settings_mode >= 0.f; },
     },
     new renodx::utils::settings::Setting{
@@ -623,9 +615,7 @@ renodx::utils::settings::Settings info_settings = {
         .section = "Links",
         .group = "button-line-3",
         .tint = 0xFF5A16,
-        .on_change = []() {
-          renodx::utils::platform::LaunchURL("https://ko-fi.com/shortfuse");
-        },
+        .on_change = []() { renodx::utils::platform::LaunchURL("https://ko-fi.com/shortfuse"); },
         .is_visible = []() { return current_settings_mode >= 0.f; },
     },
     new renodx::utils::settings::Setting{
@@ -634,9 +624,7 @@ renodx::utils::settings::Settings info_settings = {
         .section = "Links",
         .group = "button-line-3",
         .tint = 0xFF5A16,
-        .on_change = []() {
-          renodx::utils::platform::LaunchURL("https://ko-fi.com/kickfister");
-        },
+        .on_change = []() { renodx::utils::platform::LaunchURL("https://ko-fi.com/kickfister"); },
         .is_visible = []() { return current_settings_mode >= 0.f; },
     },
     new renodx::utils::settings::Setting{
@@ -645,9 +633,7 @@ renodx::utils::settings::Settings info_settings = {
         .section = "Links",
         .group = "button-line-3",
         .tint = 0xFF5A16,
-        .on_change = []() {
-          renodx::utils::platform::LaunchURL("https://ko-fi.com/musaqh");
-        },
+        .on_change = []() { renodx::utils::platform::LaunchURL("https://ko-fi.com/musaqh"); },
         .is_visible = []() { return current_settings_mode >= 0.f; },
     },
     new renodx::utils::settings::Setting{
@@ -656,9 +642,7 @@ renodx::utils::settings::Settings info_settings = {
         .section = "Links",
         .group = "button-line-3",
         .tint = 0xFF5A16,
-        .on_change = []() {
-          renodx::utils::platform::LaunchURL("https://ko-fi.com/ritsucecil");
-        },
+        .on_change = []() { renodx::utils::platform::LaunchURL("https://ko-fi.com/ritsucecil"); },
         .is_visible = []() { return current_settings_mode >= 0.f; },
     },
     new renodx::utils::settings::Setting{
@@ -667,7 +651,7 @@ renodx::utils::settings::Settings info_settings = {
                  "ShortFuse - RenoDX Creator\n"
                  "Jon, Musa, and Ritsu - Contributors",
         .section = "About",
-            .is_visible = []() { return current_settings_mode >= 1.f; },
+        .is_visible = []() { return current_settings_mode >= 1.f; },
     },
     new renodx::utils::settings::Setting{
         .value_type = renodx::utils::settings::SettingValueType::TEXT,
@@ -1977,7 +1961,7 @@ void AddAdvancedSettings() {
       .value_type = renodx::utils::settings::SettingValueType::TEXT,
       .label = "The application must be restarted for upgrades to take effect.",
       .section = "Resource Upgrades",
-        .is_visible = []() { return current_settings_mode >= 2.f; },
+      .is_visible = []() { return current_settings_mode >= 2.f; },
   }});
 }
 

@@ -147,7 +147,8 @@ float3 ApplyToneCurveExtended(
 }  // unrealengine
 
 float3 ApplyToneCurveExtendedWithHermite(
-    float3 untonemapped_rrt_prebluecorrect_ap1, float FilmSlope, float FilmToe,
+  float3 untonemapped_rrt_prebluecorrect_ap1,
+  float3 untonemapped_prebluecorrect_ap1, float FilmSlope, float FilmToe,
     float FilmShoulder, float FilmBlackClip, float FilmWhiteClip) {
   float film_black_clip = FilmBlackClip;
   if (OVERRIDE_BLACK_CLIP) film_black_clip = 0.f;
@@ -158,35 +159,44 @@ float3 ApplyToneCurveExtendedWithHermite(
   float3 tonemapped_prebluecorrect_ap1 =
       unrealengine::filmtonemap::extended::ApplyToneCurveExtended(untonemapped_rrt_prebluecorrect_ap1, vanilla, film_params);
 
-  // Correct Hue/Chroma source colors
-
-  float3 bt709_vanilla = renodx::color::bt709::from::AP1(vanilla);
-  // Reinhard Piecewise Per-Channel to variable peak (default 5) on the extended color
-  float3 bt709_per_ch = renodx::color::bt709::from::AP1(renodx::tonemap::ReinhardPiecewise(tonemapped_prebluecorrect_ap1, RENODX_TONE_MAP_PER_CH_PEAK, 0.18f));
-  float3 bt709_hue_and_chrominance_source = bt709_per_ch;
-
-  // Lerp Extended with vanilla based on ingame slider to dimm the scene
-  // UE games are extremely bright, and lerping torwards vanilla helps reduce average picture brightness
-  // Note: Vanilla is not clipped SDR
-
-  // tonemapped_prebluecorrect_ap1 = lerp(
-  //     vanilla,
-  //     tonemapped_prebluecorrect_ap1,
-  //     saturate(vanilla / 0.2f));
-
-  tonemapped_prebluecorrect_ap1 = lerp(tonemapped_prebluecorrect_ap1,
-                                       vanilla,
-                                       saturate(lerp(0.75f, 0.f, saturate(BLEND_FACTOR))));
-
-  // Map hue and chroma using the reference colors above on the final image
-  // Mostly used for Max Channel displaymap to simulate blowout
-  // LMS per-ch displaymapping can do just fine with no chroma/blowout, and just a bit of hue correction
-  float3 bt709_tonemapped_prebluecorrect = renodx::color::bt709::from::AP1(tonemapped_prebluecorrect_ap1);
-
-  float hue_shift_strength = RENODX_TONE_MAP_HUE_SHIFT;
-  float chroma_correct_strength = RENODX_TONE_MAP_CHROMA_CORRECT_BLOWOUT;
-
-  tonemapped_prebluecorrect_ap1 = renodx::color::ap1::from::BT709(HueAndChrominanceOKLab(bt709_tonemapped_prebluecorrect, bt709_hue_and_chrominance_source, saturate(hue_shift_strength), saturate(chroma_correct_strength), 1.0f));
+  if (RENODX_TONE_MAP_SCALING == 0.f) {
+    // Max Channel display mapping uses this reference to simulate hue/chroma blowout.
+    float3 bt709_hue_and_chrominance_source = renodx::color::bt709::from::AP1(
+        renodx::tonemap::ReinhardPiecewise(tonemapped_prebluecorrect_ap1, RENODX_TONE_MAP_PER_CH_PEAK, 0.18f));
+    // UE games are extremely bright, and lerping toward vanilla helps reduce average picture brightness.
+    tonemapped_prebluecorrect_ap1 = lerp(tonemapped_prebluecorrect_ap1,
+                                         vanilla,
+                                         saturate(lerp(0.75f, 0.f, saturate(BLEND_FACTOR))));
+    float3 bt709_tonemapped_prebluecorrect = renodx::color::bt709::from::AP1(tonemapped_prebluecorrect_ap1);
+    tonemapped_prebluecorrect_ap1 = renodx::color::ap1::from::BT709(HueAndChrominanceOKLab(
+        bt709_tonemapped_prebluecorrect,
+        bt709_hue_and_chrominance_source,
+        saturate(RENODX_TONE_MAP_HUE_SHIFT),
+        saturate(RENODX_TONE_MAP_CHROMA_CORRECT_BLOWOUT),
+        1.f));
+  } else if (RENODX_TONE_MAP_SCALING == 2.f) {
+    const float3 lms_white = renodx::color::lms::from::BT709(1.f.xxx);
+    float3 untonemapped_lms_normalized =
+      renodx::color::lms::from::AP1(untonemapped_prebluecorrect_ap1) / lms_white;
+    float3 tonemapped_lms_normalized =
+        renodx::color::lms::from::AP1(tonemapped_prebluecorrect_ap1) / lms_white;
+    float3 vanilla_lms_normalized = unrealengine::filmtonemap::ApplyToneCurve(
+      untonemapped_lms_normalized,
+        film_params);
+    vanilla_lms_normalized = RestorePsychoHueAndCompressLMS(
+      untonemapped_lms_normalized,
+      vanilla_lms_normalized,
+      RENODX_TONE_MAP_HUE_RESTORE);
+    tonemapped_prebluecorrect_ap1 = renodx::color::ap1::from::LMS(
+        lerp(tonemapped_lms_normalized,
+             vanilla_lms_normalized,
+             saturate(lerp(0.75f, 0.f, saturate(BLEND_FACTOR))))
+        * lms_white);
+  } else {
+    tonemapped_prebluecorrect_ap1 = lerp(tonemapped_prebluecorrect_ap1,
+                                         vanilla,
+                                         saturate(lerp(0.75f, 0.f, saturate(BLEND_FACTOR))));
+  }
 
   return tonemapped_prebluecorrect_ap1;
 }

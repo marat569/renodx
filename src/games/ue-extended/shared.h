@@ -23,8 +23,10 @@
 #define RENODX_TONE_MAP_BLOWOUT                shader_injection.tone_map_blowout
 #define RENODX_TONE_MAP_CHROMA_CORRECT_BLOWOUT shader_injection.tone_map_chroma_correct_blowout
 #define RENODX_TONE_MAP_FLARE                  shader_injection.tone_map_flare
+#define RENODX_TONE_MAP_CONTRAST_METHOD        shader_injection.tone_map_contrast_method
 #define CUSTOM_LUT_STRENGTH                    shader_injection.custom_lut_strength
 #define CUSTOM_LUT_SCALING                     shader_injection.custom_lut_scaling
+#define CUSTOM_LUT_SCALING_METHOD              shader_injection.custom_lut_scaling_method
 #define CUSTOM_LUT_GAMUT_RESTORATION           shader_injection.custom_lut_gamut_restoration
 
 #define CUSTOM_RANDOM         shader_injection.custom_random
@@ -35,6 +37,7 @@
 #define CUSTOM_HIDE_UI        shader_injection.custom_hide_ui
 
 #define RENODX_TONE_MAP_SCALING shader_injection.tone_map_scaling
+#define RENODX_TONE_MAP_HUE_RESTORE shader_injection.tone_map_hue_restore
 #define FORCE_BLUE_CORRECT      shader_injection.force_blue_correct
 #define BLEND_FACTOR            shader_injection.blend_factor
 
@@ -68,6 +71,7 @@ struct ShaderInjectData {
   float tone_map_flare;
   float custom_lut_strength;
   float custom_lut_scaling;
+  float custom_lut_scaling_method;
   float custom_lut_gamut_restoration;
 
   float custom_random;
@@ -85,7 +89,13 @@ struct ShaderInjectData {
 
   float tone_map_scaling;
   float force_blue_correct;
+  float tone_map_contrast_method;
   float blend_factor;
+
+  float tone_map_hue_restore;
+  float padding_0;
+  float padding_1;
+  float padding_2;
 };
 
 #ifndef __cplusplus

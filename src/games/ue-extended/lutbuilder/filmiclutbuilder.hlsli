@@ -93,61 +93,28 @@ float3 LerpToneMapStrength(float3 tonemapped, float3 preRRT, UECbufferConfig cb_
   return lerp(preRRT, tonemapped, saturate(cb_config.ue_tonecurveammount));
 }
 
-// AP1 -> AP0 -> Blue Corrected AP0 -> AP1
-// Pumbo: Default value for blue correct strength = 0.6, thats where it looks best; and should be untouched
-float3 ApplyBlueCorrectionPre(float3 untonemapped_ap1, UECbufferConfig cb_config) {
-  float strength = cb_config.ue_bluecorrection;
-
-  // Override blue correct cbuffer with known good value
-  // Adds blue correct to older UE games without it
-  // Should always yield better results
-  if (FORCE_BLUE_CORRECT == 1.f) {
-    strength = 0.6f;
-  }
-
-  float r = untonemapped_ap1.r, g = untonemapped_ap1.g, b = untonemapped_ap1.b;
-
-  float corrected_r = ((mad(0.061360642313957214f, b, mad(-4.540197551250458e-09f, g, (r * 0.9386394023895264f))) - r) * strength) + r;
-  float corrected_g = ((mad(0.169205904006958f, b, mad(0.8307942152023315f, g, (r * 6.775371730327606e-08f))) - g) * strength) + g;
-  float corrected_b = (mad(-2.3283064365386963e-10f, g, (r * -9.313225746154785e-10f)) * strength) + b;
-
-  return float3(corrected_r, corrected_g, corrected_b);
-}
-
-float3 ApplyBlueCorrectionPost(float3 tonemapped, UECbufferConfig cb_config) {
-  float strength = cb_config.ue_bluecorrection;
-
-  if (FORCE_BLUE_CORRECT == 1.f) {
-    strength = 0.6f;
-  }
-
-  float _1131 = tonemapped.r, _1132 = tonemapped.g, _1133 = tonemapped.b;
-  // return tonemapped;
-
-  float _1149 = ((mad(-0.06537103652954102f, _1133, mad(1.451815478503704e-06f, _1132, (_1131 * 1.065374732017517f))) - _1131) * strength) + _1131;
-  float _1150 = ((mad(-0.20366770029067993f, _1133, mad(1.2036634683609009f, _1132, (_1131 * -2.57161445915699e-07f))) - _1132) * strength) + _1132;
-  float _1151 = ((mad(0.9999996423721313f, _1133, mad(2.0954757928848267e-08f, _1132, (_1131 * 1.862645149230957e-08f))) - _1133) * strength) + _1133;
-  return float3(_1149, _1150, _1151);
-}
-
 void ApplyFilmToneMapWithBlueCorrect(float3 untonemapped,
                                      inout float3 tonemapped, UECbufferConfig cb_config) {
   float3 untonemapped_ap1 = untonemapped;
   renodx::color::grade::Config cg_config = CreateColorGradingConfig();
-  float y = renodx::color::y::from::AP1(untonemapped_ap1);
-  float3 hue_reference_color = untonemapped_ap1;
 
-  float3 untonemapped_ap1_graded = untonemapped_ap1;
+  float3 untonemapped_prebluecorrect_ap1 = ApplyBlueCorrectionPre(untonemapped_ap1, cb_config.ue_bluecorrection);
 
   if (RENODX_TONE_MAP_TYPE != 0.f) {
-    untonemapped_ap1_graded = ApplyExposureContrastFlareHighlightsShadowsByLuminance(untonemapped_ap1, y, cg_config, 0.18f);
+    if (RENODX_TONE_MAP_SCALING == 0.f) {
+      untonemapped_prebluecorrect_ap1 = ApplyBlueCorrectionPre(
+          ApplyExposureContrastFlareHighlightsShadowsByLuminance(untonemapped_ap1, cg_config, 0.18f),
+          cb_config.ue_bluecorrection);
+    } else {
+      untonemapped_prebluecorrect_ap1 = ApplyAnchoredContrast(untonemapped_prebluecorrect_ap1 * cg_config.exposure, cg_config);
+    }
   }
 
   float3 tonemapped_ap1;
 
   // Vanilla+ and UE Filmic
-  float3 untonemapped_prebluecorrect_ap1 = ApplyBlueCorrectionPre(untonemapped_ap1_graded, cb_config);
-  float3 untonemapped_rrt_prebluecorrect_ap1 = renodx::tonemap::aces::RRT(mul(renodx::color::AP1_TO_AP0_MAT, untonemapped_prebluecorrect_ap1));
+  float3 untonemapped_rrt_prebluecorrect_ap1 = renodx::tonemap::aces::RRT(
+      mul(renodx::color::AP1_TO_AP0_MAT, untonemapped_prebluecorrect_ap1));
 
   float3 tonemapped_prebluecorrect_ap1;
   if (RENODX_TONE_MAP_TYPE == 0.f) {  // Vanilla
@@ -155,12 +122,12 @@ void ApplyFilmToneMapWithBlueCorrect(float3 untonemapped,
         unrealengine::filmtonemap::ApplyToneCurve(untonemapped_rrt_prebluecorrect_ap1, cb_config.ue_filmslope, cb_config.ue_filmtoe, cb_config.ue_filmshoulder, cb_config.ue_filmblackclip, cb_config.ue_filmwhiteclip);
   } else if (RENODX_TONE_MAP_TYPE == 1.f) {
     tonemapped_prebluecorrect_ap1 =
-        ApplyToneCurveExtendedWithHermite(untonemapped_rrt_prebluecorrect_ap1, cb_config.ue_filmslope, cb_config.ue_filmtoe, cb_config.ue_filmshoulder, cb_config.ue_filmblackclip, cb_config.ue_filmwhiteclip);
+      ApplyToneCurveExtendedWithHermite(untonemapped_rrt_prebluecorrect_ap1, untonemapped_prebluecorrect_ap1, cb_config.ue_filmslope, cb_config.ue_filmtoe, cb_config.ue_filmshoulder, cb_config.ue_filmblackclip, cb_config.ue_filmwhiteclip);
   }
 
   tonemapped_prebluecorrect_ap1 = ApplyPostToneMapDesaturation(tonemapped_prebluecorrect_ap1);
-  tonemapped_prebluecorrect_ap1 = LerpToneMapStrength(tonemapped_prebluecorrect_ap1, untonemapped_ap1_graded, cb_config);
-  tonemapped_ap1 = ApplyBlueCorrectionPost(tonemapped_prebluecorrect_ap1, cb_config);
+  tonemapped_prebluecorrect_ap1 = LerpToneMapStrength(tonemapped_prebluecorrect_ap1, untonemapped_prebluecorrect_ap1, cb_config);
+  tonemapped_ap1 = ApplyBlueCorrectionPost(tonemapped_prebluecorrect_ap1, cb_config.ue_bluecorrection);
   tonemapped_ap1 = max(0, tonemapped_ap1);
 
   // Moved to GenerateOutput
@@ -185,7 +152,7 @@ renodx::lut::Config CreateSRGBInSRGBOutLUTConfig() {
   return lut_config;
 }
 
-float3 Unclamp(float3 original_gamma, float3 black_gamma, float3 mid_gray_gamma, float3 neutral_gamma) {
+float3 UnclampLegacy(float3 original_gamma, float3 black_gamma, float3 mid_gray_gamma, float3 neutral_gamma) {
   const float3 added_gamma = black_gamma;
 
   const float mid_gray_average = (mid_gray_gamma.r + mid_gray_gamma.g + mid_gray_gamma.b) / 3.f;
@@ -197,6 +164,39 @@ float3 Unclamp(float3 original_gamma, float3 black_gamma, float3 mid_gray_gamma,
 
   const float3 unclamped_gamma = max(0, original_gamma - floor_remove);
   return unclamped_gamma;
+}
+
+float3 UnclampYfAnchored(float3 original_gamma, float3 black_gamma, float3 mid_gray_gamma, float3 neutral_gamma) {
+  const bool use_lms = RENODX_TONE_MAP_SCALING == 2.f;
+  const float3 lms_white = renodx::color::lms::from::BT709(1.f.xxx);
+  float3 original_working = use_lms ? renodx::color::lms::from::BT709(original_gamma) / lms_white : renodx::color::ap1::from::BT709(original_gamma);
+  float3 black_working = use_lms ? renodx::color::lms::from::BT709(black_gamma) / lms_white : renodx::color::ap1::from::BT709(black_gamma);
+  float3 mid_gray_working = use_lms ? renodx::color::lms::from::BT709(mid_gray_gamma) / lms_white : renodx::color::ap1::from::BT709(mid_gray_gamma);
+  float3 neutral_working = use_lms ? renodx::color::lms::from::BT709(neutral_gamma) / lms_white : renodx::color::ap1::from::BT709(neutral_gamma);
+
+  float black_floor = min(black_working.r, min(black_working.g, black_working.b));
+  float mid_yf = use_lms ? renodx::color::yf::from::LMS(mid_gray_working) : renodx::color::yf::from::AP1(mid_gray_working);
+  float neutral_yf = use_lms ? renodx::color::yf::from::LMS(neutral_working) : renodx::color::yf::from::AP1(neutral_working);
+  float anchor_weight = mid_yf > 0.f ? saturate((mid_yf - neutral_yf) / mid_yf) : 0.f;
+  float3 unclamped_working = max(0.f, original_working - black_floor * anchor_weight);
+
+  return use_lms
+      ? renodx::color::bt709::from::LMS(unclamped_working * lms_white)
+      : renodx::color::bt709::from::AP1(unclamped_working);
+}
+
+float3 Unclamp(float3 original_gamma, float3 black_gamma, float3 mid_gray_gamma, float3 neutral_gamma) {
+  if (CUSTOM_LUT_SCALING_METHOD == 1.f) {
+    return UnclampYfAnchored(original_gamma, black_gamma, mid_gray_gamma, neutral_gamma);
+  }
+  return UnclampLegacy(original_gamma, black_gamma, mid_gray_gamma, neutral_gamma);
+}
+
+float3 ApplyUnclampedScaling(float3 original_linear, float3 unclamped_linear, float strength) {
+  if (CUSTOM_LUT_SCALING_METHOD == 0.f) {
+    return renodx::lut::RecolorUnclamped(original_linear, unclamped_linear, strength);
+  }
+  return lerp(original_linear, unclamped_linear, saturate(strength));
 }
 
 float3 ComputeGamutCompressionScaleAndCompress(float3 color_linear, inout float gamut_compression_scale) {
@@ -313,8 +313,7 @@ float3 SampleLUTSRGBInSRGBOut(Texture2D<float4> lut_texture, SamplerState lut_sa
         unclamped_linear = renodx::color::correct::GammaSafe(unclamped_linear, true);
       }
 
-      float3 recolored = renodx::lut::RecolorUnclamped(color_output, unclamped_linear, lut_config.scaling);
-      color_output = recolored;
+      color_output = ApplyUnclampedScaling(color_output, unclamped_linear, lut_config.scaling);
     }
   } else {
   }
@@ -431,8 +430,7 @@ float3 Sample2LUTSRGBInSRGBOut(Texture2D<float4> lut_texture1, Texture2D<float4>
         unclamped_linear = renodx::color::correct::GammaSafe(unclamped_linear, true);
       }
 
-      float3 recolored = renodx::lut::RecolorUnclamped(color_output, unclamped_linear, lut_config.scaling);
-      color_output = recolored;
+      color_output = ApplyUnclampedScaling(color_output, unclamped_linear, lut_config.scaling);
     }
   } else {
   }
@@ -562,8 +560,7 @@ float3 Sample3LUTSRGBInSRGBOut(
         unclamped_linear = renodx::color::correct::GammaSafe(unclamped_linear, true);
       }
 
-      float3 recolored = renodx::lut::RecolorUnclamped(color_output, unclamped_linear, lut_config.scaling);
-      color_output = recolored;
+      color_output = ApplyUnclampedScaling(color_output, unclamped_linear, lut_config.scaling);
     }
   } else {
   }
@@ -707,8 +704,7 @@ float3 Sample4LUTSRGBInSRGBOut(
         unclamped_linear = renodx::color::correct::GammaSafe(unclamped_linear, true);
       }
 
-      float3 recolored = renodx::lut::RecolorUnclamped(color_output, unclamped_linear, lut_config.scaling);
-      color_output = recolored;
+      color_output = ApplyUnclampedScaling(color_output, unclamped_linear, lut_config.scaling);
     }
   } else {
   }

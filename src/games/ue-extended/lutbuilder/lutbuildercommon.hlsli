@@ -261,30 +261,30 @@ float3 ApplySaturationLMS(float3 color_lms_normalized, float peak, renodx::color
 }
 
 float3 RestorePsychoHueAndCompressLMS(
-  float3 source_lms,
-  float3 target_lms,
-  float hue_restore,
-  float3 adaptive_state_lms = 0.18f) {
+    float3 source_lms,
+    float3 target_lms,
+    float hue_restore,
+    float3 adaptive_state_lms = 0.18f) {
   float3 source_relative_weighted = renodx::tonemap::psychov::psycho22_ToAdaptiveRelativeWeightedLMS(source_lms, adaptive_state_lms);
   float3 target_relative_weighted = renodx::tonemap::psychov::psycho22_ToAdaptiveRelativeWeightedLMS(target_lms, adaptive_state_lms);
   float3 neutral_weighted = renodx::tonemap::psychov::psycho22_AdaptiveRelativeWeightedNeutral();
   float neutral_yf = max(neutral_weighted.x + neutral_weighted.y, 1e-6f);
   float2 mb_neutral = neutral_weighted.xz / neutral_yf;
   float2 source_offset = source_relative_weighted.xz
-      * renodx::math::DivideSafe(1.f, max(source_relative_weighted.x + source_relative_weighted.y, 0.f), 0.f)
-      - mb_neutral;
+                             * renodx::math::DivideSafe(1.f, max(source_relative_weighted.x + source_relative_weighted.y, 0.f), 0.f)
+                         - mb_neutral;
   float target_y = max(target_relative_weighted.x + target_relative_weighted.y, 0.f);
   float2 target_offset = target_relative_weighted.xz
-      * renodx::math::DivideSafe(1.f, target_y, 0.f)
-      - mb_neutral;
-    float3 reference_white_relative_weighted =
+                             * renodx::math::DivideSafe(1.f, target_y, 0.f)
+                         - mb_neutral;
+  float3 reference_white_relative_weighted =
       renodx::tonemap::psychov::psycho22_ToAdaptiveRelativeWeightedLMS(
-        1.f.xxx,
-        adaptive_state_lms);
-    float reference_white_y =
+          1.f.xxx,
+          adaptive_state_lms);
+  float reference_white_y =
       reference_white_relative_weighted.x + reference_white_relative_weighted.y;
-    float highlight_rolloff = 1.f - smoothstep(neutral_yf, reference_white_y, target_y);
-    highlight_rolloff *= highlight_rolloff;
+  float highlight_rolloff = 1.f - smoothstep(neutral_yf, reference_white_y, target_y);
+  highlight_rolloff *= highlight_rolloff;
   float target_radius_squared = dot(target_offset, target_offset);
   float target_radius = target_radius_squared * rsqrt(max(target_radius_squared, 1e-7f));
   float2 restored_offset = lerp(
@@ -374,7 +374,7 @@ float4 GenerateOutput(float3 final_color, float3 untonemapped_ap1, inout float4 
       float3 peak_lms_normalized = renodx::color::lms::from::BT709(peak_ratio.xxx) / lms_white;
       float3 graded_lms_normalized = ApplySaturationLMS(final_color_lms_normalized, peak_ratio, cg_config);
       float3 displaymapped_lms_normalized = renodx::tonemap::neutwo::PerChannel(max(0.f, graded_lms_normalized), peak_lms_normalized);
-        displaymapped_lms_normalized = RestorePsychoHueAndCompressLMS(
+      displaymapped_lms_normalized = RestorePsychoHueAndCompressLMS(
           graded_lms_normalized,
           displaymapped_lms_normalized,
           RENODX_TONE_MAP_HUE_RESTORE);

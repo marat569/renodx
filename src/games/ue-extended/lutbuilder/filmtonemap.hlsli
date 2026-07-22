@@ -147,8 +147,8 @@ float3 ApplyToneCurveExtended(
 }  // unrealengine
 
 float3 ApplyToneCurveExtendedWithHermite(
-  float3 untonemapped_rrt_prebluecorrect_ap1,
-  float3 untonemapped_prebluecorrect_ap1, float FilmSlope, float FilmToe,
+    float3 untonemapped_rrt_prebluecorrect_ap1,
+    float3 untonemapped_prebluecorrect_ap1, float FilmSlope, float FilmToe,
     float FilmShoulder, float FilmBlackClip, float FilmWhiteClip) {
   float film_black_clip = FilmBlackClip;
   if (OVERRIDE_BLACK_CLIP) film_black_clip = 0.f;
@@ -177,16 +177,16 @@ float3 ApplyToneCurveExtendedWithHermite(
   } else if (RENODX_TONE_MAP_SCALING == 2.f) {
     const float3 lms_white = renodx::color::lms::from::BT709(1.f.xxx);
     float3 untonemapped_lms_normalized =
-      renodx::color::lms::from::AP1(untonemapped_prebluecorrect_ap1) / lms_white;
+        renodx::color::lms::from::AP1(untonemapped_prebluecorrect_ap1) / lms_white;
     float3 tonemapped_lms_normalized =
         renodx::color::lms::from::AP1(tonemapped_prebluecorrect_ap1) / lms_white;
     float3 vanilla_lms_normalized = unrealengine::filmtonemap::ApplyToneCurve(
-      untonemapped_lms_normalized,
+        untonemapped_lms_normalized,
         film_params);
     vanilla_lms_normalized = RestorePsychoHueAndCompressLMS(
-      untonemapped_lms_normalized,
-      vanilla_lms_normalized,
-      RENODX_TONE_MAP_HUE_RESTORE);
+        untonemapped_lms_normalized,
+        vanilla_lms_normalized,
+        RENODX_TONE_MAP_HUE_RESTORE);
     tonemapped_prebluecorrect_ap1 = renodx::color::ap1::from::LMS(
         lerp(tonemapped_lms_normalized,
              vanilla_lms_normalized,

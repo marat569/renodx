@@ -36,10 +36,10 @@
 #define TONEMAP_UNDER_UI      shader_injection.tm_under_ui
 #define CUSTOM_HIDE_UI        shader_injection.custom_hide_ui
 
-#define RENODX_TONE_MAP_SCALING shader_injection.tone_map_scaling
+#define RENODX_TONE_MAP_SCALING     shader_injection.tone_map_scaling
 #define RENODX_TONE_MAP_HUE_RESTORE shader_injection.tone_map_hue_restore
-#define FORCE_BLUE_CORRECT      shader_injection.force_blue_correct
-#define BLEND_FACTOR            shader_injection.blend_factor
+#define FORCE_BLUE_CORRECT          shader_injection.force_blue_correct
+#define BLEND_FACTOR                shader_injection.blend_factor
 
 // #define FIX_POST_PROCESS                     shader_injection.fix_post_process     // 0 - BT.2020 PQ, 1 - BT.709 piecewise sRGB, 2 - BT.2020 piecewise sRGB
 #define OVERRIDE_BLACK_CLIP shader_injection.override_black_clip   // 0 - Off, 1 - 0.0001 nits
@@ -93,9 +93,6 @@ struct ShaderInjectData {
   float blend_factor;
 
   float tone_map_hue_restore;
-  float padding_0;
-  float padding_1;
-  float padding_2;
 };
 
 #ifndef __cplusplus

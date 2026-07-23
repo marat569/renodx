@@ -149,6 +149,8 @@ renodx::lut::Config CreateSRGBInSRGBOutLUTConfig() {
   lut_config.type_input = renodx::lut::config::type::SRGB;
   lut_config.type_output = renodx::lut::config::type::SRGB;
   lut_config.recolor = 0.f;
+  lut_config.max_channel = 0.f;
+  lut_config.gamut_compress = 0.f;
   return lut_config;
 }
 

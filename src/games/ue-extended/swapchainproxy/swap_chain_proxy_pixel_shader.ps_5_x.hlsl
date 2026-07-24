@@ -14,12 +14,8 @@ float4 main(float4 vpos: SV_POSITION, float2 uv: TEXCOORD0) : SV_TARGET {
 
   color = renodx::math::ZeroNaN(color);  // Clear NaNs
 
-  [branch]
-  if (RENODX_GAMMA_CORRECTION == 0.f) {
-    color.rgb = renodx::color::srgb::DecodeSafe(color.rgb);
-  } else if (RENODX_GAMMA_CORRECTION == 1.f) {
-    color.rgb = renodx::color::gamma::DecodeSafe(color.rgb);
-  }
+  color.rgb = renodx::color::srgb::DecodeSafe(color.rgb);
+  color.rgb = ApplyGammaCorrection(color.rgb);
 
   // if (RENODX_COLOR_GRADE_SPACE == 1.f) {
   //   color.rgb = renodx::color::bt709::from::BT709D93(color.rgb);

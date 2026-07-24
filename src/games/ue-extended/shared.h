@@ -10,6 +10,7 @@
 #define RENODX_GRAPHICS_WHITE_NITS             shader_injection.graphics_white_nits
 #define RENODX_GAMMA_CORRECTION                shader_injection.gamma_correction
 #define RENODX_GAMMA_CORRECTION_UI             shader_injection.gamma_correction_ui
+#define RENODX_GAMMA_CORRECTION_WORKING_SPACE  shader_injection.gamma_correction_working_space
 #define RENODX_TONE_MAP_HUE_CORRECTION_TYPE    shader_injection.tone_map_hue_correction_type  // 0 - Highlights, Midtones, & Shadows, 1 - Midtones & Shadows
 #define RENODX_TONE_MAP_HUE_CORRECTION         shader_injection.tone_map_hue_correction
 #define RENODX_TONE_MAP_PER_CH_PEAK            shader_injection.tone_map_per_ch_peak
@@ -22,12 +23,14 @@
 #define RENODX_TONE_MAP_HIGHLIGHT_SATURATION   shader_injection.tone_map_highlight_saturation
 #define RENODX_TONE_MAP_BLOWOUT                shader_injection.tone_map_blowout
 #define RENODX_TONE_MAP_CHROMA_CORRECT_BLOWOUT shader_injection.tone_map_chroma_correct_blowout
+#define RENODX_TONE_MAP_HUE_BLOWOUT_WORKING_SPACE 1.f  // ICtCp
 #define RENODX_TONE_MAP_FLARE                  shader_injection.tone_map_flare
 #define RENODX_TONE_MAP_CONTRAST_METHOD        shader_injection.tone_map_contrast_method
 #define CUSTOM_LUT_STRENGTH                    shader_injection.custom_lut_strength
 #define CUSTOM_LUT_SCALING                     shader_injection.custom_lut_scaling
 #define CUSTOM_LUT_SCALING_METHOD              shader_injection.custom_lut_scaling_method
 #define CUSTOM_LUT_GAMUT_RESTORATION           shader_injection.custom_lut_gamut_restoration
+#define CUSTOM_LUT_GAMUT_COMPRESSION_METHOD    1.f  // Adaptive D65
 
 #define CUSTOM_RANDOM         shader_injection.custom_random
 #define CUSTOM_GRAIN_TYPE     shader_injection.custom_grain_type
@@ -93,6 +96,11 @@ struct ShaderInjectData {
   float blend_factor;
 
   float tone_map_hue_restore;
+  float custom_lut_gamut_compression_method;
+  float gamma_correction_working_space;
+  float tone_map_hue_blowout_working_space;
+  float injected_padding1;
+  float injected_padding2;
 };
 
 #ifndef __cplusplus

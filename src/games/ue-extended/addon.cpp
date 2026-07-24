@@ -118,6 +118,19 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Emulates a 2.2 EOTF",
         .labels = {"Off", "2.2"},
     },
+      new renodx::utils::settings::Setting{
+        .key = "ToneMapGammaCorrectionWorkingSpace",
+        .binding = &shader_injection.gamma_correction_working_space,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .label = "SDR EOTF Scaling",
+        .section = "Tone Mapping",
+        .tooltip = "Display Emulation: Matches the behavior of the display in SDR\n"
+               "Match Tone Map Scaling: Performs the correction in the working space of the selected tone map scaling. May have a preferrable look.",
+        .labels = {"Display Emulation", "Match Tone Map Scaling"},
+        .is_enabled = []() { return shader_injection.gamma_correction != 0.f; },
+        .is_visible = []() { return current_settings_mode >= 2.f; },
+      },
 
     new renodx::utils::settings::Setting{
         .key = "BlendFactor",
@@ -239,6 +252,19 @@ renodx::utils::settings::Settings settings = {
         .parse = [](float value) { return value * 0.01f; },
         .is_visible = []() { return current_settings_mode >= 1.f; },
     },
+
+    // new renodx::utils::settings::Setting{
+    //     .key = "ToneMapHueBlowoutWorkingSpace",
+    //     .binding = &shader_injection.tone_map_hue_blowout_working_space,
+    //     .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+    //     .default_value = 0.f,
+    //     .label = "Hue/Blowout Working Space",
+    //     .section = "Scene Grading",
+    //     .tooltip = "Selects the perceptual working space used by the Max Channel hue-shift and blowout controls.",
+    //     .labels = {"OKLab", "ICtCp"},
+    //     .is_enabled = []() { return shader_injection.tone_map_type == 1.f && shader_injection.tone_map_scaling == 0.f; },
+    //     .is_visible = []() { return current_settings_mode >= 1.f; },
+    // },
 
     new renodx::utils::settings::Setting{
         .key = "OverrideBlackClip",
@@ -406,6 +432,18 @@ renodx::utils::settings::Settings settings = {
         .is_enabled = []() { return shader_injection.tone_map_type != 0; },
         .is_visible = []() { return current_settings_mode >= 1.f; },
     },
+    // new renodx::utils::settings::Setting{
+    //     .key = "ColorGradeLUTGamutCompressionDebug",
+    //     .binding = &shader_injection.custom_lut_gamut_compression_method,
+    //     .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+    //     .default_value = 1.f,
+    //     .label = "LUT Gamut Compression Debug",
+    //     .section = "Color Grading LUTs",
+    //     .tooltip = "Compares the legacy gamma-domain LUT gamut compression against the adaptive-D65 replacement.",
+    //     .labels = {"Legacy Gamma", "Adaptive D65"},
+    //     .is_enabled = []() { return shader_injection.tone_map_type != 0 && shader_injection.custom_lut_gamut_restoration != 0.f; },
+    //     .is_visible = []() { return current_settings_mode >= 2.f; },
+    // },
     // new renodx::utils::settings::Setting{
     //     .key = "FixPostProcess",
     //     .binding = &shader_injection.fix_post_process,

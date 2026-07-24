@@ -190,16 +190,24 @@ float3 ApplyExtendedToneCurveAP1(
 float3 ApplyExtendedToneCurveLMS(
   float3 untonemapped_lms_normalized,
   unrealengine::filmtonemap::Config filmic_params) {
+    // AP1 clamp is needed to prevent NaNs. Emulates RRT clamping behavior.
+  float3 clamped_ap1 = clamp(
+    renodx::color::ap1::from::LMS(
+      untonemapped_lms_normalized * RENODX_BT709_LMS_WHITE),
+    0.f,
+    renodx::math::FLT16_MAX);
+  float3 curve_input_lms_normalized =
+    renodx::color::lms::from::AP1(clamped_ap1) / RENODX_BT709_LMS_WHITE;
   float3 vanilla_lms_normalized = unrealengine::filmtonemap::ApplyToneCurve(
-    untonemapped_lms_normalized,
+    curve_input_lms_normalized,
       filmic_params);
   float3 tonemapped_lms_normalized = unrealengine::filmtonemap::extended::ApplyToneCurveExtended(
-    untonemapped_lms_normalized,
+    curve_input_lms_normalized,
     vanilla_lms_normalized,
       filmic_params);
 
   return RestorePsychoHueAndCompressLMS(
-    untonemapped_lms_normalized,
+    curve_input_lms_normalized,
     lerp(
       tonemapped_lms_normalized,
       vanilla_lms_normalized,

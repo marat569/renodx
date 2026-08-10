@@ -380,13 +380,20 @@ float3 DisplayMapLMS(float3 color_bt709, float peak_ratio) {
 // input: BT.709 linear
 // output: BT.709 linear
 float3 DisplayMapByScaling(float3 color_bt709, float peak_ratio, float blue_correction) {
+  float3 display_mapped_bt709;
   if (RENODX_TONE_MAP_SCALING == 0.f) {
-    return DisplayMapMaxChannel(color_bt709, peak_ratio);
+    display_mapped_bt709 = DisplayMapMaxChannel(color_bt709, peak_ratio);
   }
-  if (RENODX_TONE_MAP_SCALING == 1.f) {
-    return DisplayMapAP1(color_bt709, peak_ratio, blue_correction);
+  else if (RENODX_TONE_MAP_SCALING == 1.f) {
+    display_mapped_bt709 = DisplayMapAP1(color_bt709, peak_ratio, blue_correction);
   }
-  return DisplayMapLMS(color_bt709, peak_ratio);
+  else {
+    display_mapped_bt709 = DisplayMapLMS(color_bt709, peak_ratio);
+  }
+  // Clamp per channel on game color to avoid max channel clamp of swapchainpass
+  float3 display_mapped_bt2020 = renodx::color::bt2020::from::BT709(display_mapped_bt709);
+  display_mapped_bt2020 = min(display_mapped_bt2020, peak_ratio);
+  return renodx::color::bt709::from::BT2020(display_mapped_bt2020);
 }
 
 // input: BT.709 linear
@@ -398,7 +405,7 @@ float4 GenerateOutput(float3 final_color, float3 untonemapped_ap1, inout float4 
     float peak_ratio = RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
     if (RENODX_GAMMA_CORRECTION != 0.f) peak_ratio = ApplyGammaCorrection(peak_ratio.xxx, true, blue_correction).x;
 
-    final_color = min(DisplayMapByScaling(final_color, peak_ratio, blue_correction), peak_ratio);  // clamp per channel here to avoid max channel clamp later
+    final_color = DisplayMapByScaling(final_color, peak_ratio, blue_correction);
   } else {
     final_color = saturate(final_color);
   }

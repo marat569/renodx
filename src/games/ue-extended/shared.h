@@ -39,6 +39,13 @@
 #define TONEMAP_UNDER_UI      shader_injection.tm_under_ui
 #define CUSTOM_HIDE_UI        shader_injection.custom_hide_ui
 
+// Custom sliders that can be used with any game. See Tekken 8's hero lights for reference
+#define CUSTOM_SLIDER_1       shader_injection.custom_slider_1
+#define CUSTOM_SLIDER_2       shader_injection.custom_slider_2
+#define CUSTOM_SLIDER_3       shader_injection.custom_slider_3
+#define CUSTOM_SLIDER_4       shader_injection.custom_slider_4
+#define CUSTOM_SLIDER_5       shader_injection.custom_slider_5
+
 #define RENODX_TONE_MAP_SCALING     shader_injection.tone_map_scaling
 #define RENODX_TONE_MAP_HUE_RESTORE shader_injection.tone_map_hue_restore
 #define FORCE_BLUE_CORRECT          shader_injection.force_blue_correct
@@ -99,8 +106,11 @@ struct ShaderInjectData {
   float custom_lut_gamut_compression_method;
   float gamma_correction_working_space;
   float tone_map_hue_blowout_working_space;
-  float injected_padding1;
-  float injected_padding2;
+  float custom_slider_1;
+  float custom_slider_2;
+  float custom_slider_3;
+  float custom_slider_4;
+  float custom_slider_5;
 };
 
 #ifndef __cplusplus

@@ -6,6 +6,8 @@
 #define ImTextureID ImU64
 #define DEBUG_LEVEL_0
 
+#include <algorithm>
+
 #include <deps/imgui/imgui.h>
 #include <embed/shaders.h>
 #include <include/reshade.hpp>
@@ -1023,13 +1025,23 @@ const auto UPGRADE_TYPE_OUTPUT_SIZE = 1.f;
 const auto UPGRADE_TYPE_OUTPUT_RATIO = 2.f;
 const auto UPGRADE_TYPE_ANY = 3.f;
 
-const std::unordered_map<
-    std::string,                             // Filename or ProductName
-    std::unordered_map<std::string, float>>  // {Key, Value}
-    GAME_DEFAULT_SETTINGS = {
+// Defaults and additional settings use filename or whatever, so we use the same struct for both
+struct GameSettings {
+  using DefaultSettings = std::unordered_map<std::string, float>;
+
+  DefaultSettings default_settings;
+  renodx::utils::settings::Settings additional_settings;
+
+  GameSettings(
+    std::initializer_list<DefaultSettings::value_type> defaults,
+    renodx::utils::settings::Settings additional = {})
+    : default_settings(defaults), additional_settings(additional) {}
+};
+
+const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
         {
             "Psychonauts2-WinGDK-Shipping.exe",
-            {
+      GameSettings{
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_RATIO},
                 {"Upgrade_R8G8B8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
                 {"ForceBorderless", 0.f},
@@ -1037,32 +1049,32 @@ const std::unordered_map<
         },
         {
             "CRISIS CORE -FINAL FANTASY VII- REUNION",
-            {
+          GameSettings{
                 {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
             },
         },
         {
             "P3R.exe",
-            {
+          GameSettings{
                 {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
             },
         },
         {
             "RainCodePlus-Win64-Shipping.exe",
-            {
+          GameSettings{
                 {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_RATIO},
             },
         },
         {
             "Wuthering Waves",
-            {
+          GameSettings{
                 {"Upgrade_R8G8B8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
             },
         },
         {
             "Expedition 33",
-            {
+          GameSettings{
                 {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
                 {"Upgrade_B8G8R8A8_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
@@ -1070,14 +1082,14 @@ const std::unordered_map<
         },
         {
             "InfinityNikki",
-            {
+          GameSettings{
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
             },
         },
 
         {
             "Stellar Blade",
-            {
+          GameSettings{
                 {"Upgrade_CopyDestinations", 1.f},
                 {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
@@ -1085,7 +1097,7 @@ const std::unordered_map<
         },
         {
             "Stellar Blade (Demo)",
-            {
+          GameSettings{
                 {"Upgrade_CopyDestinations", 1.f},
                 {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
@@ -1093,7 +1105,7 @@ const std::unordered_map<
         },
         {
             "Like a Dragon: Ishin!",
-            {
+          GameSettings{
                 {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
             },
@@ -1101,20 +1113,20 @@ const std::unordered_map<
 
         {
             "Pal",
-            {
+          GameSettings{
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
             },
         },
 
         {
             "Banishers: Ghosts of New Eden",
-            {
+          GameSettings{
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
             },
         },
         {
             "Borderlands3.exe",
-            {
+          GameSettings{
                 {"Upgrade_CopyDestinations", 1.f},
                 {"Upgrade_R8G8B8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_RATIO},
                 {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_RATIO},
@@ -1123,33 +1135,33 @@ const std::unordered_map<
         },
         {
             "SonicRacingCrossWorlds",
-            {
+          GameSettings{
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_RATIO},
             },
         },
         {
             "EM-Win64-Shipping.exe",
-            {
+          GameSettings{
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
                 {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
             },
         },
         {
             "Mixtape",
-            {
+          GameSettings{
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
             },
         },
         {
             "Ace7Game.exe",
-            {
+          GameSettings{
                 {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
                 {"Proxy_Revert_State", 1.f},
             },
         },
         {
             "Ruiner Game",
-            {
+          GameSettings{
                 {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
                 {"Upgrade_R11G11B10_FLOAT", UPGRADE_TYPE_OUTPUT_SIZE},
                 {"ToneMapGammaCorrection", 0.f},
@@ -1157,179 +1169,179 @@ const std::unordered_map<
         },
         {
             "Tony Hawks(TM) Pro Skater(TM) 3 + 4",
-            {
+          GameSettings{
                 {"Proxy_Revert_State", 1.f},
             },
         },
         {
             "Astro-Win64-Shipping.exe",
-            {
+          GameSettings{
                 {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
                 {"Proxy_Revert_State", 1.f},
             },
         },
         {
             "The Adventures of Elliot_The Millennium Tales",
-            {
+          GameSettings{
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_RATIO},
             },
         },
         {
             "Rebuilder-Win64-Shipping.exe",  // Product name "UE4"
-            {
+          GameSettings{
                 {"Proxy_Revert_State", 1.f},
             },
         },
         {
             "SILAS",  // Sprawl Zero
-            {
+          GameSettings{
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
             },
         },
         {
             "Marvel Rivals",
-            {
+          GameSettings{
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
             },
         },
         {
             "PenguinHotel-Win64-Shipping.exe",  // Meccha Chameleon, product name "LINK"
-            {
+          GameSettings{
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
             },
         },
         {
             "Delta",
-            {
+          GameSettings{
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_ANY},
                 {"Proxy_Revert_State", 1.f},
             },
         },
         {
             "Hatred-Win64-Shipping.exe",  // Product name "Unreal Engine"
-            {
+          GameSettings{
                 {"Proxy_Revert_State", 1.f},
             },
         },
         {
             "Forgive Me Father",
-            {
+          GameSettings{
                 {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
                 {"Proxy_Revert_State", 1.f},
             },
         },
         {
             "BLACKTAIL",
-            {
+          GameSettings{
                 {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_SIZE},
             },
         },
         {
             "Denshattack",
-            {
+          GameSettings{
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
             },
         },
         {
             "Frostpunk2-Win64-Shipping.exe",
-            {
+          GameSettings{
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
             },
         },
         // Native HDR on games (Path off)
         {
             "Hell is Us",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "Mafia: The Old Country",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "Returnal",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "Marvel's Midnight Suns",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "MK12.exe",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "Alone in the Dark",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "Avowed",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "Lost Soul Aside",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "Lies of P",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "Still Wakes The Deep",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "NINJAGAIDEN2BLACK-Win64-Shipping.exe",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "Project_Plague",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "Life is Strange: Reunion",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "Life Is Strange: Double Exposure",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "MGSDelta-Win64-Shipping.exe",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "SILENT HILL f",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
                 {"ForceBorderless", 0.f},
                 {"PreventFullscreen", 0.f},
@@ -1337,84 +1349,126 @@ const std::unordered_map<
         },
         {
             "Hellblade2",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
                 {"ToneMapGammaCorrection", 0.f},
             },
         },
         {
             "Ghostwire: Tokyo",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "S.T.A.L.K.E.R. 2",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "NTE",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "CodeVein2",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "Until Dawn",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "LEGOBatmanLotDK",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "Borderlands4.exe",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "Gothic 1 Remake",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "FarFarWest-Win64-Shipping.exe",  // Product name "UnrealGame"
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "Mistfall Hunter",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "LegoHorizonAdventures-Win64-Shipping.exe",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
         {
             "BeastOfReincarnation",
-            {
+          GameSettings{
                 {"Set_Path", 0.f},
             },
         },
+        {
+            "Polaris-Win64-Shipping.exe",
+            GameSettings{
+                {
+                  {"Set_Path", 0.f},
+                },
+                {
+                    new renodx::utils::settings::Setting{
+                        .key = "HeroLightsStrength",
+                        .binding = &shader_injection.custom_slider_1,
+                        .default_value = 50.f,
+                        .label = "Hero Lights Strength",
+                        .section = "Tekken 8", // To specify it's only for Tekken 8
+                        .tooltip = "Controls the intensity of hero lights.",
+                        .max = 100.f,
+                        .parse = [](float value) { return value * 0.01f; },
+                    },
+                },
+            },
+        },
 };
+
+auto FindGameSettings(const std::filesystem::path& process_path) {
+  auto game_settings = GAME_SETTINGS.find(process_path.filename().string());
+  if (game_settings == GAME_SETTINGS.end()) {
+    game_settings = GAME_SETTINGS.find(renodx::utils::platform::GetProductName(process_path));
+  }
+  return game_settings;
+}
+
+void AddGameSettings() {
+  const auto game_settings = FindGameSettings(renodx::utils::platform::GetCurrentProcessPath());
+  if (game_settings == GAME_SETTINGS.end() || game_settings->second.additional_settings.empty()) return;
+
+  // We want to add game settings just beneath Tone Mapping section
+  const auto tone_mapping_end = std::find_if(settings.rbegin(), settings.rend(), [](const auto* setting) {
+    return setting->section == "Tone Mapping";
+  });
+  settings.insert(
+      tone_mapping_end.base(),
+      game_settings->second.additional_settings.begin(),
+      game_settings->second.additional_settings.end());
+}
 
 float g_dump_shaders = 0.f;
 float g_upgrade_copy_destinations = 0.f;
@@ -1952,32 +2006,24 @@ void Use(DWORD fdw_reason) {
 void AddAdvancedSettings() {
   auto process_path = renodx::utils::platform::GetCurrentProcessPath();
   auto filename = process_path.filename().string();
-  auto default_settings = GAME_DEFAULT_SETTINGS.find(filename);
+  auto product_name = renodx::utils::platform::GetProductName(process_path);
+  auto game_settings = FindGameSettings(process_path);
 
   {
     std::stringstream s;
-    if (default_settings == GAME_DEFAULT_SETTINGS.end()) {
-      auto product_name = renodx::utils::platform::GetProductName(process_path);
-
-      default_settings = GAME_DEFAULT_SETTINGS.find(product_name);
-
-      if (default_settings == GAME_DEFAULT_SETTINGS.end()) {
-        s << "No default settings for ";
-      } else {
-        s << "Marked default values for ";
-      }
-      s << filename;
-      s << " (" << product_name << ")";
+    if (game_settings == GAME_SETTINGS.end() || game_settings->second.default_settings.empty()) {
+      s << "No default settings for ";
     } else {
       s << "Marked default values for ";
-      s << filename;
     }
+    s << filename;
+    s << " (" << product_name << ")";
     reshade::log::message(reshade::log::level::info, s.str().c_str());
   }
 
   auto add_setting = [&](auto* setting) {
-    if (default_settings != GAME_DEFAULT_SETTINGS.end()) {
-      auto values = default_settings->second;
+    if (game_settings != GAME_SETTINGS.end()) {
+      const auto& values = game_settings->second.default_settings;
       if (auto values_pair = values.find(setting->key);
           values_pair != values.end()) {
         setting->default_value = static_cast<float>(values_pair->second);
@@ -2244,6 +2290,7 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
       };
 
       if (!initialized) {
+        AddGameSettings();
         AddAdvancedSettings();
 
         for (auto* new_setting : info_settings) {

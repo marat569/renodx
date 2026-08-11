@@ -92,14 +92,14 @@ float3 ApplyPostToneMapDesaturation(float3 tonemapped_blue_corrected_ap1) {
 
 // input: white-normalized LMS linear
 // output: white-normalized LMS linear
-float3 ApplyPostToneMapDesaturationLMS(float3 tonemapped_lms_normalized) {
-  float y_white = renodx::color::xyz::from::LMS(RENODX_BT709_LMS_WHITE).y;
+float3 ApplyToneMapDesaturationLMS(float3 tonemapped_lms_normalized, float strength = 0.93f) {
+  float yf_white = renodx::color::yf::from::LMS(RENODX_BT709_LMS_WHITE);
 
-  float y = renodx::color::xyz::from::LMS(tonemapped_lms_normalized * RENODX_BT709_LMS_WHITE).y;
+  float yf = renodx::color::yf::from::LMS(tonemapped_lms_normalized * RENODX_BT709_LMS_WHITE);
 
-  float grayscale = renodx::math::DivideSafe(y, y_white, 0.f);
+  float grayscale = renodx::math::DivideSafe(yf, yf_white, 0.f);
 
-  return max(0.f, lerp(grayscale, tonemapped_lms_normalized, 0.93f));
+  return max(0.f, lerp(grayscale, tonemapped_lms_normalized, strength));
 }
 
 // input/output: same linear working space
@@ -135,9 +135,10 @@ float3 PrepareFilmicInputLMSPath(float3 untonemapped_ap1) {
   renodx::color::grade::Config cg_config = CreateColorGradingConfig();
   float3 untonemapped_lms_normalized =
       renodx::color::lms::from::AP1(untonemapped_ap1) / RENODX_BT709_LMS_WHITE;
-  return ApplyAnchoredContrast(
+  float3 untonemapped_graded_lms_normalized = ApplyAnchoredContrast(
       untonemapped_lms_normalized * cg_config.exposure,
       cg_config);
+  return ApplyToneMapDesaturationLMS(untonemapped_graded_lms_normalized, 0.96f);
 }
 
 // input: AP1 linear
@@ -162,8 +163,9 @@ void ApplyFilmicToneMap(
     float3 tonemapped_lms_normalized = ApplyExtendedToneCurveLMS(
         untonemapped_lms_normalized,
         filmic_params);
-    tonemapped_lms_normalized = ApplyPostToneMapDesaturationLMS(
-        tonemapped_lms_normalized);
+    tonemapped_lms_normalized = ApplyToneMapDesaturationLMS(
+        tonemapped_lms_normalized,
+      0.93f);
     tonemapped_lms_normalized = LerpToneMapStrength(
         tonemapped_lms_normalized,
         untonemapped_lms_normalized,

@@ -9,17 +9,20 @@ cbuffer cb0 : register(b0) {
 SamplerState s0 : register(s0);
 
 // DXIL FirstbitHi: returns bit position counting from MSB (leading zeros count)
-uint firstbithigh_msb(int value) { return (value == 0) ? 0xFFFFFFFF : (31u - firstbithigh(value)); }
-uint firstbithigh_msb(uint value) { return (value == 0) ? 0xFFFFFFFF : (31u - firstbithigh(value)); }
+uint firstbithigh_msb(int value) {
+  return (value == 0) ? 0xFFFFFFFF : (31u - firstbithigh(value));
+}
+uint firstbithigh_msb(uint value) {
+  return (value == 0) ? 0xFFFFFFFF : (31u - firstbithigh(value));
+}
 
 float4 main(
-  precise noperspective float4 SV_Position : SV_Position,
-  linear float4 COLOR : COLOR,
-  linear float4 COLOR_1 : COLOR1,
-  linear float4 ORIGINAL_POSITION : ORIGINAL_POSITION,
-  linear float2 TEXCOORD : TEXCOORD,
-  linear float4 TEXCOORD_1 : TEXCOORD1
-) : SV_Target {
+    precise noperspective float4 SV_Position: SV_Position,
+    linear float4 COLOR: COLOR,
+    linear float4 COLOR_1: COLOR1,
+    linear float4 ORIGINAL_POSITION: ORIGINAL_POSITION,
+    linear float2 TEXCOORD: TEXCOORD,
+    linear float4 TEXCOORD_1: TEXCOORD1) : SV_Target {
   float4 SV_Target;
   float _15;
   float _33;
@@ -80,8 +83,9 @@ float4 main(
   // Hardcoded UID hide for 4K users for now
   float2 viewport_size = float2(3840.0f, 2160.0f);
   float2 mask_size = float2(viewport_size.x * 0.20f, viewport_size.y * 0.05f);
-  if ((SV_Position.x < mask_size.x) && (SV_Position.y > (viewport_size.y - mask_size.y))) {
-    return float4(0.0f, 0.0f, 0.0f, 0.0f);
-  }
+  // Temp disable NTE's UID hide, since it griefs other games
+  // if ((SV_Position.x < mask_size.x) && (SV_Position.y > (viewport_size.y - mask_size.y))) {
+  //   return float4(0.0f, 0.0f, 0.0f, 0.0f);
+  // }
   return SV_Target;
 }

@@ -1043,17 +1043,20 @@ const auto UPGRADE_TYPE_OUTPUT_SIZE = 1.f;
 const auto UPGRADE_TYPE_OUTPUT_RATIO = 2.f;
 const auto UPGRADE_TYPE_ANY = 3.f;
 
-// Defaults and additional settings use filename or whatever, so we use the same struct for both
+// Defaults, additional settings, and game-scoped shaders use filename or product name.
 struct GameSettings {
   using DefaultSettings = std::unordered_map<std::string, float>;
+  using CustomShaderHashes = std::unordered_set<std::uint32_t>;
 
   DefaultSettings default_settings;
   renodx::utils::settings::Settings additional_settings;
+  CustomShaderHashes custom_shaders;
 
   GameSettings(
       std::initializer_list<DefaultSettings::value_type> defaults,
-      renodx::utils::settings::Settings additional = {})
-      : default_settings(defaults), additional_settings(additional) {}
+      const renodx::utils::settings::Settings& additional = {},
+      std::initializer_list<std::uint32_t> custom_shader_hashes = {})
+      : default_settings(defaults), additional_settings(additional), custom_shaders(custom_shader_hashes) {}
 };
 
 const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
@@ -1387,7 +1390,17 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
     {
         "NTE",
         GameSettings{
-            {"Set_Path", 0.f},
+        {
+          {"Set_Path", 0.f},
+        },
+        {},
+        {
+          0x2713F110,  // UI
+          0x87519E48,  // Pre-composite
+          0xC5B1B7C5,  // Text
+          0xC632B436,  // UI
+          0xFDDAFA08,  // UI
+        },
         },
     },
     {
@@ -1462,6 +1475,9 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
                     .parse = [](float value) { return value * 0.01f; },
                 },
             },
+            {
+                0xE6193B1A,  // Hero lights
+            },
         },
     },
 };
@@ -1476,6 +1492,17 @@ auto FindGameSettings(const std::filesystem::path& process_path) {
 
 void AddGameSettings() {
   const auto game_settings = FindGameSettings(renodx::utils::platform::GetCurrentProcessPath());
+
+  // Generated shader entries include every game, so remove scoped shaders not owned by this game.
+  for (const auto& game_settings_pair : GAME_SETTINGS) {
+    for (const auto shader_hash : game_settings_pair.second.custom_shaders) {
+      if (game_settings == GAME_SETTINGS.end()
+          || !game_settings->second.custom_shaders.contains(shader_hash)) {
+        custom_shaders.erase(shader_hash);
+      }
+    }
+  }
+
   if (game_settings == GAME_SETTINGS.end() || game_settings->second.additional_settings.empty()) return;
 
   // We want to add game settings just beneath Tone Mapping section

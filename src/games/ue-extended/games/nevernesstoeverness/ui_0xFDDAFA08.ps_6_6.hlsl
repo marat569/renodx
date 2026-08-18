@@ -84,8 +84,8 @@ float4 main(
   float2 viewport_size = float2(3840.0f, 2160.0f);
   float2 mask_size = float2(viewport_size.x * 0.20f, viewport_size.y * 0.05f);
   // Temp disable NTE's UID hide, since it griefs other games
-  // if ((SV_Position.x < mask_size.x) && (SV_Position.y > (viewport_size.y - mask_size.y))) {
-  //   return float4(0.0f, 0.0f, 0.0f, 0.0f);
-  // }
+  if ((SV_Position.x < mask_size.x) && (SV_Position.y > (viewport_size.y - mask_size.y))) {
+    return float4(0.0f, 0.0f, 0.0f, 0.0f);
+  }
   return SV_Target;
 }

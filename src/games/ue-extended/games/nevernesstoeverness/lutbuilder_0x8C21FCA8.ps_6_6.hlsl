@@ -809,7 +809,9 @@ float4 main(
 
   // Scale brightness down
   float3 untonemapped_ap1 = float3(_805, _807, _809);
-  untonemapped_ap1 *= 0.65f;
+
+  // CUSTOM_SLIDER_1 = Character Exposure
+  untonemapped_ap1 *= CUSTOM_SLIDER_1;
 
   UECbufferConfig cb_config = CreateCbufferConfig();
   cb_config.ue_filmblackclip = 0.0f;

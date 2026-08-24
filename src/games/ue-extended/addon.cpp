@@ -1403,6 +1403,7 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
                     .tooltip = "Controls the exposure of the character models.",
                     .min = 0.65f,
                     .max = 1.f,
+                    .format = "%.05f",
                 },
             },
             {

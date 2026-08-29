@@ -1269,6 +1269,12 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
             {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
         },
     },
+    {
+        "Mortal Shell II",
+        GameSettings{
+            {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
+        },
+    },
     // Native HDR on games (Path off)
     {
         "Hell is Us",
@@ -1490,6 +1496,12 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
             {
                 0xE6193B1A,  // Hero lights
             },
+        },
+    },
+    {
+        "SWZeroCompany",
+        GameSettings{
+            {"Set_Path", 0.f},
         },
     },
 };
@@ -2106,7 +2118,9 @@ void AddAdvancedSettings() {
         .default_value = 1.f,
         .label = "Upgrade Path",
         .section = "Resource Upgrades",
-        .tooltip = "Use the game's Native HDR (Off), or Upgrade the game to SDR (On)",
+        .tooltip =
+            "Off: Fix native or Engine.ini HDR.\n"
+            "On: Upgrade SDR to HDR.",
         .labels = {
             "Off",
             "On",

@@ -1422,6 +1422,34 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
         },
     },
     {
+        "HTGame.exe",
+        GameSettings{
+            {
+                {"Set_Path", 0.f},
+            },
+            {
+                new renodx::utils::settings::Setting{
+                    .key = "NTECharExposure",
+                    .binding = &shader_injection.custom_slider_1,
+                    .default_value = 0.85f,
+                    .label = "Character Exposure",
+                    .section = "NTE Neverness to Everness",
+                    .tooltip = "Controls the exposure of the character models.",
+                    .min = 0.65f,
+                    .max = 1.f,
+                    .format = "%.05f",
+                },
+            },
+            {
+                0x2713F110,  // UI
+                0x87519E48,  // Pre-composite
+                0xC5B1B7C5,  // Text
+                0xC632B436,  // UI
+                0xFDDAFA08,  // UI
+            },
+        },
+    },
+    {
         "CodeVein2",
         GameSettings{
             {"Set_Path", 0.f},

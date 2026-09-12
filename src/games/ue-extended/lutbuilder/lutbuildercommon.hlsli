@@ -5,6 +5,41 @@
 
 #include "./etcfunctions.hlsli"
 
+/// Identity through anchor to every derivative; then approaches peak
+/// monotonically and concave down. Requires anchor < peak and compression_strength >= 1.
+#define APPLYANCHORED_CINFINITY_SHOULDER_GENERATOR(T)                                                      \
+  T ApplyAnchoredCInfinityShoulder(T color, T peak, T anchor, float compression_strength) {                \
+    T shoulder_range = peak - anchor;                                                                      \
+    T distance_from_anchor = max(color - anchor, (T)0.f);                                                  \
+    T flat_weight = exp2(-shoulder_range / (compression_strength * distance_from_anchor));                 \
+    T response_denominator = mad(distance_from_anchor, flat_weight, shoulder_range);                       \
+    return mad(shoulder_range, distance_from_anchor / response_denominator, color - distance_from_anchor); \
+  }
+
+APPLYANCHORED_CINFINITY_SHOULDER_GENERATOR(float)
+APPLYANCHORED_CINFINITY_SHOULDER_GENERATOR(float3)
+#undef APPLYANCHORED_CINFINITY_SHOULDER_GENERATOR
+
+float ApplyAnchoredCInfinityShoulderMaxChannelScale(float3 color, float peak, float anchor, float compression_strength) {
+  float max_channel = renodx::math::Max(abs(color));
+  float compressed_max = ApplyAnchoredCInfinityShoulder(max_channel, peak, anchor, compression_strength);
+  return renodx::math::DivideSafe(compressed_max, max_channel, 1.f);
+}
+
+// A QoL macro to quickly swap displaymappers used in one place
+// Can be used for branching for debugging and etc.
+#define SELECT_DISPLAYMAP(T)                                                                                     \
+  T SelectDisplaymap(T color, T peak, T shoulder, float compression_strength = 1.5f, float white_clip = 100.f) { \
+    return ApplyAnchoredCInfinityShoulder(color, peak, shoulder, compression_strength);                          \
+  }
+SELECT_DISPLAYMAP(float)
+SELECT_DISPLAYMAP(float3)
+#undef SELECT_DISPLAYMAP
+
+float3 SelectMaxChDisplaymap(float3 color, float peak, float shoulder, float compression_strength = 1.5f, float white_clip = 100.f) {
+  return color * ApplyAnchoredCInfinityShoulderMaxChannelScale(color, peak, shoulder, compression_strength);
+}
+
 float3 HueAndChrominance(
     float3 incorrect_color, float3 reference_color,
     float hue_correct_strength = 0.f,
@@ -340,10 +375,11 @@ float3 DisplayMapMaxChannel(float3 color_bt709, float peak_ratio) {
   renodx::color::grade::Config cg_config = CreateColorGradingConfig();
   float3 graded_bt709 = ApplySaturationMaxChannel(color_bt709, peak_ratio, cg_config);
   float3 graded_bt2020 = renodx::color::bt2020::from::BT709(graded_bt709);
-  float3 displaymapped_bt2020 = renodx::tonemap::neutwo::MaxChannel(
+  float3 displaymapped_bt2020 = SelectMaxChDisplaymap(
       max(0.f, graded_bt2020),
       peak_ratio,
-      100.f);
+      0.18f,
+      1.5f);
   return renodx::color::bt709::from::BT2020(displaymapped_bt2020);
 }
 
@@ -353,9 +389,11 @@ float3 DisplayMapAP1(float3 color_bt709, float peak_ratio, float blue_correction
   renodx::color::grade::Config cg_config = CreateColorGradingConfig();
   float3 color_blue_corrected_ap1 = BlueCorrectedAP1FromBT709(color_bt709, blue_correction);
   float3 graded_blue_corrected_ap1 = ApplySaturationAP1(color_blue_corrected_ap1, peak_ratio, cg_config);
-  float3 displaymapped_blue_corrected_ap1 = renodx::tonemap::neutwo::PerChannel(
+  float3 displaymapped_blue_corrected_ap1 = SelectDisplaymap(
       max(0.f, graded_blue_corrected_ap1),
-      peak_ratio);
+      peak_ratio,
+      0.18f,
+      1.5f);
   return BT709FromBlueCorrectedAP1(displaymapped_blue_corrected_ap1, blue_correction);
 }
 
@@ -366,10 +404,13 @@ float3 DisplayMapLMS(float3 color_bt709, float peak_ratio) {
   const float3 lms_white = RENODX_BT709_LMS_WHITE;
   float3 color_lms_normalized = renodx::color::lms::from::BT709(color_bt709) / lms_white;
   float3 peak_lms_normalized = renodx::color::lms::from::BT709(peak_ratio.xxx) / lms_white;
+  float3 shoulder_lms_normalized = renodx::color::lms::from::BT709(0.18f) / lms_white;
   float3 graded_lms_normalized = ApplySaturationLMS(color_lms_normalized, peak_ratio, cg_config);
-  float3 displaymapped_lms_normalized = renodx::tonemap::neutwo::PerChannel(
+  float3 displaymapped_lms_normalized = SelectDisplaymap(
       max(0.f, graded_lms_normalized),
-      peak_lms_normalized);
+      peak_lms_normalized,
+      shoulder_lms_normalized,
+      1.5f);
   displaymapped_lms_normalized = RestorePsychoHueAndCompressLMS(
       graded_lms_normalized,
       displaymapped_lms_normalized,
@@ -383,11 +424,9 @@ float3 DisplayMapByScaling(float3 color_bt709, float peak_ratio, float blue_corr
   float3 display_mapped_bt709;
   if (RENODX_TONE_MAP_SCALING == 0.f) {
     display_mapped_bt709 = DisplayMapMaxChannel(color_bt709, peak_ratio);
-  }
-  else if (RENODX_TONE_MAP_SCALING == 1.f) {
+  } else if (RENODX_TONE_MAP_SCALING == 1.f) {
     display_mapped_bt709 = DisplayMapAP1(color_bt709, peak_ratio, blue_correction);
-  }
-  else {
+  } else {
     display_mapped_bt709 = DisplayMapLMS(color_bt709, peak_ratio);
   }
   // Clamp per channel on game color to avoid max channel clamp of swapchainpass

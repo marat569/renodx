@@ -1276,6 +1276,12 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
             {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
         },
     },
+    {
+        "Dune: Awakening",
+        GameSettings{
+            {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
+        },
+    },
     // Native HDR on games (Path off)
     {
         "Hell is Us",

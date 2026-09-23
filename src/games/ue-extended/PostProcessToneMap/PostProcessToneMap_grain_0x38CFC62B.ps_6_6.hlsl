@@ -1,7 +1,8 @@
+// Found in UE 5.4
 // Silent Hill F output/lutbuilder sample shaders
 // We disable their grain if grain type is custom
 
-#include "../postfx.hlsli"
+#include "./PostProcessToneMap.hlsli"
 
 struct FViewConstants {
   float4 TranslatedWorldToClip[4];

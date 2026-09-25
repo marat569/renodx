@@ -40,8 +40,8 @@ Config Create(
   p.FilmBlackClip = FilmBlackClip;
   p.FilmWhiteClip = FilmWhiteClip;
 
-  p.toe_width = max((FilmBlackClip + 1.0f) - FilmToe, 1e-6f);
-  p.shoulder_width = max((FilmWhiteClip + 1.0f) - FilmShoulder, 1e-6f);
+  p.toe_width = (FilmBlackClip + 1.0f) - FilmToe;
+  p.shoulder_width = (FilmWhiteClip + 1.0f) - FilmShoulder;
   if (FilmToe > 0.8) {
     p.log_toe_threshold = (((0.82 - FilmToe) / FilmSlope) - 0.7447274923324585f);
   } else {

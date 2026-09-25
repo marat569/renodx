@@ -40,8 +40,8 @@ Config Create(
   p.FilmBlackClip = FilmBlackClip;
   p.FilmWhiteClip = FilmWhiteClip;
 
-  p.toe_width = (FilmBlackClip + 1.0f) - FilmToe;
-  p.shoulder_width = (FilmWhiteClip + 1.0f) - FilmShoulder;
+  p.toe_width = max((FilmBlackClip + 1.0f) - FilmToe, 1e-6f);
+  p.shoulder_width = max((FilmWhiteClip + 1.0f) - FilmShoulder, 1e-6f);
   if (FilmToe > 0.8) {
     p.log_toe_threshold = (((0.82 - FilmToe) / FilmSlope) - 0.7447274923324585f);
   } else {
@@ -152,16 +152,20 @@ float3 ApplyExtendedToneCurveMaxChannel(
     float3 tonemapped_blue_corrected_ap1,
     float3 vanilla_blue_corrected_ap1,
     float blue_correction) {
-  // Max Channel display mapping uses this reference to simulate hue/chroma blowout.
-  float3 bt709_hue_and_chrominance_source = BT709FromBlueCorrectedAP1(
-      renodx::tonemap::ReinhardPiecewise(tonemapped_blue_corrected_ap1, RENODX_TONE_MAP_PER_CH_PEAK, 0.18f),
-      blue_correction);
 
   // UE games are extremely bright, and lerping toward vanilla helps reduce average picture brightness.
   tonemapped_blue_corrected_ap1 = lerp(
       tonemapped_blue_corrected_ap1,
       vanilla_blue_corrected_ap1,
       saturate(lerp(0.75f, 0.f, saturate(BLEND_FACTOR))));
+
+  // Max Channel display mapping uses this reference to simulate hue/chroma blowout.
+  float3 bt709_hue_and_chrominance_source = BT709FromBlueCorrectedAP1(
+      ApplyAnchoredCInfinityShoulder(tonemapped_blue_corrected_ap1, RENODX_TONE_MAP_PER_CH_PEAK, 0.18f, 1.5f),
+      blue_correction);
+
+  // Use vanilla tonemap reference at 1.f target
+  if (RENODX_TONE_MAP_PER_CH_PEAK == 1.f) bt709_hue_and_chrominance_source = saturate(BT709FromBlueCorrectedAP1(vanilla_blue_corrected_ap1, blue_correction));
 
   float3 bt709_tonemapped = BT709FromBlueCorrectedAP1(tonemapped_blue_corrected_ap1, blue_correction);
   return BlueCorrectedAP1FromBT709(
@@ -223,7 +227,7 @@ float3 ApplyExtendedToneCurveLMS(
 
 // input: RRT value in blue-corrected AP1 linear
 // output: blue-corrected AP1 linear
-float3 ApplyToneCurveExtendedWithHermite(
+float3 ApplyToneCurveExtended(
     float3 untonemapped_rrt_blue_corrected_ap1,
     float blue_correction,
     float FilmSlope,

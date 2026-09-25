@@ -187,7 +187,7 @@ void main(
   cb_config.ue_filmslope = asfloat(cb0[37].x);
   cb_config.ue_filmwhiteclip = asfloat(cb0[38].x);
   cb_config.ue_tonecurveammount = asfloat(cb0[36].w);
-  cb_config.ue_mappingpolynomial = asfloat(cb0[5].xyz);
+  cb_config.ue_mappingpolynomial = asfloat(cb0[39].xyz);
   cb_config.ue_overlaycolor = asfloat(cb0[13].xyzw);
   cb_config.ue_bluecorrection = asfloat(cb0[36].y);
   cb_config.ue_colorscale = asfloat(cb0[14].xyz);

@@ -44,22 +44,50 @@ float3 ApplyMappingAndOverlay(float3 color_bt709, UECbufferConfig cb_config) {
 float4 FinalizeLutbuilderOutput(
     float3 untonemapped_ap1,
     float3 processed_bt709,
+    float3 safe_mid_gray_bt709,
     UECbufferConfig cb_config,
     float4 SV_Target,
     uint outputdevice) {
   float3 output_bt709 = ApplyMappingAndOverlay(processed_bt709, cb_config);
+  safe_mid_gray_bt709 = ApplyMappingAndOverlay(safe_mid_gray_bt709, cb_config);
+
+  float peak_ratio = RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS;
+  float grading_peak_ratio = peak_ratio;
+  if (RENODX_TONE_MAP_TYPE != 0.f && RENODX_GAMMA_CORRECTION != 0.f) {
+    grading_peak_ratio = ApplyGammaCorrection(grading_peak_ratio.xxx, true, cb_config.ue_bluecorrection).x;
+  }
+  if (RENODX_TONE_MAP_TYPE != 0.f) {
+    float3 tracked_mid_gray_bt709 = ApplyPostLUTColorGrading(
+        safe_mid_gray_bt709,
+        safe_mid_gray_bt709,
+        grading_peak_ratio,
+        cb_config.ue_bluecorrection);
+    output_bt709 = ApplyPostLUTColorGrading(
+        output_bt709,
+        safe_mid_gray_bt709,
+        grading_peak_ratio,
+        cb_config.ue_bluecorrection);
+    safe_mid_gray_bt709 = tracked_mid_gray_bt709;
+  }
 
   bool is_linear = (outputdevice == 8u || outputdevice == 9u);
   if (is_linear) {
     return ProcessOutputDevice89(untonemapped_ap1, output_bt709, outputdevice, cb_config);
   }
 
+  float shoulder_peak_ratio = peak_ratio;
+  if (RENODX_TONE_MAP_TYPE != 0.f
+      && RENODX_TONE_MAP_SCALING != 0.f
+      && RENODX_SAFE_LIMIT_WHITE_CLIP_ENABLED) {
+    shoulder_peak_ratio = min(peak_ratio, ComputeFilmicSafeInversePeakRatio(cb_config));
+  }
   return GenerateOutput(
       output_bt709,
-      untonemapped_ap1,
+      safe_mid_gray_bt709,
       SV_Target,
       outputdevice,
-      cb_config.ue_bluecorrection);
+      cb_config.ue_bluecorrection,
+      shoulder_peak_ratio);
 }
 
 // No SDR Lut
@@ -76,7 +104,8 @@ float4 ProcessLutbuilder(float3 untonemapped_ap1, UECbufferConfig cb_config, flo
   // float _1162 = mad((WorkingColorSpace.FromAP1[1].z), _1151, mad((WorkingColorSpace.FromAP1[1].y), _1150, ((WorkingColorSpace.FromAP1[1].x) * _1149)));
   // float _1163 = mad((WorkingColorSpace.FromAP1[2].z), _1151, mad((WorkingColorSpace.FromAP1[2].y), _1150, ((WorkingColorSpace.FromAP1[2].x) * _1149)));
   float3 tonemapped_bt709 = renodx::color::bt709::from::AP1(tonemapped_ap1);
-  return FinalizeLutbuilderOutput(untonemapped_ap1, tonemapped_bt709, cb_config, SV_Target, outputdevice);
+  float3 tracked_mid_gray_bt709 = ComputeFilmicMidGrayBT709(cb_config);
+  return FinalizeLutbuilderOutput(untonemapped_ap1, tonemapped_bt709, tracked_mid_gray_bt709, cb_config, SV_Target, outputdevice);
 }
 
 // 1 SDR Lut
@@ -90,7 +119,11 @@ float4 ProcessLutbuilder(float3 untonemapped_ap1, SamplerState lut_sampler, Text
   float3 lutted_bt709;
   SampleLUTUpgradeToneMap(tonemapped_bt709, lut_sampler, lut_texture, lutted_bt709.r, lutted_bt709.g, lutted_bt709.b, cb_config);
 
-  return FinalizeLutbuilderOutput(untonemapped_ap1, lutted_bt709, cb_config, SV_Target, outputdevice);
+  float3 mid_gray_before_lut = ComputeFilmicMidGrayBT709(cb_config);
+  float3 tracked_mid_gray_bt709;
+  SampleLUTUpgradeToneMap(mid_gray_before_lut, lut_sampler, lut_texture, tracked_mid_gray_bt709.r, tracked_mid_gray_bt709.g, tracked_mid_gray_bt709.b, cb_config);
+
+  return FinalizeLutbuilderOutput(untonemapped_ap1, lutted_bt709, tracked_mid_gray_bt709, cb_config, SV_Target, outputdevice);
 }
 
 // 2 SDR Luts
@@ -104,7 +137,11 @@ float4 ProcessLutbuilder(float3 untonemapped_ap1, SamplerState lut_sampler1, Sam
   float3 lutted_bt709;
   Sample2LUTsUpgradeToneMap(tonemapped_bt709, lut_sampler1, lut_sampler2, lut_texture1, lut_texture2, lutted_bt709.r, lutted_bt709.g, lutted_bt709.b, cb_config);
 
-  return FinalizeLutbuilderOutput(untonemapped_ap1, lutted_bt709, cb_config, SV_Target, outputdevice);
+  float3 mid_gray_before_lut = ComputeFilmicMidGrayBT709(cb_config);
+  float3 tracked_mid_gray_bt709;
+  Sample2LUTsUpgradeToneMap(mid_gray_before_lut, lut_sampler1, lut_sampler2, lut_texture1, lut_texture2, tracked_mid_gray_bt709.r, tracked_mid_gray_bt709.g, tracked_mid_gray_bt709.b, cb_config);
+
+  return FinalizeLutbuilderOutput(untonemapped_ap1, lutted_bt709, tracked_mid_gray_bt709, cb_config, SV_Target, outputdevice);
 }
 
 // 3 SDR Luts
@@ -118,7 +155,11 @@ float4 ProcessLutbuilder(float3 untonemapped_ap1, SamplerState lut_sampler1, Sam
   float3 lutted_bt709;
   Sample3LUTsUpgradeToneMap(tonemapped_bt709, lut_sampler1, lut_sampler2, lut_sampler3, lut_texture1, lut_texture2, lut_texture3, lutted_bt709.r, lutted_bt709.g, lutted_bt709.b, cb_config);
 
-  return FinalizeLutbuilderOutput(untonemapped_ap1, lutted_bt709, cb_config, SV_Target, outputdevice);
+  float3 mid_gray_before_lut = ComputeFilmicMidGrayBT709(cb_config);
+  float3 tracked_mid_gray_bt709;
+  Sample3LUTsUpgradeToneMap(mid_gray_before_lut, lut_sampler1, lut_sampler2, lut_sampler3, lut_texture1, lut_texture2, lut_texture3, tracked_mid_gray_bt709.r, tracked_mid_gray_bt709.g, tracked_mid_gray_bt709.b, cb_config);
+
+  return FinalizeLutbuilderOutput(untonemapped_ap1, lutted_bt709, tracked_mid_gray_bt709, cb_config, SV_Target, outputdevice);
 }
 
 // 4 SDR luts
@@ -132,5 +173,9 @@ float4 ProcessLutbuilder(float3 untonemapped_ap1, SamplerState lut_sampler1, Sam
   float3 lutted_bt709;
   Sample4LUTsUpgradeToneMap(tonemapped_bt709, lut_sampler1, lut_sampler2, lut_sampler3, lut_sampler4, lut_texture1, lut_texture2, lut_texture3, lut_texture4, lutted_bt709.r, lutted_bt709.g, lutted_bt709.b, cb_config);
 
-  return FinalizeLutbuilderOutput(untonemapped_ap1, lutted_bt709, cb_config, SV_Target, outputdevice);
+  float3 mid_gray_before_lut = ComputeFilmicMidGrayBT709(cb_config);
+  float3 tracked_mid_gray_bt709;
+  Sample4LUTsUpgradeToneMap(mid_gray_before_lut, lut_sampler1, lut_sampler2, lut_sampler3, lut_sampler4, lut_texture1, lut_texture2, lut_texture3, lut_texture4, tracked_mid_gray_bt709.r, tracked_mid_gray_bt709.g, tracked_mid_gray_bt709.b, cb_config);
+
+  return FinalizeLutbuilderOutput(untonemapped_ap1, lutted_bt709, tracked_mid_gray_bt709, cb_config, SV_Target, outputdevice);
 }

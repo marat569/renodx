@@ -11,8 +11,7 @@
   T ApplyAnchoredCInfinityShoulder(T color, T peak, T anchor, float compression_strength) {                \
     T shoulder_range = peak - anchor;                                                                              \
     T distance_from_anchor = max(color - anchor, (T)0.f);                                                          \
-    T safe_distance_from_anchor = max(compression_strength * distance_from_anchor, (T)1e-6f);                \
-    T flat_weight = exp2(-shoulder_range / safe_distance_from_anchor);                                      \
+    T flat_weight = exp2(-shoulder_range / (compression_strength * distance_from_anchor));                 \
     T response_denominator = mad(distance_from_anchor, flat_weight, shoulder_range);                       \
     return mad(shoulder_range, distance_from_anchor / response_denominator, color - distance_from_anchor); \
   }
@@ -96,8 +95,7 @@ float3 HueAndChrominance(
 
 float3 ComputeCInfinityTransition(float3 position) {
   position = saturate(position);
-  float3 transition_denominator = max(position * (1.f - position), 1e-6f);
-  return 1.f / (1.f + exp2((1.f - 2.f * position) / transition_denominator));
+  return 1.f / (1.f + exp2((1.f - 2.f * position) / (position * (1.f - position))));
 }
 
 // Monotonic and C-infinity continuous anchored tonal grading.

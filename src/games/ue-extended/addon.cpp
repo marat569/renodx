@@ -1628,6 +1628,12 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
             {"Set_Path", 0.f},
         },
     },
+    {
+        "SWGR-Win64-Shipping.exe",  // Star Wars Galactic Racer
+        GameSettings{
+            {"Set_Path", 0.f},
+        },
+    },
 };
 
 auto FindGameSettings(const std::filesystem::path& process_path) {

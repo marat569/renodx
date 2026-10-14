@@ -1640,6 +1640,12 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
             {"Set_Path", 0.f},
         },
     },
+    {
+        "Gears of War E-Day",
+        GameSettings{
+            {"Set_Path", 0.f},
+        },
+    },
 };
 
 auto FindGameSettings(const std::filesystem::path& process_path) {

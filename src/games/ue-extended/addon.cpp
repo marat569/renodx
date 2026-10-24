@@ -1347,6 +1347,12 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
     },
     // Native HDR on games (Path off)
     {
+      "Grounded2",
+      GameSettings{
+        {"Set_Path", 0.f},
+      },
+    },
+    {
         "Gears of War E-Day",
         GameSettings{
             {"Set_Path", 0.f},

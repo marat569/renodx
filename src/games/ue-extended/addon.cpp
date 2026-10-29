@@ -294,18 +294,6 @@ renodx::utils::settings::Settings settings = {
     //     .is_enabled = []() { return shader_injection.tone_map_type == 1.f; },
     // },
 
-    // new renodx::utils::settings::Setting{
-    //     .key = "ToneMapHueCorrection",
-    //     .binding = &shader_injection.tone_map_hue_correction,
-    //     .default_value = 100.f,
-    //     .label = "Hue Correction",
-    //     .section = "Tone Mapping & Color Grading",
-    //     .tooltip = "Hue retention strength.",
-    //     .max = 100.f,
-    //     .is_enabled = []() { return shader_injection.tone_map_type == 1.f; },
-    //     .parse = [](float value) { return value * 0.01f; },
-    // },
-
     new renodx::utils::settings::Setting{
         .key = "ToneMapScaling",
         .binding = &shader_injection.tone_map_scaling,
@@ -318,6 +306,20 @@ renodx::utils::settings::Settings settings = {
                    "LMS: Applies grading, filmic extension, and display mapping per channel in normalized LMS.",
         .labels = {"Max Channel (Legacy)", "AP1", "LMS"},
         .is_enabled = []() { return shader_injection.tone_map_type == 1.f; },
+        .is_visible = []() { return current_settings_mode >= 1.f; },
+    },
+
+    new renodx::utils::settings::Setting{
+        .key = "ToneMapHueCorrection",
+        .binding = &shader_injection.tone_map_hue_correction,
+        .default_value = 25.f,
+        .label = "Hue Correction",
+        .section = "Tone Mapping",
+        .tooltip = "Emulates BT.709 gamut clipping present in SDR.",
+        .min = 0.f,
+        .max = 100.f,
+        .is_enabled = []() { return shader_injection.tone_map_type == 1.f; },
+        .parse = [](float value) { return value * 0.01f; },
         .is_visible = []() { return current_settings_mode >= 1.f; },
     },
 

@@ -408,6 +408,41 @@ float3 ScaleScene(float3 color) {
   return color;
 }
 
+// CUSTOM: Transfer shoulder-compressed channel-magnitude positions in linear BT.709,
+// restoring source signs and positive relative luminance.
+float3 ApplyHueClipEmulationBT709(float3 color, float strength, float clip_point, float shoulder_anchor) {
+  float3 custom_bent = color;
+  const float custom_source_y = renodx::color::y::from::BT709(color);
+  if (strength > 0.f && custom_source_y > 0.f) {
+    const float3 custom_magnitude = abs(color);
+    const float3 custom_reference = ApplyAnchoredCInfinityShoulder(
+      custom_magnitude,
+      max(clip_point, 0.01f).xxx,
+      clamp(shoulder_anchor, 0.f, max(clip_point, 0.01f) - 1e-6f).xxx,
+      1.5f);
+    const float custom_reference_min = renodx::math::Min(custom_reference);
+    const float custom_reference_range = renodx::math::Max(custom_reference) - custom_reference_min;
+    float3 custom_transferred = color;
+    if (custom_reference_range > 0.f) {
+      custom_transferred = renodx::math::Rescale(
+          custom_reference - custom_reference_min,
+          0.f,
+          custom_reference_range,
+          renodx::math::Min(custom_magnitude),
+          renodx::math::Max(custom_magnitude));
+      custom_transferred = renodx::math::CopySign(custom_transferred, color);
+    }
+    custom_bent = lerp(color, custom_transferred, saturate(strength));
+    const float custom_bent_y = renodx::color::y::from::BT709(custom_bent);
+    if (custom_bent_y > 0.f) {
+      custom_bent *= custom_source_y / custom_bent_y;
+    } else {
+      custom_bent = color;
+    }
+  }
+  return custom_bent;
+}
+
 // input: BT.709 linear
 // output: BT.709 linear
 float3 DisplayMapMaxChannel(float3 color_bt709, float3 mid_gray_bt709, float peak_ratio) {
@@ -487,6 +522,8 @@ float4 GenerateOutput(
   if (RENODX_TONE_MAP_TYPE == 0.f) {
     final_color = saturate(final_color);
   } else {
+    final_color = ApplyHueClipEmulationBT709(
+      final_color, RENODX_TONE_MAP_HUE_CORRECTION, 1.f, renodx::math::Max(abs(shoulder_anchor_bt709)));
     final_color = DisplayMapByScaling(final_color, shoulder_anchor_bt709, peak_ratio, blue_correction);
   }
 

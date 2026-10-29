@@ -1347,10 +1347,10 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
     },
     // Native HDR on games (Path off)
     {
-      "Grounded2",
-      GameSettings{
-        {"Set_Path", 0.f},
-      },
+        "Grounded2",
+        GameSettings{
+            {"Set_Path", 0.f},
+        },
     },
     {
         "Gears of War E-Day",
@@ -1675,6 +1675,12 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
                 0x8C646984,  // Glitch effect
                 0x9144F578,  // Glitch effect
             },
+        },
+    },
+    {
+        "Phantom Blade Zero",  // The Talos Principle: Reawakened
+        GameSettings{
+            {"Set_Path", 0.f},
         },
     },
 };

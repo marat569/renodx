@@ -4,21 +4,7 @@
 #define INCLUDE_LUTBUILDER_COMMON
 
 #include "./etcfunctions.hlsli"
-
-/// Identity through anchor to every derivative; then approaches peak
-/// monotonically and concave down. Requires anchor < peak and compression_strength >= 1.
-#define APPLYANCHORED_CINFINITY_SHOULDER_GENERATOR(T)                                                      \
-  T ApplyAnchoredCInfinityShoulder(T color, T peak, T anchor, float compression_strength) {                \
-    T shoulder_range = peak - anchor;                                                                              \
-    T distance_from_anchor = max(color - anchor, (T)0.f);                                                          \
-    T flat_weight = exp2(-shoulder_range / (compression_strength * distance_from_anchor));                 \
-    T response_denominator = mad(distance_from_anchor, flat_weight, shoulder_range);                       \
-    return mad(shoulder_range, distance_from_anchor / response_denominator, color - distance_from_anchor); \
-  }
-
-APPLYANCHORED_CINFINITY_SHOULDER_GENERATOR(float)
-APPLYANCHORED_CINFINITY_SHOULDER_GENERATOR(float3)
-#undef APPLYANCHORED_CINFINITY_SHOULDER_GENERATOR
+#include "../cinfinityrolloff.hlsli"
 
 float ApplyAnchoredCInfinityShoulderMaxChannelScale(
     float3 color,
@@ -26,7 +12,7 @@ float ApplyAnchoredCInfinityShoulderMaxChannelScale(
     float anchor,
     float compression_strength) {
   float max_channel = renodx::math::Max(abs(color));
-  float compressed_max = ApplyAnchoredCInfinityShoulder(max_channel, peak, anchor, compression_strength);
+  float compressed_max = CInfinityRollOff(max_channel, peak, anchor, compression_strength);
   return renodx::math::DivideSafe(compressed_max, max_channel, 1.f);
 }
 
@@ -34,7 +20,7 @@ float ApplyAnchoredCInfinityShoulderMaxChannelScale(
 // Can be used for branching for debugging and etc.
 #define SELECT_DISPLAYMAP(T)                                                                            \
   T SelectDisplaymap(T color, T peak, T shoulder, float compression_strength = 1.5f) {                  \
-    return ApplyAnchoredCInfinityShoulder(color, peak, shoulder, compression_strength);                  \
+    return CInfinityRollOff(color, peak, shoulder, compression_strength);                  \
   }
 SELECT_DISPLAYMAP(float)
 SELECT_DISPLAYMAP(float3)
@@ -416,7 +402,7 @@ float3 ApplyHueClipEmulationBT709(float3 color, float strength, float clip_point
     const float3 custom_magnitude = abs(color);
     float reference_peak = max(clip_point, 0.01f);
     float reference_anchor = clamp(shoulder_anchor, 0.f, reference_peak - 1e-6f);
-    float3 custom_reference = ApplyAnchoredCInfinityShoulder(
+    float3 custom_reference = CInfinityRollOff(
       custom_magnitude, reference_peak.xxx, reference_anchor.xxx, 1.5f);
     const float custom_reference_min = renodx::math::Min(custom_reference);
     const float custom_reference_range = renodx::math::Max(custom_reference) - custom_reference_min;

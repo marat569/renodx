@@ -163,11 +163,9 @@ float3 ApplyExtendedToneCurveMaxChannel(
       tonemapped_blue_corrected_ap1,
       vanilla_blue_corrected_ap1,
       vanilla_blend);
-  tonemapped_blue_corrected_ap1 = renodx::tonemap::neutwo::PerChannel(tonemapped_blue_corrected_ap1, 100.f.xxx);
-
   // Max Channel display mapping uses this reference to simulate hue/chroma blowout.
   float3 bt709_hue_and_chrominance_source = BT709FromBlueCorrectedAP1(
-      ApplyAnchoredCInfinityShoulder(tonemapped_blue_corrected_ap1, RENODX_TONE_MAP_PER_CH_PEAK, 0.18f, 1.5f),
+      CInfinityRollOff(tonemapped_blue_corrected_ap1, RENODX_TONE_MAP_PER_CH_PEAK, 0.18f, 1.5f),
       blue_correction);
 
   // Use vanilla tonemap reference at 1.f target
@@ -190,9 +188,7 @@ float3 ApplyExtendedToneCurveAP1(
     float3 tonemapped_blue_corrected_ap1,
   float3 vanilla_blue_corrected_ap1,
   float vanilla_blend) {
-    return renodx::tonemap::neutwo::PerChannel(
-      lerp(tonemapped_blue_corrected_ap1, vanilla_blue_corrected_ap1, vanilla_blend),
-      100.f.xxx);
+  return lerp(tonemapped_blue_corrected_ap1, vanilla_blue_corrected_ap1, vanilla_blend);
 }
 
 // input: white-normalized LMS linear
@@ -224,10 +220,10 @@ float3 ApplyExtendedToneCurveLMS(
 
   return RestorePsychoHueAndCompressLMS(
       curve_input_lms_normalized,
-        renodx::tonemap::neutwo::PerChannel(lerp(
+      lerp(
           tonemapped_lms_normalized,
           vanilla_lms_normalized,
-          ComputeFilmicVanillaBlend()), 100.f.xxx),
+          ComputeFilmicVanillaBlend()),
       RENODX_TONE_MAP_HUE_RESTORE);
 }
 

@@ -1,4 +1,72 @@
-#include "../shared.h"
+#include "../common.hlsli"
+#include "../cinfinityrolloff.hlsli"
+
+// Bridge LUT output to SDR sRGB; preserve the scales for reconstruction.
+struct ScaleFactors {
+  float gamut_compression_scale;
+  float max_channel_scale;
+};
+
+float3 LutOutputToSdrSrgb(float3 color, out ScaleFactors state) {
+  state.gamut_compression_scale = 1.f;
+  state.max_channel_scale = 1.f;
+  if (RENODX_TONE_MAP_TYPE == 0.f) return color;
+
+  float3 color_bt709;
+  if (PROCESSING_PATH == 0.f) {
+    color_bt709 = renodx::color::bt709::from::BT2020(
+        renodx::color::pq::DecodeSafe(color, RENODX_DIFFUSE_WHITE_NITS));
+    color_bt709 = ApplyGammaCorrection(color_bt709, true);
+  } else {
+    if (RENODX_DIFFUSE_WHITE_NITS != RENODX_GRAPHICS_WHITE_NITS) {
+      color = renodx::color::gamma::DecodeSafe(color);
+      color *= renodx::math::DivideSafe(RENODX_GRAPHICS_WHITE_NITS, RENODX_DIFFUSE_WHITE_NITS, 1.f);
+      color = renodx::color::gamma::EncodeSafe(color);
+    }
+    color_bt709 = RENODX_GAMMA_CORRECTION != 0.f
+      ? renodx::color::gamma::DecodeSafe(color)
+      : renodx::color::srgb::DecodeSafe(color);
+  }
+
+  float3 adaptive_state_lms = renodx::color::lms::from::BT709(0.18f.xxx);
+  state.gamut_compression_scale = renodx::color::gamut::ComputeGamutCompressionScaleBT709AdaptiveD65(
+      color_bt709, adaptive_state_lms, 1.f);
+  color_bt709 = renodx::color::gamut::GamutCompressBT709AdaptiveD65(
+      color_bt709, adaptive_state_lms, state.gamut_compression_scale);
+
+  float max_channel = renodx::math::Max(color_bt709);
+  float white_clip = ApplyGammaCorrection(max(RENODX_PEAK_WHITE_NITS / RENODX_DIFFUSE_WHITE_NITS, 1.f).xxx, true).x;
+  float mapped_max_channel = CInfinityRollOff(max_channel, 1.f, 0.18f, 1.5f, max(white_clip, 1.0001f));
+  state.max_channel_scale = max_channel > 0.f ? mapped_max_channel / max_channel : 1.f;
+  return renodx::color::srgb::EncodeSafe(color_bt709 * state.max_channel_scale);
+}
+
+float3 LutOutputToSdrSrgb(float3 color) {
+  ScaleFactors unused_state;
+  return LutOutputToSdrSrgb(color, unused_state);
+}
+
+float3 SdrSrgbToLutOutput(float3 color, ScaleFactors state) {
+  if (RENODX_TONE_MAP_TYPE == 0.f) return color;
+  float3 color_bt709 = renodx::color::srgb::DecodeSafe(color);
+  color_bt709 /= max(state.max_channel_scale, 1e-6f);
+  color_bt709 = renodx::color::gamut::GamutDecompressBT709AdaptiveD65(
+      color_bt709, renodx::color::lms::from::BT709(0.18f.xxx), state.gamut_compression_scale);
+  if (PROCESSING_PATH == 0.f) {
+    color_bt709 = ApplyGammaCorrection(color_bt709, false);
+    return renodx::color::pq::EncodeSafe(
+        renodx::color::bt2020::from::BT709(color_bt709), RENODX_DIFFUSE_WHITE_NITS);
+  }
+  float3 encoded_color = RENODX_GAMMA_CORRECTION != 0.f
+      ? renodx::color::gamma::EncodeSafe(color_bt709)
+      : renodx::color::srgb::EncodeSafe(color_bt709);
+  if (RENODX_DIFFUSE_WHITE_NITS != RENODX_GRAPHICS_WHITE_NITS) {
+    encoded_color = renodx::color::gamma::DecodeSafe(encoded_color);
+    encoded_color *= renodx::math::DivideSafe(RENODX_DIFFUSE_WHITE_NITS, RENODX_GRAPHICS_WHITE_NITS, 1.f);
+    encoded_color = renodx::color::gamma::EncodeSafe(encoded_color);
+  }
+  return encoded_color;
+}
 
 /// Applies Exponential Roll-Off tonemapping using the maximum channel.
 /// Used to fit the color into a 0–output_max range for SDR LUT compatibility.

@@ -1,4 +1,4 @@
-#include "../common.hlsli"
+#include "../../postfx.hlsli"
 
 Texture2D<float4> t0 : register(t0);
 SamplerState s0_s : register(s0);
@@ -15,7 +15,7 @@ void main(
     out float4 o0 : SV_Target0,
     out float4 o1 : SV_Target1) {
   float4 r0, r1, r2, r3;
-  DBZSPARKLutSpaceState bridge_state;
+  ScaleFactors bridge_state;
 
   r0.xy = cb0[67].xw + -cb0[67].yz;
   r0.zw = v0.xy / cb0[66].zw;
@@ -46,7 +46,7 @@ void main(
   r0.w = r1.x * r0.w;
   r1.w = 0;
   r2.xyzw = t0.Sample(s0_s, v0.xy).xyzw;
-  r2.xyz = DBZSPARK_PqToSrgbLutSpace(r2.xyz, bridge_state);
+  r2.xyz = LutOutputToSdrSrgb(r2.xyz, bridge_state);
   r1.xyz = r2.xyz;
   r3.xyzw = r2.xyzw + -r1.xyzw;
   r1.xyzw = r0.wwww * r3.xyzw + r1.xyzw;
@@ -69,7 +69,7 @@ void main(
   r0.x = r0.x * r0.x;
   r0.x = r0.y * r0.x;
   r0.xyzw = r0.xxxx * r2.xyzw + r1.xyzw;
-  o0.rgb = DBZSPARK_SrgbLutSpaceToPq(r0.rgb, bridge_state);
+  o0.rgb = SdrSrgbToLutOutput(r0.rgb, bridge_state);
   o0.w = r0.w;
   o1.xyzw = float4(0, 0, 0, 0);
 }

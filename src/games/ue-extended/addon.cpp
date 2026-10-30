@@ -34,6 +34,7 @@ renodx::mods::shader::CustomShaders custom_shaders = {__ALL_CUSTOM_SHADERS};
 ShaderInjectData shader_injection;
 
 float current_settings_mode = 0;
+float developer_mode_enabled = 0.f;
 
 // start keybind code
 
@@ -165,10 +166,9 @@ renodx::utils::settings::Settings settings = {
         .default_value = 0.f,
         .can_reset = false,
         .label = "Settings Mode",
-        .labels = {"Simple", "Intermediate", "Advanced"},
+        .labels = {"Simple", "Intermediate", "Advanced", "Developer"},
         .is_global = true,
     },
-
     new renodx::utils::settings::Setting{
         .key = "ToneMapType",
         .binding = &shader_injection.tone_map_type,
@@ -196,6 +196,16 @@ renodx::utils::settings::Settings settings = {
         .is_enabled = []() { return shader_injection.tone_map_type != 0.f; },
         .is_logarithmic = true,
     },
+      new renodx::utils::settings::Setting{
+        .key = "UEExtendedDeveloperMode",
+        .binding = &developer_mode_enabled,
+        .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
+        .default_value = 0.f,
+        .can_reset = false,
+        .label = "Developer Mode",
+        .is_global = true,
+        .is_visible = []() { return false; },
+      },
 
     new renodx::utils::settings::Setting{
         .key = "ToneMapGameNits",
@@ -312,7 +322,7 @@ renodx::utils::settings::Settings settings = {
     new renodx::utils::settings::Setting{
         .key = "ToneMapHueCorrection",
         .binding = &shader_injection.tone_map_hue_correction,
-        .default_value = 25.f,
+        .default_value = 50.f,
         .label = "Hue Correction",
         .section = "Tone Mapping",
         .tooltip = "Emulates BT.709 gamut clipping present in SDR.",
@@ -322,6 +332,20 @@ renodx::utils::settings::Settings settings = {
         .parse = [](float value) { return value * 0.01f; },
         .is_visible = []() { return current_settings_mode >= 1.f; },
     },
+
+      new renodx::utils::settings::Setting{
+        .key = "ToneMapHueCorrectionPeak",
+        .binding = &shader_injection.tone_map_hue_correction_peak,
+        .default_value = 1.f,
+        .label = "Hue Correction Peak",
+        .section = "Tone Mapping",
+        .tooltip = "Reference peak relative to game white. 0 uses the calculated display-mapping peak.",
+        .min = 0.f,
+        .max = 10.f,
+        .format = "%.2f",
+        .is_enabled = []() { return shader_injection.tone_map_type == 1.f; },
+        .is_visible = []() { return developer_mode_enabled != 0.f && current_settings_mode >= 3.f; },
+      },
 
     new renodx::utils::settings::Setting{
         .key = "ToneMapHueRestore",
@@ -2560,6 +2584,7 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
         renodx::mods::shader::expected_constant_buffer_space = 50;
         renodx::mods::shader::allow_multiple_push_constants = true;
         renodx::mods::shader::force_pipeline_cloning = true;
+        renodx::mods::shader::use_root_signature_cbv = true;
 
         renodx::mods::swapchain::expected_constant_buffer_index = 13;
         renodx::mods::swapchain::expected_constant_buffer_space = 50;
@@ -2608,6 +2633,23 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
     lut_dump::Use(fdw_reason);
   }
   renodx::utils::settings::Use(fdw_reason, &settings, &OnPresetOff);
+  if (fdw_reason == DLL_PROCESS_ATTACH) {
+    auto* settings_mode = renodx::utils::settings::FindSetting("SettingsMode");
+    if (developer_mode_enabled == 0.f && settings_mode != nullptr) {
+      settings_mode->labels.resize(3);
+      if (current_settings_mode > 2.f) {
+        settings_mode->Set(2.f)->Write();
+      }
+    }
+    for (auto* setting : settings) {
+      if (setting->key == "UEExtendedDeveloperMode") continue;
+      auto is_visible = setting->is_visible;
+      setting->is_visible = [is_visible]() {
+        return (developer_mode_enabled != 0.f && current_settings_mode >= 3.f)
+               || is_visible == nullptr || is_visible();
+      };
+    }
+  }
 
   // start last preset code
   if (fdw_reason == DLL_PROCESS_ATTACH) {

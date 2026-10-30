@@ -117,7 +117,7 @@ float3 ApplyGammaCorrectionLMS(float3 color_bt709, bool inverse) {
 
 // input: BT.709 linear
 // output: BT.709 linear
-float3 ApplyGammaCorrection(float3 color_bt709, bool inverse = false, float blue_correction = 0.f) {
+float3 ApplyGammaCorrection(float3 color_bt709, bool inverse = false, float blue_correction = 0.6f) {
   if (RENODX_GAMMA_CORRECTION == 0.f) return color_bt709;
 
   if (RENODX_GAMMA_CORRECTION_WORKING_SPACE == 0.f || RENODX_TONE_MAP_TYPE == 0.f) {
@@ -128,6 +128,11 @@ float3 ApplyGammaCorrection(float3 color_bt709, bool inverse = false, float blue
     return ApplyGammaCorrectionAP1(color_bt709, inverse, blue_correction);
   }
   return ApplyGammaCorrectionLMS(color_bt709, inverse);
+}
+
+// input: sRGB-encoded BT.709; output: BT.709 linear before EOTF emulation
+float3 InverseGammaCorrectionFromSrgb(float3 color_srgb, float blue_correction = 0.f) {
+  return ApplyGammaCorrection(renodx::color::srgb::DecodeSafe(color_srgb), true, blue_correction);
 }
 
 #endif  // SRC_GAMES_UE_EXTENDED_COMMON_HLSLI_

@@ -146,18 +146,24 @@ float3 ApplyToneCurveExtended(
 
 }  // unrealengine
 
+float ComputeFilmicVanillaBlend() {
+  return saturate(lerp(0.75f, 0.f, saturate(BLEND_FACTOR)));
+}
+
 // input: blue-corrected AP1 linear
 // output: blue-corrected AP1 linear
 float3 ApplyExtendedToneCurveMaxChannel(
     float3 tonemapped_blue_corrected_ap1,
     float3 vanilla_blue_corrected_ap1,
-    float blue_correction) {
+    float blue_correction,
+    float vanilla_blend) {
 
   // UE games are extremely bright, and lerping toward vanilla helps reduce average picture brightness.
   tonemapped_blue_corrected_ap1 = lerp(
       tonemapped_blue_corrected_ap1,
       vanilla_blue_corrected_ap1,
-      saturate(lerp(0.75f, 0.f, saturate(BLEND_FACTOR))));
+      vanilla_blend);
+  tonemapped_blue_corrected_ap1 = renodx::tonemap::neutwo::PerChannel(tonemapped_blue_corrected_ap1, 100.f.xxx);
 
   // Max Channel display mapping uses this reference to simulate hue/chroma blowout.
   float3 bt709_hue_and_chrominance_source = BT709FromBlueCorrectedAP1(
@@ -182,11 +188,11 @@ float3 ApplyExtendedToneCurveMaxChannel(
 // output: blue-corrected AP1 linear
 float3 ApplyExtendedToneCurveAP1(
     float3 tonemapped_blue_corrected_ap1,
-    float3 vanilla_blue_corrected_ap1) {
-  return lerp(
-      tonemapped_blue_corrected_ap1,
-      vanilla_blue_corrected_ap1,
-      saturate(lerp(0.75f, 0.f, saturate(BLEND_FACTOR))));
+  float3 vanilla_blue_corrected_ap1,
+  float vanilla_blend) {
+    return renodx::tonemap::neutwo::PerChannel(
+      lerp(tonemapped_blue_corrected_ap1, vanilla_blue_corrected_ap1, vanilla_blend),
+      100.f.xxx);
 }
 
 // input: white-normalized LMS linear
@@ -218,10 +224,10 @@ float3 ApplyExtendedToneCurveLMS(
 
   return RestorePsychoHueAndCompressLMS(
       curve_input_lms_normalized,
-      lerp(
+        renodx::tonemap::neutwo::PerChannel(lerp(
           tonemapped_lms_normalized,
           vanilla_lms_normalized,
-          saturate(lerp(0.75f, 0.f, saturate(BLEND_FACTOR)))),
+          ComputeFilmicVanillaBlend()), 100.f.xxx),
       RENODX_TONE_MAP_HUE_RESTORE);
 }
 
@@ -252,11 +258,13 @@ float3 ApplyToneCurveExtended(
     return ApplyExtendedToneCurveMaxChannel(
         tonemapped_blue_corrected_ap1,
         vanilla_blue_corrected_ap1,
-        blue_correction);
+        blue_correction,
+        ComputeFilmicVanillaBlend());
   }
   return ApplyExtendedToneCurveAP1(
       tonemapped_blue_corrected_ap1,
-      vanilla_blue_corrected_ap1);
+      vanilla_blue_corrected_ap1,
+      ComputeFilmicVanillaBlend());
 }
 
 #endif  // INCLUDE_FILMTONEMAP

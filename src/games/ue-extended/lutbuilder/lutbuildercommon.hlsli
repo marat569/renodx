@@ -408,18 +408,16 @@ float3 ScaleScene(float3 color) {
   return color;
 }
 
-// CUSTOM: Transfer shoulder-compressed channel-magnitude positions in linear BT.709,
-// restoring source signs and positive relative luminance.
+// CUSTOM: Emulate BT.709 presentation hue clipping for warm AP1-tonemapped colors.
 float3 ApplyHueClipEmulationBT709(float3 color, float strength, float clip_point, float shoulder_anchor) {
   float3 custom_bent = color;
   const float custom_source_y = renodx::color::y::from::BT709(color);
   if (strength > 0.f && custom_source_y > 0.f) {
     const float3 custom_magnitude = abs(color);
-    const float3 custom_reference = ApplyAnchoredCInfinityShoulder(
-      custom_magnitude,
-      max(clip_point, 0.01f).xxx,
-      clamp(shoulder_anchor, 0.f, max(clip_point, 0.01f) - 1e-6f).xxx,
-      1.5f);
+    float reference_peak = max(clip_point, 0.01f);
+    float reference_anchor = clamp(shoulder_anchor, 0.f, reference_peak - 1e-6f);
+    float3 custom_reference = ApplyAnchoredCInfinityShoulder(
+      custom_magnitude, reference_peak.xxx, reference_anchor.xxx, 1.5f);
     const float custom_reference_min = renodx::math::Min(custom_reference);
     const float custom_reference_range = renodx::math::Max(custom_reference) - custom_reference_min;
     float3 custom_transferred = color;
@@ -435,7 +433,13 @@ float3 ApplyHueClipEmulationBT709(float3 color, float strength, float clip_point
     custom_bent = lerp(color, custom_transferred, saturate(strength));
     const float custom_bent_y = renodx::color::y::from::BT709(custom_bent);
     if (custom_bent_y > 0.f) {
-      custom_bent *= custom_source_y / custom_bent_y;
+      float luminance_weight = smoothstep(0.25f, 0.75f, custom_bent_y / custom_source_y);
+      custom_bent *= custom_source_y / max(custom_bent_y, custom_source_y * 0.25f);
+      float3 displacement = custom_bent - color;
+      float displacement_size = renodx::math::Max(abs(displacement));
+      float displacement_limit = 0.25f * renodx::math::Max(custom_magnitude);
+      float limit_weight = displacement_limit / max(displacement_limit + displacement_size, 1e-6f);
+      custom_bent = color + displacement * (luminance_weight * limit_weight);
     } else {
       custom_bent = color;
     }
@@ -522,8 +526,22 @@ float4 GenerateOutput(
   if (RENODX_TONE_MAP_TYPE == 0.f) {
     final_color = saturate(final_color);
   } else {
+    // Empirical default strengths at peak/game ratios 1, 2, 4, 7, and 10.
+    float hue_peak_ratio = peak_ratio;
+    float default_hue_strength = 0.1f
+        + 0.075f * saturate(hue_peak_ratio - 1.f)
+        + 0.075f * saturate((hue_peak_ratio - 2.f) / 2.f)
+        + 0.13f * saturate((hue_peak_ratio - 4.f) / 3.f)
+        + 0.32f * saturate((hue_peak_ratio - 7.f) / 3.f);
+    float hue_slider = saturate(RENODX_TONE_MAP_HUE_CORRECTION);
+    float hue_strength = lerp(
+        default_hue_strength * saturate(hue_slider * 2.f),
+        0.7f,
+        saturate(hue_slider * 2.f - 1.f));
     final_color = ApplyHueClipEmulationBT709(
-      final_color, RENODX_TONE_MAP_HUE_CORRECTION, 1.f, renodx::math::Max(abs(shoulder_anchor_bt709)));
+      final_color, hue_strength,
+      RENODX_TONE_MAP_HUE_CORRECTION_PEAK == 0.f ? peak_ratio : RENODX_TONE_MAP_HUE_CORRECTION_PEAK,
+      renodx::math::Max(abs(shoulder_anchor_bt709)));
     final_color = DisplayMapByScaling(final_color, shoulder_anchor_bt709, peak_ratio, blue_correction);
   }
 

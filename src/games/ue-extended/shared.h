@@ -51,6 +51,7 @@
 #define RENODX_TONE_MAP_SCALING     shader_injection.tone_map_scaling
 #define RENODX_TONE_MAP_HUE_RESTORE shader_injection.tone_map_hue_restore
 #define RENODX_TONE_MAP_HUE_CORRECTION shader_injection.tone_map_hue_correction
+#define RENODX_TONE_MAP_HUE_CORRECTION_PEAK shader_injection.tone_map_hue_correction_peak
 #define FORCE_BLUE_CORRECT          1.f
 #define BLEND_FACTOR                shader_injection.blend_factor
 #define RENODX_SAFE_LIMIT_WHITE_CLIP_ENABLED (shader_injection.safe_limit_white_clip != 0.f)
@@ -116,6 +117,7 @@ struct ShaderInjectData {
   float custom_slider_2;
   float safe_limit_white_clip;
   float tone_map_hue_correction;
+  float tone_map_hue_correction_peak;
 };
 
 #ifndef __cplusplus

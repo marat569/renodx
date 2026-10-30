@@ -196,7 +196,7 @@ renodx::utils::settings::Settings settings = {
         .is_enabled = []() { return shader_injection.tone_map_type != 0.f; },
         .is_logarithmic = true,
     },
-      new renodx::utils::settings::Setting{
+    new renodx::utils::settings::Setting{
         .key = "UEExtendedDeveloperMode",
         .binding = &developer_mode_enabled,
         .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
@@ -205,7 +205,7 @@ renodx::utils::settings::Settings settings = {
         .label = "Developer Mode",
         .is_global = true,
         .is_visible = []() { return false; },
-      },
+    },
 
     new renodx::utils::settings::Setting{
         .key = "ToneMapGameNits",
@@ -251,7 +251,7 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Emulates a 2.2 EOTF",
         .labels = {"Off", "2.2"},
     },
-      new renodx::utils::settings::Setting{
+    new renodx::utils::settings::Setting{
         .key = "UIGammaCorrection",
         .binding = &shader_injection.gamma_correction_ui,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
@@ -262,7 +262,7 @@ renodx::utils::settings::Settings settings = {
         .labels = {"Match EOTF Emulation", "Force 2.2"},
         .is_enabled = []() { return shader_injection.processing_path == 0.f; },
         .is_visible = []() { return current_settings_mode >= 1.f && shader_injection.processing_path == 0.f; },
-      },
+    },
     new renodx::utils::settings::Setting{
         .key = "ToneMapGammaCorrectionWorkingSpace",
         .binding = &shader_injection.gamma_correction_working_space,
@@ -345,7 +345,7 @@ renodx::utils::settings::Settings settings = {
         .is_visible = []() { return current_settings_mode >= 1.f; },
     },
 
-      new renodx::utils::settings::Setting{
+    new renodx::utils::settings::Setting{
         .key = "ToneMapHueCorrectionPeak",
         .binding = &shader_injection.tone_map_hue_correction_peak,
         .default_value = 1.f,
@@ -357,7 +357,7 @@ renodx::utils::settings::Settings settings = {
         .format = "%.2f",
         .is_enabled = []() { return shader_injection.tone_map_type == 1.f; },
         .is_visible = []() { return developer_mode_enabled != 0.f && current_settings_mode >= 3.f; },
-      },
+    },
 
     new renodx::utils::settings::Setting{
         .key = "ToneMapHueRestore",
@@ -1378,6 +1378,23 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
             {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
         },
     },
+    {
+        "SHIN MEGAMI TENSEI V: Vengeance",
+        GameSettings{
+            {
+                {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_RATIO},
+            },
+            {},
+            {
+                0x3CFCA6D5,  // Grading
+                0x4D541E80,  // Grading
+                0x84676A8E,  // Grading
+                0xD0AE0A40,  // Grading
+                0xD2F5778E,  // Grading
+                0xD019CA1A,  // Grading
+            },
+        },
+    },
     // Native HDR on games (Path off)
     {
         "Grounded2",
@@ -1716,6 +1733,7 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
             {"Set_Path", 0.f},
         },
     },
+
 };
 
 auto FindGameSettings(const std::filesystem::path& process_path) {

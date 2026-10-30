@@ -1,4 +1,4 @@
-#include "../common.hlsli"
+#include "../../postfx.hlsli"
 
 Texture2D<float4> t7 : register(t7);
 Texture2D<float4> t6 : register(t6);
@@ -37,16 +37,16 @@ void main(
   float4 r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11;
   uint4 bitmask, uiDest;
   float4 fDest;
-  DBZSPARKLutSpaceState bridge_state;
+  ScaleFactors bridge_state;
 
   r0.xy = asuint(cb0[37].xy);
   r0.xy = v0.xy + -r0.xy;
   r0.zw = cb0[38].zw * r0.xy;
   r1.xy = r0.zw * cb0[5].xy + cb0[4].xy;
   r2.xyz = t7.Sample(s6_s, r1.xy).xyz;
-  r2.xyz = DBZSPARK_PqToSrgbLutSpace(r2.xyz);
+  r2.xyz = LutOutputToSdrSrgb(r2.xyz);
   r1.xyz = t7.Sample(s5_s, r1.xy).xyz;
-  r1.xyz = DBZSPARK_PqToSrgbLutSpace(r1.xyz, bridge_state);
+  r1.xyz = LutOutputToSdrSrgb(r1.xyz, bridge_state);
   r3.xyz = float3(1, 1, 1) + -r1.xyz;
   r4.xy = r0.xy * cb0[38].zw + cb2[1].yz;
   r0.xy = r0.xy * cb0[38].zw + -r4.xy;
@@ -277,6 +277,6 @@ void main(
   r0.xyz = cb2[22].yyy * r0.xyz + r2.xyz;
   r1.xyz = cb2[23].xyz + -r0.xyz;
   r0.xyz = cb2[22].zzz * r1.xyz + r0.xyz;
-  o0.xyz = DBZSPARK_SrgbLutSpaceToPq(max(float3(0, 0, 0), r0.xyz), bridge_state);
+  o0.xyz = SdrSrgbToLutOutput(max(float3(0, 0, 0), r0.xyz), bridge_state);
   o0.w = 0;
 }

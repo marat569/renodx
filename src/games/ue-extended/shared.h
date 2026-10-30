@@ -15,7 +15,7 @@
 #define RENODX_DIFFUSE_WHITE_NITS                 shader_injection.diffuse_white_nits
 #define RENODX_GRAPHICS_WHITE_NITS                shader_injection.graphics_white_nits
 #define RENODX_GAMMA_CORRECTION                   shader_injection.gamma_correction
-#define RENODX_GAMMA_CORRECTION_UI                ((shader_injection.processing_path != 0.f) ? shader_injection.gamma_correction : shader_injection.gamma_correction_ui)
+#define RENODX_GAMMA_CORRECTION_UI                (shader_injection.gamma_correction_ui != 0.f ? 1.f : shader_injection.gamma_correction)
 #define RENODX_GAMMA_CORRECTION_WORKING_SPACE     shader_injection.gamma_correction_working_space
 #define RENODX_TONE_MAP_PER_CH_PEAK               shader_injection.tone_map_per_ch_peak
 #define RENODX_TONE_MAP_HUE_SHIFT                 1.f  // Strength 100

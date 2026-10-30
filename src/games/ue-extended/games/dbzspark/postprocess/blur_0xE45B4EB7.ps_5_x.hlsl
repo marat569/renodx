@@ -1,4 +1,4 @@
-#include "../common.hlsli"
+#include "../../postfx.hlsli"
 
 Texture2D<float4> t0 : register(t0);
 SamplerState s0_s : register(s0);
@@ -14,30 +14,30 @@ void main(
     float4 v1 : SV_POSITION0,
     out float4 o0 : SV_Target0) {
   float4 r0, r1, r2, r3, r4, r5;
-  DBZSPARKLutSpaceState bridge_state, center_state, sample_a_state, sample_b_state;
+  ScaleFactors bridge_state, center_state, sample_a_state, sample_b_state;
   float bridge_weight_sum = cb0[0].x + 2.f * cb0[0].z;
 
   r0.xy = max(cb0[65].xy, v0.xy);
   r0.xy = min(cb0[65].zw, r0.xy);
   r0.xyz = t0.Sample(s0_s, r0.xy).xyz;
-  r0.xyz = DBZSPARK_PqToSrgbLutSpace(r0.xyz, center_state);
+  r0.xyz = LutOutputToSdrSrgb(r0.xyz, center_state);
   bridge_state.gamut_compression_scale = cb0[0].x * center_state.gamut_compression_scale;
-  bridge_state.neutwo_max_channel_scale = cb0[0].x * center_state.neutwo_max_channel_scale;
+  bridge_state.max_channel_scale = cb0[0].x * center_state.max_channel_scale;
   r1.xy = cb0[0].ww * cb0[64].xy;
   r1.zw = r1.xy * cb0[64].zw + v0.xy;
   r1.zw = max(cb0[65].xy, r1.zw);
   r1.zw = min(cb0[65].zw, r1.zw);
   r2.xyz = t0.Sample(s0_s, r1.zw).xyz;
-  r2.xyz = DBZSPARK_PqToSrgbLutSpace(r2.xyz, sample_a_state);
+  r2.xyz = LutOutputToSdrSrgb(r2.xyz, sample_a_state);
   bridge_state.gamut_compression_scale += cb0[0].z * sample_a_state.gamut_compression_scale;
-  bridge_state.neutwo_max_channel_scale += cb0[0].z * sample_a_state.neutwo_max_channel_scale;
+  bridge_state.max_channel_scale += cb0[0].z * sample_a_state.max_channel_scale;
   r1.xy = -r1.xy * cb0[64].zw + v0.xy;
   r1.xy = max(cb0[65].xy, r1.xy);
   r1.xy = min(cb0[65].zw, r1.xy);
   r1.xyz = t0.Sample(s0_s, r1.xy).xyz;
-  r1.xyz = DBZSPARK_PqToSrgbLutSpace(r1.xyz, sample_b_state);
+  r1.xyz = LutOutputToSdrSrgb(r1.xyz, sample_b_state);
   bridge_state.gamut_compression_scale += cb0[0].z * sample_b_state.gamut_compression_scale;
-  bridge_state.neutwo_max_channel_scale += cb0[0].z * sample_b_state.neutwo_max_channel_scale;
+  bridge_state.max_channel_scale += cb0[0].z * sample_b_state.max_channel_scale;
   r1.xyz = cb0[0].zzz * r1.xyz;
   r1.xyz = r2.xyz * cb0[0].zzz + r1.xyz;
   r0.xyz = r0.xyz * cb0[0].xxx + r1.xyz;
@@ -57,27 +57,27 @@ void main(
     r3.xyzw = max(cb0[65].xyxy, r3.xyzw);
     r3.xyzw = min(cb0[65].zwzw, r3.xyzw);
     r4.xyz = t0.Sample(s0_s, r3.xy).xyz;
-    r4.xyz = DBZSPARK_PqToSrgbLutSpace(r4.xyz, sample_a_state);
+    r4.xyz = LutOutputToSdrSrgb(r4.xyz, sample_a_state);
     bridge_state.gamut_compression_scale += cb0[r1.w + 0].x * sample_a_state.gamut_compression_scale;
-    bridge_state.neutwo_max_channel_scale += cb0[r1.w + 0].x * sample_a_state.neutwo_max_channel_scale;
+    bridge_state.max_channel_scale += cb0[r1.w + 0].x * sample_a_state.max_channel_scale;
     r2.xyzw = -r2.xyzw * cb0[64].zwzw + v0.xyxy;
     r2.xyzw = max(cb0[65].xyxy, r2.xyzw);
     r2.xyzw = min(cb0[65].zwzw, r2.xyzw);
     r5.xyz = t0.Sample(s0_s, r2.xy).xyz;
-    r5.xyz = DBZSPARK_PqToSrgbLutSpace(r5.xyz, sample_b_state);
+    r5.xyz = LutOutputToSdrSrgb(r5.xyz, sample_b_state);
     bridge_state.gamut_compression_scale += cb0[r1.w + 0].x * sample_b_state.gamut_compression_scale;
-    bridge_state.neutwo_max_channel_scale += cb0[r1.w + 0].x * sample_b_state.neutwo_max_channel_scale;
+    bridge_state.max_channel_scale += cb0[r1.w + 0].x * sample_b_state.max_channel_scale;
     r5.xyz = cb0[r1.w + 0].xxx * r5.xyz;
     r4.xyz = r4.xyz * cb0[r1.w + 0].xxx + r5.xyz;
     r4.xyz = r4.xyz + r1.xyz;
     r3.xyz = t0.Sample(s0_s, r3.zw).xyz;
-    r3.xyz = DBZSPARK_PqToSrgbLutSpace(r3.xyz, sample_a_state);
+    r3.xyz = LutOutputToSdrSrgb(r3.xyz, sample_a_state);
     bridge_state.gamut_compression_scale += cb0[r1.w + 0].z * sample_a_state.gamut_compression_scale;
-    bridge_state.neutwo_max_channel_scale += cb0[r1.w + 0].z * sample_a_state.neutwo_max_channel_scale;
+    bridge_state.max_channel_scale += cb0[r1.w + 0].z * sample_a_state.max_channel_scale;
     r2.xyz = t0.Sample(s0_s, r2.zw).xyz;
-    r2.xyz = DBZSPARK_PqToSrgbLutSpace(r2.xyz, sample_b_state);
+    r2.xyz = LutOutputToSdrSrgb(r2.xyz, sample_b_state);
     bridge_state.gamut_compression_scale += cb0[r1.w + 0].z * sample_b_state.gamut_compression_scale;
-    bridge_state.neutwo_max_channel_scale += cb0[r1.w + 0].z * sample_b_state.neutwo_max_channel_scale;
+    bridge_state.max_channel_scale += cb0[r1.w + 0].z * sample_b_state.max_channel_scale;
     r2.xyz = cb0[r1.w + 0].zzz * r2.xyz;
     r2.xyz = r3.xyz * cb0[r1.w + 0].zzz + r2.xyz;
     r1.xyz = r4.xyz + r2.xyz;
@@ -85,7 +85,7 @@ void main(
     r0.w = (int)r0.w + 2;
   }
   bridge_state.gamut_compression_scale /= max(bridge_weight_sum, 1e-6f);
-  bridge_state.neutwo_max_channel_scale /= max(bridge_weight_sum, 1e-6f);
-  o0.xyz = DBZSPARK_SrgbLutSpaceToPq(r1.xyz, bridge_state);
+  bridge_state.max_channel_scale /= max(bridge_weight_sum, 1e-6f);
+  o0.xyz = SdrSrgbToLutOutput(r1.xyz, bridge_state);
   o0.w = 1;
 }

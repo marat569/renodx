@@ -10,28 +10,28 @@
 #define DEBUG_CONTROLS 0
 #endif
 
-#define RENODX_TONE_MAP_TYPE                      shader_injection.tone_map_type  // 0 - UE Vanilla (SDR), 1 - UE Filmic Extended (HDR)
-#define RENODX_PEAK_WHITE_NITS                    shader_injection.peak_white_nits
-#define RENODX_DIFFUSE_WHITE_NITS                 shader_injection.diffuse_white_nits
-#define RENODX_GRAPHICS_WHITE_NITS                shader_injection.graphics_white_nits
-#define RENODX_GAMMA_CORRECTION                   shader_injection.gamma_correction
-#define RENODX_GAMMA_CORRECTION_UI                (shader_injection.gamma_correction_ui != 0.f ? 1.f : shader_injection.gamma_correction)
-#define RENODX_GAMMA_CORRECTION_WORKING_SPACE     shader_injection.gamma_correction_working_space
-#define RENODX_TONE_MAP_EXPOSURE                  shader_injection.tone_map_exposure
-#define RENODX_TONE_MAP_HIGHLIGHTS                shader_injection.tone_map_highlights
-#define RENODX_TONE_MAP_SHADOWS                   shader_injection.tone_map_shadows
-#define RENODX_TONE_MAP_CONTRAST                  shader_injection.tone_map_contrast
-#define RENODX_TONE_MAP_SATURATION                shader_injection.tone_map_saturation
-#define RENODX_TONE_MAP_HIGHLIGHT_SATURATION      shader_injection.tone_map_highlight_saturation
-#define RENODX_TONE_MAP_BLOWOUT                   shader_injection.tone_map_blowout
-#define RENODX_TONE_MAP_HIGHLIGHT_CONTRAST        shader_injection.tone_map_highlight_contrast
-#define RENODX_TONE_MAP_SHADOW_CONTRAST           shader_injection.tone_map_shadow_contrast
-#define RENODX_TONE_MAP_FLARE                     shader_injection.tone_map_flare
-#define CUSTOM_LUT_STRENGTH                       shader_injection.custom_lut_strength
-#define CUSTOM_LUT_SCALING                        shader_injection.custom_lut_scaling
-#define CUSTOM_LUT_SCALING_METHOD                 shader_injection.custom_lut_scaling_method
-#define CUSTOM_LUT_GAMUT_RESTORATION              1.f
-#define CUSTOM_LUT_GAMUT_COMPRESSION_METHOD       1.f  // Adaptive D65
+#define RENODX_TONE_MAP_TYPE                  shader_injection.tone_map_type  // 0 - UE Vanilla (SDR), 1 - UE Filmic Extended (HDR)
+#define RENODX_PEAK_WHITE_NITS                shader_injection.peak_white_nits
+#define RENODX_DIFFUSE_WHITE_NITS             shader_injection.diffuse_white_nits
+#define RENODX_GRAPHICS_WHITE_NITS            shader_injection.graphics_white_nits
+#define RENODX_GAMMA_CORRECTION               shader_injection.gamma_correction
+#define RENODX_GAMMA_CORRECTION_UI            (shader_injection.gamma_correction_ui != 0.f ? 1.f : shader_injection.gamma_correction)
+#define RENODX_GAMMA_CORRECTION_WORKING_SPACE shader_injection.gamma_correction_working_space
+#define RENODX_TONE_MAP_EXPOSURE              shader_injection.tone_map_exposure
+#define RENODX_TONE_MAP_HIGHLIGHTS            shader_injection.tone_map_highlights
+#define RENODX_TONE_MAP_SHADOWS               shader_injection.tone_map_shadows
+#define RENODX_TONE_MAP_CONTRAST              shader_injection.tone_map_contrast
+#define RENODX_TONE_MAP_SATURATION            shader_injection.tone_map_saturation
+#define RENODX_TONE_MAP_HIGHLIGHT_SATURATION  shader_injection.tone_map_highlight_saturation
+#define RENODX_TONE_MAP_BLOWOUT               shader_injection.tone_map_blowout
+#define RENODX_TONE_MAP_HIGHLIGHT_CONTRAST    shader_injection.tone_map_highlight_contrast
+#define RENODX_TONE_MAP_SHADOW_CONTRAST       shader_injection.tone_map_shadow_contrast
+#define RENODX_TONE_MAP_FLARE                 shader_injection.tone_map_flare
+#define CUSTOM_LUT_STRENGTH                   shader_injection.custom_lut_strength
+#define CUSTOM_LUT_SCALING                    shader_injection.custom_lut_scaling
+#define CUSTOM_LUT_SCALING_METHOD             shader_injection.custom_lut_scaling_method
+#define CUSTOM_LUT_GAMUT_RESTORATION          1.f
+#define CUSTOM_LUT_GAMUT_COMPRESSION_METHOD   1.f  // Adaptive D65
 
 #define CUSTOM_RANDOM         shader_injection.custom_random
 #define CUSTOM_GRAIN_TYPE     shader_injection.custom_grain_type
@@ -44,18 +44,18 @@
 #define CUSTOM_SLIDER_1 shader_injection.custom_slider_1
 #define CUSTOM_SLIDER_2 shader_injection.custom_slider_2
 
-#define RENODX_TONE_MAP_SCALING     shader_injection.tone_map_scaling
-#define RENODX_TONE_MAP_HUE_RESTORE shader_injection.tone_map_hue_restore
-#define RENODX_TONE_MAP_HUE_CORRECTION shader_injection.tone_map_hue_correction
-#define RENODX_TONE_MAP_HUE_CORRECTION_PEAK shader_injection.tone_map_hue_correction_peak
-#define FORCE_BLUE_CORRECT          1.f
-#define BLEND_FACTOR                shader_injection.blend_factor
+#define RENODX_TONE_MAP_SCALING              shader_injection.tone_map_scaling
+#define RENODX_TONE_MAP_HUE_RESTORE          shader_injection.tone_map_hue_restore
+#define RENODX_TONE_MAP_HUE_CORRECTION       shader_injection.tone_map_hue_correction
+#define RENODX_TONE_MAP_HUE_CORRECTION_PEAK  shader_injection.tone_map_hue_correction_peak
+#define FORCE_BLUE_CORRECT                   1.f
+#define BLEND_FACTOR                         shader_injection.blend_factor
 #define RENODX_SAFE_LIMIT_WHITE_CLIP_ENABLED (shader_injection.safe_limit_white_clip != 0.f)
-#define RENODX_NEUTRAL_COLOR_MAPPING 1
+#define RENODX_NEUTRAL_COLOR_MAPPING         1
 
 // Scaling mode values
-#define RENODX_TONE_MAP_SCALING_AP1              0.f
-#define RENODX_TONE_MAP_SCALING_LMS              1.f
+#define RENODX_TONE_MAP_SCALING_AP1               0.f
+#define RENODX_TONE_MAP_SCALING_LMS               1.f
 #define CUSTOM_LUT_SCALING_METHOD_HUE_PRESERVING  0.f
 #define CUSTOM_LUT_SCALING_METHOD_COLOR_RESTORING 1.f
 

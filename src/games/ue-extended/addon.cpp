@@ -398,15 +398,15 @@ renodx::utils::settings::Settings settings = {
     // },
 
     new renodx::utils::settings::Setting{
-      .key = "OverrideBlackClip",
-      .binding = &shader_injection.override_black_clip,
-      .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
-      .default_value = 1.f,
-      .label = "Override Black Clip",
-      .section = "Tone Mapping",
-      .tooltip = "Sets the filmic tonemapper's black clip to zero in Force SDR and extended modes.",
-      .labels = {"Off", "On"},
-      .is_visible = []() { return developer_mode_enabled != 0.f && current_settings_mode >= 3.f; },
+        .key = "OverrideBlackClip",
+        .binding = &shader_injection.override_black_clip,
+        .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
+        .default_value = 1.f,
+        .label = "Override Black Clip",
+        .section = "Tone Mapping",
+        .tooltip = "Sets the filmic tonemapper's black clip to zero in Force SDR and extended modes.",
+        .labels = {"Off", "On"},
+        .is_visible = []() { return developer_mode_enabled != 0.f && current_settings_mode >= 3.f; },
     },
 
     new renodx::utils::settings::Setting{

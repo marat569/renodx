@@ -804,7 +804,7 @@ float4 main(
   float film_grain_intensity_midtones = cb0_003x;
   float film_grain_intensity_shadows = cb0_002w;
   float film_grain_intensity_highlights = cb0_003y;
-  if ((RENODX_TONE_MAP_TYPE != 0.f) && (CUSTOM_GRAIN_TYPE != 0.f)) {
+  if (CUSTOM_GRAIN_TYPE != 0.f) {
     film_grain_intensity_midtones = 0.f;
     film_grain_intensity_shadows = 0.f;
     film_grain_intensity_highlights = 0.f;

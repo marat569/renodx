@@ -35,6 +35,7 @@ ShaderInjectData shader_injection;
 
 float current_settings_mode = 0;
 float developer_mode_enabled = 0.f;
+float vanilla_tone_map_mode = 0.f;
 
 // start keybind code
 
@@ -179,10 +180,21 @@ renodx::utils::settings::Settings settings = {
         .section = "Tone Mapping",
         .tooltip = "Sets the tone mapper type",
         // .labels = {"UE ACES (HDR)", "None", "ACES", "UE Filmic Extended (HDR)", "UE Filmic (SDR)"},
-        .labels = {"UE Vanilla (SDR)", "UE Filmic Extended (HDR)"},
+        .labels = {"UE Vanilla", "UE Filmic Extended (HDR)"},
         .is_visible = []() { return current_settings_mode >= 1.f; },
     },
-
+    new renodx::utils::settings::Setting{
+        .key = "VanillaToneMapMode",
+        .binding = &vanilla_tone_map_mode,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .label = "Vanilla Tone Map Mode",
+        .section = "Tone Mapping",
+        .tooltip = "Force SDR runs the original SDR code, clamped and presented up to game brightness nits. Vanilla uses the game's unmodified shaders. Note that you may still need to force the lutbuilder to rebuild.",
+        .labels = {"Force SDR", "Vanilla"},
+        .is_enabled = []() { return shader_injection.processing_path == 0.f && shader_injection.tone_map_type == 0.f; },
+        .is_visible = []() { return current_settings_mode >= 1.f && shader_injection.processing_path == 0.f && shader_injection.tone_map_type == 0.f; },
+    },
     new renodx::utils::settings::Setting{
         .key = "ToneMapPeakNits",
         .binding = &shader_injection.peak_white_nits,
@@ -385,17 +397,17 @@ renodx::utils::settings::Settings settings = {
     //     .is_visible = []() { return current_settings_mode >= 1.f; },
     // },
 
-    // new renodx::utils::settings::Setting{
-    //     .key = "OverrideBlackClip",
-    //     .binding = &shader_injection.override_black_clip,
-    //     .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
-    //     .default_value = 1.f,
-    //     .label = "Override Black Clip",
-    //     .section = "Scene Grading",
-    //     .tooltip = "Disables black clip in the tonemapper. Prevents crushing when the black clip parameter is used",
-    //     .is_enabled = []() { return shader_injection.tone_map_type == 1.f; },
-    //     .is_visible = []() { return current_settings_mode >= 1.f; },
-    // },
+    new renodx::utils::settings::Setting{
+      .key = "OverrideBlackClip",
+      .binding = &shader_injection.override_black_clip,
+      .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
+      .default_value = 1.f,
+      .label = "Override Black Clip",
+      .section = "Tone Mapping",
+      .tooltip = "Sets the filmic tonemapper's black clip to zero in Force SDR and extended modes.",
+      .labels = {"Off", "On"},
+      .is_visible = []() { return developer_mode_enabled != 0.f && current_settings_mode >= 3.f; },
+    },
 
     new renodx::utils::settings::Setting{
         .key = "ColorGradeExposure",
@@ -562,7 +574,7 @@ renodx::utils::settings::Settings settings = {
                    "Color Restoring: Reduces the LUTs black raise to always achieve true black. Can affect the way the LUT colors look in shadow.",
         .labels = {"Hue Preserving", "Color Restoring"},
         .is_enabled = []() { return shader_injection.tone_map_type != 0.f
-                  && shader_injection.custom_lut_scaling != 0.f; },
+                                    && shader_injection.custom_lut_scaling != 0.f; },
         .is_visible = []() { return current_settings_mode >= 1.f; },
     },
     // new renodx::utils::settings::Setting{
@@ -962,9 +974,11 @@ void OnInitSwapchain(reshade::api::swapchain* swapchain, bool resize) {
   if (fired_on_init_swapchain) return;
   auto peak = renodx::utils::swapchain::GetPeakNits(swapchain);
   if (peak.has_value()) {
-    settings[2]->default_value = peak.value();
-    settings[2]->can_reset = true;
-    fired_on_init_swapchain = true;
+    if (auto* peak_setting = renodx::utils::settings::FindSetting("ToneMapPeakNits"); peak_setting != nullptr) {
+      peak_setting->default_value = peak.value();
+      peak_setting->can_reset = true;
+      fired_on_init_swapchain = true;
+    }
   }
 }
 
@@ -2292,11 +2306,11 @@ void AddAdvancedSettings() {
         .label = "Upgrade Path",
         .section = "Resource Upgrades",
         .tooltip =
-            "Off: Fix native or Engine.ini HDR.\n"
-            "On: Upgrade SDR to HDR.",
+            "Fix Native HDR: Forces native or ini forced HDR to use an HDR version of the SDR code path.\n"
+            "SDR to HDR: Upgrades the swapchain and converts the SDR code path into HDR.",
         .labels = {
-            "Off",
-            "On",
+            "Fix Native HDR",
+            "SDR to HDR",
         },
         .is_global = true,
         .is_visible = []() { return current_settings_mode >= 2.f; },
@@ -2604,6 +2618,19 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
     }
     for (auto* setting : settings) {
       if (setting->key == "UEExtendedDeveloperMode") continue;
+      if (setting->key != "ToneMapType" && setting->key != "VanillaToneMapMode"
+          && (setting->section == "Tone Mapping"
+              || setting->section == "Custom Color Grading"
+              || setting->section == "Color Grading LUTs"
+              || setting->section == "Effects")) {
+        auto is_enabled = setting->is_enabled;
+        setting->is_enabled = [is_enabled]() {
+          return !(shader_injection.processing_path == 0.f
+                   && shader_injection.tone_map_type == 0.f
+                   && vanilla_tone_map_mode != 0.f)
+                 && (is_enabled == nullptr || is_enabled());
+        };
+      }
       auto is_visible = setting->is_visible;
       setting->is_visible = [is_visible]() {
         return (developer_mode_enabled != 0.f && current_settings_mode >= 3.f)
@@ -2627,6 +2654,15 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
     });
   }
   // end last preset code
+  if (fdw_reason == DLL_PROCESS_ATTACH) {
+    for (auto& [hash, shader] : custom_shaders) {
+      auto on_replace = shader.on_replace;
+      shader.on_replace = [on_replace](reshade::api::command_list* cmd_list) {
+        if (shader_injection.processing_path == 0.f && shader_injection.tone_map_type == 0.f && vanilla_tone_map_mode != 0.f) return false;
+        return on_replace == nullptr || on_replace(cmd_list);
+      };
+    }
+  }
   renodx::mods::shader::Use(fdw_reason, custom_shaders, &shader_injection);
   //
   if (g_path != 0.f) {

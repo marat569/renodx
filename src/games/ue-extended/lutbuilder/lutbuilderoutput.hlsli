@@ -32,10 +32,21 @@ float4 ProcessOutputDevice89(float3 untonemapped_ap1, float3 processed, uint out
 // input: BT.709 linear
 // output: BT.709 linear
 float3 ApplyMappingAndOverlay(float3 color_bt709, UECbufferConfig cb_config) {
-  float3 scaled = cb_config.ue_colorscale.xyz
-                  * (((cb_config.ue_mappingpolynomial.y + (cb_config.ue_mappingpolynomial.x * color_bt709))
-                      * color_bt709)
-                     + cb_config.ue_mappingpolynomial.z);
+  if (!RENODX_NEUTRAL_COLOR_MAPPING) {
+    if (RENODX_TONE_MAP_TYPE == 0.f) {
+      color_bt709 = ((cb_config.ue_mappingpolynomial.y + cb_config.ue_mappingpolynomial.x * color_bt709)
+                     * color_bt709)
+                    + cb_config.ue_mappingpolynomial.z;
+    } else {
+      LUTBridgeState bridge_state;
+      float3 mapping_input = PrepareLUTInput(color_bt709, bridge_state);
+      float3 mapped = ((cb_config.ue_mappingpolynomial.y + cb_config.ue_mappingpolynomial.x * mapping_input)
+                       * mapping_input)
+                      + cb_config.ue_mappingpolynomial.z;
+      color_bt709 = RestoreLUTOutput(mapped, bridge_state);
+    }
+  }
+  float3 scaled = cb_config.ue_colorscale.xyz * color_bt709;
   return ((cb_config.ue_overlaycolor.xyz - scaled) * cb_config.ue_overlaycolor.w) + scaled;
 }
 

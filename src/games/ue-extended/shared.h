@@ -51,6 +51,7 @@
 #define FORCE_BLUE_CORRECT          1.f
 #define BLEND_FACTOR                shader_injection.blend_factor
 #define RENODX_SAFE_LIMIT_WHITE_CLIP_ENABLED (shader_injection.safe_limit_white_clip != 0.f)
+#define RENODX_NEUTRAL_COLOR_MAPPING 1
 
 // Scaling mode values
 #define RENODX_TONE_MAP_SCALING_AP1              0.f
@@ -59,7 +60,7 @@
 #define CUSTOM_LUT_SCALING_METHOD_COLOR_RESTORING 1.f
 
 // #define FIX_POST_PROCESS                     shader_injection.fix_post_process     // 0 - BT.2020 PQ, 1 - BT.709 piecewise sRGB, 2 - BT.2020 piecewise sRGB
-#define OVERRIDE_BLACK_CLIP 1.f                                    // 0 - Off, 1 - 0.0001 nits
+#define OVERRIDE_BLACK_CLIP shader_injection.override_black_clip
 #define PROCESSING_PATH     shader_injection.processing_path       // 0 hdr, 1 sdr // temp name
 #define SWAP_CHAIN_ENCODING shader_injection.processing_use_scrgb  // 0 HDR10, 1 scRGB
 
@@ -73,7 +74,6 @@ struct ShaderInjectData {
   float gamma_correction;
   // float tone_map_hue_correction_type;
   // float tone_map_hue_correction;
-  // float override_black_clip;
   float tone_map_exposure;
   float tone_map_highlights;
   float tone_map_shadows;
@@ -116,6 +116,7 @@ struct ShaderInjectData {
   float tone_map_hue_correction;
   float tone_map_hue_correction_peak;
   float gamma_correction_ui;
+  float override_black_clip;
 };
 
 #ifndef __cplusplus

@@ -407,6 +407,7 @@ float3 PrepareLUTInput(float3 color_bt709, out LUTBridgeState state) {
   state.gamut_compression_scale = 1.f;
 
   if (CUSTOM_LUT_GAMUT_RESTORATION != 0.f) {
+    color_bt709 = SanitizeGamutInputBT709(color_bt709);
     if (CUSTOM_LUT_GAMUT_COMPRESSION_METHOD == 0.f) {
       const float mid_gray_gamma = log(1.f / pow(10.f, 0.75f)) / log(0.5f);
       float3 encoded = renodx::color::gamma::EncodeSafe(color_bt709, mid_gray_gamma);

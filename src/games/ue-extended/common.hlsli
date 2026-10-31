@@ -5,6 +5,26 @@
 
 #define RENODX_BT709_LMS_WHITE renodx::color::lms::from::BT709(1.f.xxx)
 
+float3 SanitizeGamutInput(float3 color, float3x3 gamut_xyz) {
+  const float3 luminance_weights = gamut_xyz[1];
+  const float y = dot(color, luminance_weights);
+  [branch]
+  if (y >= 0.f) return color;
+
+  const float3 positive = max(color, 0.f);
+  const float positive_y = dot(positive, luminance_weights);
+  const float scale = positive_y / (positive_y - y);
+  return mad(color - positive, scale, positive);
+}
+
+float3 SanitizeGamutInputBT709(float3 color) {
+  return SanitizeGamutInput(color, renodx::color::BT709_TO_XYZ_MAT);
+}
+
+float3 SanitizeGamutInputBT2020(float3 color) {
+  return SanitizeGamutInput(color, renodx::color::BT2020_TO_XYZ_MAT);
+}
+
 // Pumbo's "accurate blue correct"
 float3 ApplyBlueCorrectionPrePumbo(float3 untonemapped_ap1, float blue_correction) {
   if (FORCE_BLUE_CORRECT == 1.f) {

@@ -26,6 +26,7 @@ float3 LutOutputToSdrSrgb(float3 color, out ScaleFactors state) {
     color_bt709 = InverseGammaCorrectionFromSrgb(color);
   }
 
+  color_bt709 = SanitizeGamutInputBT709(color_bt709);
   float3 adaptive_state_lms = renodx::color::lms::from::BT709(0.18f.xxx);
   state.gamut_compression_scale = renodx::color::gamut::ComputeGamutCompressionScaleBT709AdaptiveD65(
       color_bt709, adaptive_state_lms, 1.f);

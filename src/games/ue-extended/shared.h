@@ -17,8 +17,6 @@
 #define RENODX_GAMMA_CORRECTION                   shader_injection.gamma_correction
 #define RENODX_GAMMA_CORRECTION_UI                (shader_injection.gamma_correction_ui != 0.f ? 1.f : shader_injection.gamma_correction)
 #define RENODX_GAMMA_CORRECTION_WORKING_SPACE     shader_injection.gamma_correction_working_space
-#define RENODX_TONE_MAP_PER_CH_PEAK               shader_injection.tone_map_per_ch_peak
-#define RENODX_TONE_MAP_HUE_SHIFT                 1.f  // Strength 100
 #define RENODX_TONE_MAP_EXPOSURE                  shader_injection.tone_map_exposure
 #define RENODX_TONE_MAP_HIGHLIGHTS                shader_injection.tone_map_highlights
 #define RENODX_TONE_MAP_SHADOWS                   shader_injection.tone_map_shadows
@@ -28,8 +26,6 @@
 #define RENODX_TONE_MAP_BLOWOUT                   shader_injection.tone_map_blowout
 #define RENODX_TONE_MAP_HIGHLIGHT_CONTRAST        shader_injection.tone_map_highlight_contrast
 #define RENODX_TONE_MAP_SHADOW_CONTRAST           shader_injection.tone_map_shadow_contrast
-#define RENODX_TONE_MAP_CHROMA_CORRECT_BLOWOUT    1.f  // Strength 100
-#define RENODX_TONE_MAP_HUE_BLOWOUT_WORKING_SPACE 1.f  // ICtCp
 #define RENODX_TONE_MAP_FLARE                     shader_injection.tone_map_flare
 #define CUSTOM_LUT_STRENGTH                       shader_injection.custom_lut_strength
 #define CUSTOM_LUT_SCALING                        shader_injection.custom_lut_scaling
@@ -56,6 +52,12 @@
 #define BLEND_FACTOR                shader_injection.blend_factor
 #define RENODX_SAFE_LIMIT_WHITE_CLIP_ENABLED (shader_injection.safe_limit_white_clip != 0.f)
 
+// Scaling mode values
+#define RENODX_TONE_MAP_SCALING_AP1              0.f
+#define RENODX_TONE_MAP_SCALING_LMS              1.f
+#define CUSTOM_LUT_SCALING_METHOD_HUE_PRESERVING  0.f
+#define CUSTOM_LUT_SCALING_METHOD_COLOR_RESTORING 1.f
+
 // #define FIX_POST_PROCESS                     shader_injection.fix_post_process     // 0 - BT.2020 PQ, 1 - BT.709 piecewise sRGB, 2 - BT.2020 piecewise sRGB
 #define OVERRIDE_BLACK_CLIP 1.f                                    // 0 - Off, 1 - 0.0001 nits
 #define PROCESSING_PATH     shader_injection.processing_path       // 0 hdr, 1 sdr // temp name
@@ -71,9 +73,6 @@ struct ShaderInjectData {
   float gamma_correction;
   // float tone_map_hue_correction_type;
   // float tone_map_hue_correction;
-  float tone_map_per_ch_peak;
-  // float tone_map_hue_shift;
-  // float tone_map_chroma_correct_blowout;
   // float override_black_clip;
   float tone_map_exposure;
   float tone_map_highlights;
@@ -111,7 +110,6 @@ struct ShaderInjectData {
   float tone_map_hue_restore;
   // float custom_lut_gamut_compression_method;
   float gamma_correction_working_space;
-  // float tone_map_hue_blowout_working_space;
   float custom_slider_1;
   float custom_slider_2;
   float safe_limit_white_clip;

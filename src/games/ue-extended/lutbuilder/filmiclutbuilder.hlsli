@@ -110,12 +110,6 @@ float3 LerpToneMapStrength(float3 tonemapped, float3 pre_tonemap, UECbufferConfi
 
 // input: AP1 linear
 // output: blue-corrected AP1 linear
-float3 PrepareFilmicInputMaxChannelPath(float3 untonemapped_ap1, UECbufferConfig cb_config) {
-  return ApplyBlueCorrectionPre(untonemapped_ap1, cb_config.ue_bluecorrection);
-}
-
-// input: AP1 linear
-// output: blue-corrected AP1 linear
 float3 PrepareFilmicInputAP1Path(float3 untonemapped_ap1, UECbufferConfig cb_config) {
   return ApplyBlueCorrectionPre(untonemapped_ap1, cb_config.ue_bluecorrection);
 }
@@ -142,7 +136,7 @@ void ApplyFilmicToneMap(
     cb_config.ue_filmblackclip = 0.f;
   }
 
-  if (RENODX_TONE_MAP_TYPE != 0.f && RENODX_TONE_MAP_SCALING == 2.f) {
+  if (RENODX_TONE_MAP_TYPE != 0.f && RENODX_TONE_MAP_SCALING == RENODX_TONE_MAP_SCALING_LMS) {
     float3 untonemapped_lms_normalized = PrepareFilmicInputLMSPath(untonemapped_ap1);
     unrealengine::filmtonemap::Config filmic_params =
         unrealengine::filmtonemap::config::Create(
@@ -169,8 +163,6 @@ void ApplyFilmicToneMap(
   float3 untonemapped_blue_corrected_ap1;
   if (RENODX_TONE_MAP_TYPE == 0.f) {
     untonemapped_blue_corrected_ap1 = ApplyBlueCorrectionPre(untonemapped_ap1, cb_config.ue_bluecorrection);
-  } else if (RENODX_TONE_MAP_TYPE != 0.f && RENODX_TONE_MAP_SCALING == 0.f) {
-    untonemapped_blue_corrected_ap1 = PrepareFilmicInputMaxChannelPath(untonemapped_ap1, cb_config);
   } else {
     untonemapped_blue_corrected_ap1 = PrepareFilmicInputAP1Path(untonemapped_ap1, cb_config);
   }
@@ -293,63 +285,6 @@ renodx::lut::Config CreateSRGBInSRGBOutLUTConfig() {
   return lut_config;
 }
 
-// input: BT.709 sRGB encoded
-// output: BT.709 sRGB encoded
-float3 UnclampLegacy(float3 original_gamma, float3 black_gamma, float3 mid_gray_gamma, float3 neutral_gamma) {
-  const float3 added_gamma = black_gamma;
-
-  const float mid_gray_average = (mid_gray_gamma.r + mid_gray_gamma.g + mid_gray_gamma.b) / 3.f;
-
-  // Remove from 0 to mid-gray
-  const float shadow_length = mid_gray_average;
-  const float shadow_stop = max(neutral_gamma.r, max(neutral_gamma.g, neutral_gamma.b));
-  const float3 floor_remove = added_gamma * max(0, shadow_length - shadow_stop) / shadow_length;
-
-  const float3 unclamped_gamma = max(0, original_gamma - floor_remove);
-  return unclamped_gamma;
-}
-
-// input: BT.709 sRGB encoded
-// output: BT.709 sRGB encoded
-float3 UnclampYfAnchoredAP1(float3 original_gamma, float3 black_gamma, float3 mid_gray_gamma, float3 neutral_gamma, float blue_correction) {
-  float3 original_blue_corrected_ap1 = BlueCorrectedAP1FromBT709(original_gamma, blue_correction);
-  float3 black_blue_corrected_ap1 = BlueCorrectedAP1FromBT709(black_gamma, blue_correction);
-  float3 mid_gray_blue_corrected_ap1 = BlueCorrectedAP1FromBT709(mid_gray_gamma, blue_correction);
-  float3 neutral_blue_corrected_ap1 = BlueCorrectedAP1FromBT709(neutral_gamma, blue_correction);
-
-  float black_floor = min(black_blue_corrected_ap1.r, min(black_blue_corrected_ap1.g, black_blue_corrected_ap1.b));
-  float mid_yf = renodx::color::yf::from::AP1(mid_gray_blue_corrected_ap1);
-  float neutral_yf = renodx::color::yf::from::AP1(neutral_blue_corrected_ap1);
-  float anchor_weight = mid_yf > 0.f ? saturate((mid_yf - neutral_yf) / mid_yf) : 0.f;
-  float3 unclamped_blue_corrected_ap1 = max(0.f, original_blue_corrected_ap1 - black_floor * anchor_weight);
-
-  return BT709FromBlueCorrectedAP1(unclamped_blue_corrected_ap1, blue_correction);
-}
-
-// input: BT.709 sRGB encoded
-// output: BT.709 sRGB encoded
-float3 UnclampYfAnchoredLMS(float3 original_gamma, float3 black_gamma, float3 mid_gray_gamma, float3 neutral_gamma) {
-  const float3 lms_white = RENODX_BT709_LMS_WHITE;
-  float3 original_lms_normalized = renodx::color::lms::from::BT709(original_gamma) / lms_white;
-  float3 black_lms_normalized = renodx::color::lms::from::BT709(black_gamma) / lms_white;
-  float3 mid_gray_lms_normalized = renodx::color::lms::from::BT709(mid_gray_gamma) / lms_white;
-  float3 neutral_lms_normalized = renodx::color::lms::from::BT709(neutral_gamma) / lms_white;
-
-  float black_floor = min(black_lms_normalized.r, min(black_lms_normalized.g, black_lms_normalized.b));
-  float mid_yf = renodx::color::yf::from::LMS(mid_gray_lms_normalized * lms_white);
-  float neutral_yf = renodx::color::yf::from::LMS(neutral_lms_normalized * lms_white);
-  float anchor_weight = mid_yf > 0.f ? saturate((mid_yf - neutral_yf) / mid_yf) : 0.f;
-  float3 unclamped_lms_normalized = max(0.f, original_lms_normalized - black_floor * anchor_weight);
-
-  return renodx::color::bt709::from::LMS(unclamped_lms_normalized * lms_white);
-}
-
-// input: BT.709 sRGB encoded
-// output: BT.709 sRGB encoded
-float3 Unclamp(float3 original_gamma, float3 black_gamma, float3 mid_gray_gamma, float3 neutral_gamma, float blue_correction) {
-  return UnclampLegacy(original_gamma, black_gamma, mid_gray_gamma, neutral_gamma);
-}
-
 float3 CompensateHuePreservingLUTBlackRaise(
     float3 graded,
     float3 source,
@@ -457,13 +392,6 @@ float3 ApplyColorRestoringLUTScaling(
   }
 
   return lerp(graded, compensated, saturate(strength));
-}
-
-float3 ApplyUnclampedScaling(float3 original_linear, float3 unclamped_linear, float strength) {
-  if (CUSTOM_LUT_SCALING_METHOD == 0.f) {
-    return renodx::lut::RecolorUnclamped(original_linear, unclamped_linear, strength);
-  }
-  return lerp(original_linear, unclamped_linear, saturate(strength));
 }
 
 struct LUTBridgeState {
@@ -582,7 +510,7 @@ float3 SampleLUTSRGBInSRGBOut(Texture2D<float4> lut_texture, SamplerState lut_sa
     float3 lut_black_linear = renodx::lut::LinearOutput(lut_black, lut_config);
     float lut_black_y = max(0, renodx::color::y::from::BT709(lut_black_linear));
     if (lut_black_y > 0.f) {
-      if (CUSTOM_LUT_SCALING_METHOD == 1.f) {
+      if (CUSTOM_LUT_SCALING_METHOD == CUSTOM_LUT_SCALING_METHOD_HUE_PRESERVING) {
         color_output = ApplyHuePreservingLUTScaling(
             color_output,
             color_input,
@@ -591,7 +519,7 @@ float3 SampleLUTSRGBInSRGBOut(Texture2D<float4> lut_texture, SamplerState lut_sa
             cb_config.ue_bluecorrection);
         return color_output;
       }
-      if (CUSTOM_LUT_SCALING_METHOD == 2.f) {
+      if (CUSTOM_LUT_SCALING_METHOD == CUSTOM_LUT_SCALING_METHOD_COLOR_RESTORING) {
         color_output = ApplyColorRestoringLUTScaling(
             color_output,
             color_input,
@@ -601,29 +529,6 @@ float3 SampleLUTSRGBInSRGBOut(Texture2D<float4> lut_texture, SamplerState lut_sa
         return color_output;
       }
 
-      // set lut_mid based on lut_black to target shadows more
-      float3 lut_mid = SamplePacked1DLut(lut_black, lut_config.lut_sampler, lut_texture, cb_config);
-
-      if (RENODX_GAMMA_CORRECTION != 0.f) {  // account for EOTF emulation in inputs
-        lut_output_color = renodx::lut::ConvertInput(ApplyGammaCorrection(color_output, false, cb_config.ue_bluecorrection), lut_config);
-        lut_black = renodx::lut::ConvertInput(ApplyGammaCorrection(lut_black_linear, false, cb_config.ue_bluecorrection), lut_config);
-        lut_mid = renodx::lut::ConvertInput(ApplyGammaCorrection(renodx::lut::LinearOutput(lut_mid, lut_config), false, cb_config.ue_bluecorrection), lut_config);
-      }
-
-      float3 unclamped_gamma = Unclamp(
-          renodx::lut::GammaOutput(lut_output_color, lut_config),
-          renodx::lut::GammaOutput(lut_black, lut_config),
-          renodx::lut::GammaOutput(lut_mid, lut_config),
-          renodx::lut::ConvertInput(color_input, lut_config),
-          cb_config.ue_bluecorrection);
-
-      float3 unclamped_linear = renodx::lut::LinearUnclampedOutput(unclamped_gamma, lut_config);
-
-      if (RENODX_GAMMA_CORRECTION != 0.f) {  // inverse EOTF emulation
-        unclamped_linear = ApplyGammaCorrection(unclamped_linear, true, cb_config.ue_bluecorrection);
-      }
-
-      color_output = ApplyUnclampedScaling(color_output, unclamped_linear, lut_config.scaling);
     }
   } else {
   }
@@ -716,7 +621,7 @@ float3 Sample2LUTSRGBInSRGBOut(Texture2D<float4> lut_texture1, Texture2D<float4>
     float3 lut_black_linear = renodx::lut::LinearOutput(lut_black, lut_config);
     float lut_black_y = max(0, renodx::color::y::from::BT709(lut_black_linear));
     if (lut_black_y > 0.f) {
-      if (CUSTOM_LUT_SCALING_METHOD == 1.f) {
+      if (CUSTOM_LUT_SCALING_METHOD == CUSTOM_LUT_SCALING_METHOD_HUE_PRESERVING) {
         color_output = ApplyHuePreservingLUTScaling(
             color_output,
             color_input,
@@ -725,7 +630,7 @@ float3 Sample2LUTSRGBInSRGBOut(Texture2D<float4> lut_texture1, Texture2D<float4>
             cb_config.ue_bluecorrection);
         return color_output;
       }
-      if (CUSTOM_LUT_SCALING_METHOD == 2.f) {
+      if (CUSTOM_LUT_SCALING_METHOD == CUSTOM_LUT_SCALING_METHOD_COLOR_RESTORING) {
         color_output = ApplyColorRestoringLUTScaling(
             color_output,
             color_input,
@@ -735,29 +640,6 @@ float3 Sample2LUTSRGBInSRGBOut(Texture2D<float4> lut_texture1, Texture2D<float4>
         return color_output;
       }
 
-      // set lut_mid based on lut_black to target shadows more
-      float3 lut_mid = Sample2Packed1DLuts(lut_black, lut_sampler1, lut_sampler2, lut_texture1, lut_texture2, cb_config);
-
-      if (RENODX_GAMMA_CORRECTION != 0.f) {  // account for EOTF emulation in inputs
-        lut_output_color = renodx::lut::ConvertInput(ApplyGammaCorrection(color_output, false, cb_config.ue_bluecorrection), lut_config);
-        lut_black = renodx::lut::ConvertInput(ApplyGammaCorrection(lut_black_linear, false, cb_config.ue_bluecorrection), lut_config);
-        lut_mid = renodx::lut::ConvertInput(ApplyGammaCorrection(renodx::lut::LinearOutput(lut_mid, lut_config), false, cb_config.ue_bluecorrection), lut_config);
-      }
-
-      float3 unclamped_gamma = Unclamp(
-          renodx::lut::GammaOutput(lut_output_color, lut_config),
-          renodx::lut::GammaOutput(lut_black, lut_config),
-          renodx::lut::GammaOutput(lut_mid, lut_config),
-          renodx::lut::ConvertInput(color_input, lut_config),
-          cb_config.ue_bluecorrection);
-
-      float3 unclamped_linear = renodx::lut::LinearUnclampedOutput(unclamped_gamma, lut_config);
-
-      if (RENODX_GAMMA_CORRECTION != 0.f) {  // inverse EOTF emulation
-        unclamped_linear = ApplyGammaCorrection(unclamped_linear, true, cb_config.ue_bluecorrection);
-      }
-
-      color_output = ApplyUnclampedScaling(color_output, unclamped_linear, lut_config.scaling);
     }
   } else {
   }
@@ -866,7 +748,7 @@ float3 Sample3LUTSRGBInSRGBOut(
     float3 lut_black_linear = renodx::lut::LinearOutput(lut_black, lut_config);
     float lut_black_y = max(0, renodx::color::y::from::BT709(lut_black_linear));
     if (lut_black_y > 0.f) {
-      if (CUSTOM_LUT_SCALING_METHOD == 1.f) {
+      if (CUSTOM_LUT_SCALING_METHOD == CUSTOM_LUT_SCALING_METHOD_HUE_PRESERVING) {
         color_output = ApplyHuePreservingLUTScaling(
             color_output,
             color_input,
@@ -875,7 +757,7 @@ float3 Sample3LUTSRGBInSRGBOut(
             cb_config.ue_bluecorrection);
         return color_output;
       }
-      if (CUSTOM_LUT_SCALING_METHOD == 2.f) {
+      if (CUSTOM_LUT_SCALING_METHOD == CUSTOM_LUT_SCALING_METHOD_COLOR_RESTORING) {
         color_output = ApplyColorRestoringLUTScaling(
             color_output,
             color_input,
@@ -885,32 +767,6 @@ float3 Sample3LUTSRGBInSRGBOut(
         return color_output;
       }
 
-      // set lut_mid based on lut_black to target shadows more
-      float3 lut_mid = Sample3Packed1DLuts(lut_black,
-                                           lut_sampler1, lut_sampler2, lut_sampler3,
-                                           lut_texture1, lut_texture2, lut_texture3,
-                                           cb_config);
-
-      if (RENODX_GAMMA_CORRECTION != 0.f) {  // account for EOTF emulation in inputs
-        lut_output_color = renodx::lut::ConvertInput(ApplyGammaCorrection(color_output, false, cb_config.ue_bluecorrection), lut_config);
-        lut_black = renodx::lut::ConvertInput(ApplyGammaCorrection(lut_black_linear, false, cb_config.ue_bluecorrection), lut_config);
-        lut_mid = renodx::lut::ConvertInput(ApplyGammaCorrection(renodx::lut::LinearOutput(lut_mid, lut_config), false, cb_config.ue_bluecorrection), lut_config);
-      }
-
-      float3 unclamped_gamma = Unclamp(
-          renodx::lut::GammaOutput(lut_output_color, lut_config),
-          renodx::lut::GammaOutput(lut_black, lut_config),
-          renodx::lut::GammaOutput(lut_mid, lut_config),
-          renodx::lut::ConvertInput(color_input, lut_config),
-          cb_config.ue_bluecorrection);
-
-      float3 unclamped_linear = renodx::lut::LinearUnclampedOutput(unclamped_gamma, lut_config);
-
-      if (RENODX_GAMMA_CORRECTION != 0.f) {  // inverse EOTF emulation
-        unclamped_linear = ApplyGammaCorrection(unclamped_linear, true, cb_config.ue_bluecorrection);
-      }
-
-      color_output = ApplyUnclampedScaling(color_output, unclamped_linear, lut_config.scaling);
     }
   } else {
   }
@@ -1024,7 +880,7 @@ float3 Sample4LUTSRGBInSRGBOut(
     float3 lut_black_linear = renodx::lut::LinearOutput(lut_black, lut_config);
     float lut_black_y = max(0, renodx::color::y::from::BT709(lut_black_linear));
     if (lut_black_y > 0.f) {
-      if (CUSTOM_LUT_SCALING_METHOD == 1.f) {
+      if (CUSTOM_LUT_SCALING_METHOD == CUSTOM_LUT_SCALING_METHOD_HUE_PRESERVING) {
         color_output = ApplyHuePreservingLUTScaling(
             color_output,
             color_input,
@@ -1033,7 +889,7 @@ float3 Sample4LUTSRGBInSRGBOut(
             cb_config.ue_bluecorrection);
         return color_output;
       }
-      if (CUSTOM_LUT_SCALING_METHOD == 2.f) {
+      if (CUSTOM_LUT_SCALING_METHOD == CUSTOM_LUT_SCALING_METHOD_COLOR_RESTORING) {
         color_output = ApplyColorRestoringLUTScaling(
             color_output,
             color_input,
@@ -1043,32 +899,6 @@ float3 Sample4LUTSRGBInSRGBOut(
         return color_output;
       }
 
-      // set lut_mid based on lut_black to target shadows more
-      float3 lut_mid = Sample4Packed1DLuts(lut_black,
-                                           lut_sampler1, lut_sampler2, lut_sampler3, lut_sampler4,
-                                           lut_texture1, lut_texture2, lut_texture3, lut_texture4,
-                                           cb_config);
-
-      if (RENODX_GAMMA_CORRECTION != 0.f) {  // account for EOTF emulation in inputs
-        lut_output_color = renodx::lut::ConvertInput(ApplyGammaCorrection(color_output, false, cb_config.ue_bluecorrection), lut_config);
-        lut_black = renodx::lut::ConvertInput(ApplyGammaCorrection(lut_black_linear, false, cb_config.ue_bluecorrection), lut_config);
-        lut_mid = renodx::lut::ConvertInput(ApplyGammaCorrection(renodx::lut::LinearOutput(lut_mid, lut_config), false, cb_config.ue_bluecorrection), lut_config);
-      }
-
-      float3 unclamped_gamma = Unclamp(
-          renodx::lut::GammaOutput(lut_output_color, lut_config),
-          renodx::lut::GammaOutput(lut_black, lut_config),
-          renodx::lut::GammaOutput(lut_mid, lut_config),
-          renodx::lut::ConvertInput(color_input, lut_config),
-          cb_config.ue_bluecorrection);
-
-      float3 unclamped_linear = renodx::lut::LinearUnclampedOutput(unclamped_gamma, lut_config);
-
-      if (RENODX_GAMMA_CORRECTION != 0.f) {  // inverse EOTF emulation
-        unclamped_linear = ApplyGammaCorrection(unclamped_linear, true, cb_config.ue_bluecorrection);
-      }
-
-      color_output = ApplyUnclampedScaling(color_output, unclamped_linear, lut_config.scaling);
     }
   } else {
   }

@@ -300,7 +300,7 @@ renodx::utils::settings::Settings settings = {
         .section = "Tone Mapping",
         .tooltip = "Calculates the slope of the vanilla tone curve to determine a safe brightness extension to offer HDR enhancements while preserving more of the SDR look.",
         .labels = {"Off", "On"},
-        .is_enabled = []() { return shader_injection.tone_map_type == 1.f && shader_injection.tone_map_scaling != 0.f; },
+        .is_enabled = []() { return shader_injection.tone_map_type == 1.f; },
         .is_visible = []() { return current_settings_mode >= 1.f; },
     },
 
@@ -320,13 +320,12 @@ renodx::utils::settings::Settings settings = {
         .key = "ToneMapScaling",
         .binding = &shader_injection.tone_map_scaling,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 1.f,
+        .default_value = 0.f,
         .label = "Tonemap Scaling",
         .section = "Tone Mapping",
-        .tooltip = "Max Channel: Hand-tuned to match the original tonemapper's behavior.\n"
-                   "AP1: Applies grading and display mapping per channel in AP1.\n"
+        .tooltip = "AP1: Applies grading and display mapping per channel in AP1.\n"
                    "LMS: Applies grading, filmic extension, and display mapping per channel in normalized LMS.",
-        .labels = {"Max Channel (Legacy)", "AP1", "LMS"},
+        .labels = {"AP1", "LMS"},
         .is_enabled = []() { return shader_injection.tone_map_type == 1.f; },
         .is_visible = []() { return current_settings_mode >= 1.f; },
     },
@@ -368,23 +367,9 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Controls LMS hue restoration for the extended and blended vanilla tonemaps.",
         .min = 0.f,
         .max = 100.f,
-        .is_enabled = []() { return shader_injection.tone_map_type == 1.f && shader_injection.tone_map_scaling == 2.f; },
+        .is_enabled = []() { return shader_injection.tone_map_type == 1.f && RENODX_TONE_MAP_SCALING == RENODX_TONE_MAP_SCALING_LMS; },
         .parse = [](float value) { return value * 0.01f; },
-        .is_visible = []() { return current_settings_mode >= 1.f && shader_injection.tone_map_scaling == 2.f; },
-    },
-
-    new renodx::utils::settings::Setting{
-        .key = "ToneMapPerChPeak",
-        .binding = &shader_injection.tone_map_per_ch_peak,
-        .default_value = 5.f,
-        .label = "Per Channel Peak",
-        .section = "Tone Mapping",
-        .tooltip = "Used to control hue/chroma input peak.",
-        .min = 1.f,
-        .max = 11.f,
-        .is_enabled = []() { return shader_injection.tone_map_type == 1.f && shader_injection.tone_map_scaling == 0.f; },
-        .parse = [](float value) { return value * 1.f; },
-        .is_visible = []() { return current_settings_mode >= 1.f && shader_injection.tone_map_scaling == 0.f; },
+        .is_visible = []() { return current_settings_mode >= 1.f && RENODX_TONE_MAP_SCALING == RENODX_TONE_MAP_SCALING_LMS; },
     },
 
     // new renodx::utils::settings::Setting{
@@ -397,46 +382,6 @@ renodx::utils::settings::Settings settings = {
     //     .tooltip = "Force Blue Correct when using AP1 Tonemap Scaling.",
     //     .labels = {"Off", "On"},
     //     .is_enabled = []() { return shader_injection.tone_map_type == 1.f && shader_injection.tone_map_scaling == 1.f; },
-    //     .is_visible = []() { return current_settings_mode >= 1.f; },
-    // },
-
-    // new renodx::utils::settings::Setting{
-    //     .key = "ToneMapHueShift",
-    //     .binding = &shader_injection.tone_map_hue_shift,
-    //     .default_value = 100.f,
-    //     .label = "Hue Shift",
-    //     .section = "Scene Grading",
-    //     .tooltip = "Hue-shift emulation strength.",
-    //     .min = 0.f,
-    //     .max = 100.f,
-    //     .is_enabled = []() { return shader_injection.tone_map_type == 1.f && shader_injection.tone_map_scaling == 0.f; },
-    //     .parse = [](float value) { return value * 0.01f; },
-    //     .is_visible = []() { return current_settings_mode >= 1.f; },
-    // },
-
-    // new renodx::utils::settings::Setting{
-    //     .key = "ColorGradeChromaCorrectBlowout",
-    //     .binding = &shader_injection.tone_map_chroma_correct_blowout,
-    //     .default_value = 100.f,
-    //     .label = "Blowout",
-    //     .section = "Scene Grading",
-    //     .tooltip = "Emulates blowout from per channel tonemapping.",
-    //     .max = 100.f,
-    //     .is_enabled = []() { return shader_injection.tone_map_type != 0 && shader_injection.tone_map_scaling == 0.f; },
-    //     .parse = [](float value) { return value * 0.01f; },
-    //     .is_visible = []() { return current_settings_mode >= 1.f; },
-    // },
-
-    // new renodx::utils::settings::Setting{
-    //     .key = "ToneMapHueBlowoutWorkingSpace",
-    //     .binding = &shader_injection.tone_map_hue_blowout_working_space,
-    //     .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-    //     .default_value = 0.f,
-    //     .label = "Hue/Blowout Working Space",
-    //     .section = "Scene Grading",
-    //     .tooltip = "Selects the perceptual working space used by the Max Channel hue-shift and blowout controls.",
-    //     .labels = {"OKLab", "ICtCp"},
-    //     .is_enabled = []() { return shader_injection.tone_map_type == 1.f && shader_injection.tone_map_scaling == 0.f; },
     //     .is_visible = []() { return current_settings_mode >= 1.f; },
     // },
 
@@ -610,16 +555,14 @@ renodx::utils::settings::Settings settings = {
         .key = "ColorGradeLUTScalingMethod",
         .binding = &shader_injection.custom_lut_scaling_method,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 1.f,
+        .default_value = 0.f,
         .label = "LUT Scaling Mode",
         .section = "Color Grading LUTs",
-        .tooltip = "Perceptual: Always scales the LUT to true black, and attempts to remap the LUT color back onto the image. This is how LUT Scaling worked originally.\n"
-                   "Hue Preserving: Reduces the LUTs black raise while preserving the color tint where necessary.\n"
+        .tooltip = "Hue Preserving: Reduces the LUTs black raise while preserving the color tint where necessary.\n"
                    "Color Restoring: Reduces the LUTs black raise to always achieve true black. Can affect the way the LUT colors look in shadow.",
-        .labels = {"Perceptual (Legacy)", "Hue Preserving", "Color Restoring"},
+        .labels = {"Hue Preserving", "Color Restoring"},
         .is_enabled = []() { return shader_injection.tone_map_type != 0.f
-                                    && shader_injection.custom_lut_scaling != 0.f
-                                    && shader_injection.tone_map_scaling != 0.f; },
+                  && shader_injection.custom_lut_scaling != 0.f; },
         .is_visible = []() { return current_settings_mode >= 1.f; },
     },
     // new renodx::utils::settings::Setting{
@@ -977,7 +920,7 @@ void OnPresetOff() {
       {"ColorGradeFlare", 0.f},
       {"ColorGradeLUTStrength", 100.f},
       {"ColorGradeLUTScaling", 0.f},
-      {"ColorGradeLUTScalingMethod", 1.f},
+      {"ColorGradeLUTScalingMethod", 0.f},
       {"FxGrainType", 0.f},
       {"FxGrainStrength", 50.f},
   });

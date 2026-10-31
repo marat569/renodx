@@ -124,7 +124,7 @@ float3 ApplyGammaCorrection(float3 color_bt709, bool inverse = false, float blue
     return renodx::color::correct::GammaSafe(color_bt709, inverse);
   }
 
-  if (RENODX_TONE_MAP_SCALING <= 1.f) {
+  if (RENODX_TONE_MAP_SCALING != RENODX_TONE_MAP_SCALING_LMS) {
     return ApplyGammaCorrectionAP1(color_bt709, inverse, blue_correction);
   }
   return ApplyGammaCorrectionLMS(color_bt709, inverse);

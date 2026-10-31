@@ -5,6 +5,26 @@
 
 #define RENODX_BT709_LMS_WHITE renodx::color::lms::from::BT709(1.f.xxx)
 
+float3 SanitizeGamutInput(float3 color, float3x3 gamut_xyz) {
+  const float3 luminance_weights = gamut_xyz[1];
+  const float y = dot(color, luminance_weights);
+  [branch]
+  if (y >= 0.f) return color;
+
+  const float3 positive = max(color, 0.f);
+  const float positive_y = dot(positive, luminance_weights);
+  const float scale = positive_y / (positive_y - y);
+  return mad(color - positive, scale, positive);
+}
+
+float3 SanitizeGamutInputBT709(float3 color) {
+  return SanitizeGamutInput(color, renodx::color::BT709_TO_XYZ_MAT);
+}
+
+float3 SanitizeGamutInputBT2020(float3 color) {
+  return SanitizeGamutInput(color, renodx::color::BT2020_TO_XYZ_MAT);
+}
+
 // Pumbo's "accurate blue correct"
 float3 ApplyBlueCorrectionPrePumbo(float3 untonemapped_ap1, float blue_correction) {
   if (FORCE_BLUE_CORRECT == 1.f) {
@@ -117,17 +137,22 @@ float3 ApplyGammaCorrectionLMS(float3 color_bt709, bool inverse) {
 
 // input: BT.709 linear
 // output: BT.709 linear
-float3 ApplyGammaCorrection(float3 color_bt709, bool inverse = false, float blue_correction = 0.f) {
+float3 ApplyGammaCorrection(float3 color_bt709, bool inverse = false, float blue_correction = 0.6f) {
   if (RENODX_GAMMA_CORRECTION == 0.f) return color_bt709;
 
   if (RENODX_GAMMA_CORRECTION_WORKING_SPACE == 0.f || RENODX_TONE_MAP_TYPE == 0.f) {
     return renodx::color::correct::GammaSafe(color_bt709, inverse);
   }
 
-  if (RENODX_TONE_MAP_SCALING <= 1.f) {
+  if (RENODX_TONE_MAP_SCALING != RENODX_TONE_MAP_SCALING_LMS) {
     return ApplyGammaCorrectionAP1(color_bt709, inverse, blue_correction);
   }
   return ApplyGammaCorrectionLMS(color_bt709, inverse);
+}
+
+// input: sRGB-encoded BT.709; output: BT.709 linear before EOTF emulation
+float3 InverseGammaCorrectionFromSrgb(float3 color_srgb, float blue_correction = 0.f) {
+  return ApplyGammaCorrection(renodx::color::srgb::DecodeSafe(color_srgb), true, blue_correction);
 }
 
 #endif  // SRC_GAMES_UE_EXTENDED_COMMON_HLSLI_

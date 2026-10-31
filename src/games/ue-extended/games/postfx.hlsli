@@ -23,11 +23,10 @@ float3 LutOutputToSdrSrgb(float3 color, out ScaleFactors state) {
       color *= renodx::math::DivideSafe(RENODX_GRAPHICS_WHITE_NITS, RENODX_DIFFUSE_WHITE_NITS, 1.f);
       color = renodx::color::gamma::EncodeSafe(color);
     }
-    color_bt709 = RENODX_GAMMA_CORRECTION != 0.f
-      ? renodx::color::gamma::DecodeSafe(color)
-      : renodx::color::srgb::DecodeSafe(color);
+    color_bt709 = InverseGammaCorrectionFromSrgb(color);
   }
 
+  color_bt709 = SanitizeGamutInputBT709(color_bt709);
   float3 adaptive_state_lms = renodx::color::lms::from::BT709(0.18f.xxx);
   state.gamut_compression_scale = renodx::color::gamut::ComputeGamutCompressionScaleBT709AdaptiveD65(
       color_bt709, adaptive_state_lms, 1.f);
@@ -52,14 +51,12 @@ float3 SdrSrgbToLutOutput(float3 color, ScaleFactors state) {
   color_bt709 /= max(state.max_channel_scale, 1e-6f);
   color_bt709 = renodx::color::gamut::GamutDecompressBT709AdaptiveD65(
       color_bt709, renodx::color::lms::from::BT709(0.18f.xxx), state.gamut_compression_scale);
+  color_bt709 = ApplyGammaCorrection(color_bt709, false);
   if (PROCESSING_PATH == 0.f) {
-    color_bt709 = ApplyGammaCorrection(color_bt709, false);
     return renodx::color::pq::EncodeSafe(
         renodx::color::bt2020::from::BT709(color_bt709), RENODX_DIFFUSE_WHITE_NITS);
   }
-  float3 encoded_color = RENODX_GAMMA_CORRECTION != 0.f
-      ? renodx::color::gamma::EncodeSafe(color_bt709)
-      : renodx::color::srgb::EncodeSafe(color_bt709);
+  float3 encoded_color = renodx::color::srgb::EncodeSafe(color_bt709);
   if (RENODX_DIFFUSE_WHITE_NITS != RENODX_GRAPHICS_WHITE_NITS) {
     encoded_color = renodx::color::gamma::DecodeSafe(encoded_color);
     encoded_color *= renodx::math::DivideSafe(RENODX_DIFFUSE_WHITE_NITS, RENODX_GRAPHICS_WHITE_NITS, 1.f);

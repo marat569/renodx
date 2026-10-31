@@ -6,16 +6,6 @@
 #include "./etcfunctions.hlsli"
 #include "../cinfinityrolloff.hlsli"
 
-float ApplyAnchoredCInfinityShoulderMaxChannelScale(
-    float3 color,
-    float peak,
-    float anchor,
-    float compression_strength) {
-  float max_channel = renodx::math::Max(abs(color));
-  float compressed_max = CInfinityRollOff(max_channel, peak, anchor, compression_strength);
-  return renodx::math::DivideSafe(compressed_max, max_channel, 1.f);
-}
-
 // A QoL macro to quickly swap displaymappers used in one place
 // Can be used for branching for debugging and etc.
 #define SELECT_DISPLAYMAP(T)                                                                            \
@@ -25,59 +15,6 @@ float ApplyAnchoredCInfinityShoulderMaxChannelScale(
 SELECT_DISPLAYMAP(float)
 SELECT_DISPLAYMAP(float3)
 #undef SELECT_DISPLAYMAP
-
-float3 SelectMaxChDisplaymap(float3 color, float peak, float shoulder, float compression_strength = 1.5f) {
-  return color * ApplyAnchoredCInfinityShoulderMaxChannelScale(
-                     color,
-                     peak,
-                     shoulder,
-                     compression_strength);
-}
-
-float3 HueAndChrominance(
-    float3 incorrect_color, float3 reference_color,
-    float hue_correct_strength = 0.f,
-    float chrominance_correct_strength = 0.f,
-    float saturation = 1.f) {
-  if (hue_correct_strength != 0.0 || chrominance_correct_strength != 0.0 || saturation != 0.0) {
-    float3 perceptual_new;
-    float3 perceptual_reference;
-    if (RENODX_TONE_MAP_HUE_BLOWOUT_WORKING_SPACE == 0.f) {
-      perceptual_new = renodx::color::oklab::from::BT709(incorrect_color);
-      perceptual_reference = renodx::color::oklab::from::BT709(reference_color);
-    } else {
-      perceptual_new = renodx::color::ictcp::from::BT709(incorrect_color);
-      perceptual_reference = renodx::color::ictcp::from::BT709(reference_color);
-    }
-
-    float chrominance_current = length(perceptual_new.yz);
-    float chrominance_ratio = 1.0;
-
-    if (hue_correct_strength != 0.0) {
-      const float chrominance_pre = chrominance_current;
-      perceptual_new.yz = lerp(perceptual_new.yz, perceptual_reference.yz, hue_correct_strength);
-      const float chrominancePost = length(perceptual_new.yz);
-      chrominance_ratio = renodx::math::SafeDivision(chrominance_pre, chrominancePost, 1);
-      chrominance_current = chrominancePost;
-    }
-
-    if (chrominance_correct_strength != 0.0) {
-      const float reference_chrominance = length(perceptual_reference.yz);
-      float target_chrominance_ratio = renodx::math::SafeDivision(reference_chrominance, chrominance_current, 1);
-      chrominance_ratio = lerp(chrominance_ratio, target_chrominance_ratio, chrominance_correct_strength);
-    }
-    perceptual_new.yz *= chrominance_ratio;
-    perceptual_new.yz *= saturation;
-
-    if (RENODX_TONE_MAP_HUE_BLOWOUT_WORKING_SPACE == 0.f) {
-      incorrect_color = renodx::color::bt709::from::OkLab(perceptual_new);
-    } else {
-      incorrect_color = renodx::color::bt709::from::ICtCp(perceptual_new);
-    }
-    incorrect_color = renodx::color::bt709::clamp::AP1(incorrect_color);
-  }
-  return incorrect_color;
-}
 
 float3 ComputeCInfinityTransition(float3 position) {
   position = saturate(position);
@@ -183,57 +120,6 @@ float3 ApplyAnchoredTonalGrading(
   }
 
   return renodx::math::CopySign(contrasted_normalized * anchor_out, color);
-}
-
-float3 ApplyAnchoredContrast(float3 color, renodx::color::grade::Config config, float3 anchor = 0.18f) {
-  return ApplyAnchoredTonalGrading(
-      color,
-      anchor,
-      anchor,
-      config.contrast,
-      config.flare,
-      RENODX_TONE_MAP_HIGHLIGHT_CONTRAST,
-      RENODX_TONE_MAP_SHADOW_CONTRAST,
-      config.highlights,
-      config.shadows);
-}
-
-float3 ApplyExposureContrastFlareHighlightsShadowsByLuminance(float3 untonemapped, renodx::color::grade::Config config, float mid_gray = 0.18f) {
-  if (config.exposure == 1.f
-      && config.shadows == 1.f
-      && config.highlights == 1.f
-      && config.contrast == 1.f
-      && config.flare == 0.f
-      && RENODX_TONE_MAP_HIGHLIGHT_CONTRAST == 1.f
-      && RENODX_TONE_MAP_SHADOW_CONTRAST == 1.f) {
-    return untonemapped;
-  }
-  float3 color = untonemapped * config.exposure;
-  float yf = renodx::color::yf::from::AP1(color);
-  float yf_graded = ApplyAnchoredContrast(yf.xxx, config, mid_gray.xxx).x;
-  return color * renodx::math::DivideSafe(yf_graded, yf, 1.f);
-}
-
-float HighlightSaturationWeight(float yf, float yf_peak) {
-  return pow(smoothstep(0.f, max(1.f, yf_peak), yf), 0.375f);
-}
-
-float ComputeSaturationScale(float yf, float yf_peak, renodx::color::grade::Config config) {
-  float scale = config.saturation;
-  if (config.dechroma != 0.f) {
-    scale *= lerp(1.f, 0.f, saturate(pow(max(yf, 0.f) / 100.f, 1.f - config.dechroma)));
-  }
-  scale *= lerp(1.f, 1.f - config.blowout, HighlightSaturationWeight(max(yf, 0.f), yf_peak));
-  return scale;
-}
-
-// input: BT.709 linear
-// output: BT.709 linear
-float3 ApplySaturationMaxChannel(float3 color_bt709, float peak, renodx::color::grade::Config config) {
-  float3 perceptual = renodx::color::oklab::from::BT709(color_bt709);
-  float yf = renodx::color::yf::from::BT709(color_bt709);
-  perceptual.yz *= ComputeSaturationScale(yf, renodx::color::yf::from::BT709(peak.xxx), config);
-  return renodx::color::bt709::from::OkLab(perceptual);
 }
 
 // Apply the tonal controls independently to each channel around the tracked per-channel anchor.
@@ -344,17 +230,7 @@ float3 ApplyPostLUTColorGrading(
     float blue_correction) {
   renodx::color::grade::Config cg_config = CreateColorGradingConfig();
   cg_config.exposure = 1.f;
-  if (RENODX_TONE_MAP_SCALING == 0.f) {
-    float mid_gray_yf = max(
-        renodx::color::yf::from::AP1(renodx::color::ap1::from::BT709(mid_gray_bt709)),
-        1e-6f);
-    color_bt709 = ApplyExposureContrastFlareHighlightsShadowsByLuminance(
-        color_bt709,
-        cg_config,
-        mid_gray_yf);
-    return ApplySaturationMaxChannel(color_bt709, peak_ratio, cg_config);
-  }
-  if (RENODX_TONE_MAP_SCALING == 1.f) {
+  if (RENODX_TONE_MAP_SCALING != RENODX_TONE_MAP_SCALING_LMS) {
     float3 color_ap1 = BlueCorrectedAP1FromBT709(color_bt709, blue_correction);
     float3 anchor_ap1 = BlueCorrectedAP1FromBT709(mid_gray_bt709, blue_correction);
     color_ap1 = ApplyPerChannelTonalGrading(color_ap1, anchor_ap1, cg_config);
@@ -435,17 +311,6 @@ float3 ApplyHueClipEmulationBT709(float3 color, float strength, float clip_point
 
 // input: BT.709 linear
 // output: BT.709 linear
-float3 DisplayMapMaxChannel(float3 color_bt709, float3 mid_gray_bt709, float peak_ratio) {
-  float3 color_bt2020 = renodx::color::bt2020::from::BT709(color_bt709);
-  float3 mid_gray_bt2020 = renodx::color::bt2020::from::BT709(mid_gray_bt709);
-  float3 displaymapped_bt2020 = SelectMaxChDisplaymap(
-      max(0.f, color_bt2020),
-      peak_ratio,
-      renodx::math::Max(abs(mid_gray_bt2020)),
-      1.5f);
-  return renodx::color::bt709::from::BT2020(displaymapped_bt2020);
-}
-
 // input: BT.709 linear
 // output: BT.709 linear
 float3 DisplayMapAP1(float3 color_bt709, float3 mid_gray_bt709, float peak_ratio, float blue_correction) {
@@ -482,9 +347,7 @@ float3 DisplayMapLMS(float3 color_bt709, float3 mid_gray_bt709, float peak_ratio
 // output: BT.709 linear
 float3 DisplayMapByScaling(float3 color_bt709, float3 mid_gray_bt709, float peak_ratio, float blue_correction) {
   float3 display_mapped_bt709;
-  if (RENODX_TONE_MAP_SCALING == 0.f) {
-    display_mapped_bt709 = DisplayMapMaxChannel(color_bt709, mid_gray_bt709, peak_ratio);
-  } else if (RENODX_TONE_MAP_SCALING == 1.f) {
+  if (RENODX_TONE_MAP_SCALING != RENODX_TONE_MAP_SCALING_LMS) {
     display_mapped_bt709 = DisplayMapAP1(color_bt709, mid_gray_bt709, peak_ratio, blue_correction);
   } else {
     display_mapped_bt709 = DisplayMapLMS(color_bt709, mid_gray_bt709, peak_ratio);

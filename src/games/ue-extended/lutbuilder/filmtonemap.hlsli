@@ -152,38 +152,6 @@ float ComputeFilmicVanillaBlend() {
 
 // input: blue-corrected AP1 linear
 // output: blue-corrected AP1 linear
-float3 ApplyExtendedToneCurveMaxChannel(
-    float3 tonemapped_blue_corrected_ap1,
-    float3 vanilla_blue_corrected_ap1,
-    float blue_correction,
-    float vanilla_blend) {
-
-  // UE games are extremely bright, and lerping toward vanilla helps reduce average picture brightness.
-  tonemapped_blue_corrected_ap1 = lerp(
-      tonemapped_blue_corrected_ap1,
-      vanilla_blue_corrected_ap1,
-      vanilla_blend);
-  // Max Channel display mapping uses this reference to simulate hue/chroma blowout.
-  float3 bt709_hue_and_chrominance_source = BT709FromBlueCorrectedAP1(
-      CInfinityRollOff(tonemapped_blue_corrected_ap1, RENODX_TONE_MAP_PER_CH_PEAK, 0.18f, 1.5f),
-      blue_correction);
-
-  // Use vanilla tonemap reference at 1.f target
-  if (RENODX_TONE_MAP_PER_CH_PEAK == 1.f) bt709_hue_and_chrominance_source = saturate(BT709FromBlueCorrectedAP1(vanilla_blue_corrected_ap1, blue_correction));
-
-  float3 bt709_tonemapped = BT709FromBlueCorrectedAP1(tonemapped_blue_corrected_ap1, blue_correction);
-  return BlueCorrectedAP1FromBT709(
-      HueAndChrominance(
-          bt709_tonemapped,
-          bt709_hue_and_chrominance_source,
-          saturate(RENODX_TONE_MAP_HUE_SHIFT),
-          saturate(RENODX_TONE_MAP_CHROMA_CORRECT_BLOWOUT),
-          1.f),
-      blue_correction);
-}
-
-// input: blue-corrected AP1 linear
-// output: blue-corrected AP1 linear
 float3 ApplyExtendedToneCurveAP1(
     float3 tonemapped_blue_corrected_ap1,
   float3 vanilla_blue_corrected_ap1,
@@ -250,13 +218,6 @@ float3 ApplyToneCurveExtended(
       vanilla_blue_corrected_ap1,
       filmic_params);
 
-  if (RENODX_TONE_MAP_SCALING == 0.f) {
-    return ApplyExtendedToneCurveMaxChannel(
-        tonemapped_blue_corrected_ap1,
-        vanilla_blue_corrected_ap1,
-        blue_correction,
-        ComputeFilmicVanillaBlend());
-  }
   return ApplyExtendedToneCurveAP1(
       tonemapped_blue_corrected_ap1,
       vanilla_blue_corrected_ap1,

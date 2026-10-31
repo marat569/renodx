@@ -77,7 +77,6 @@ float4 FinalizeLutbuilderOutput(
 
   float shoulder_peak_ratio = peak_ratio;
   if (RENODX_TONE_MAP_TYPE != 0.f
-      && RENODX_TONE_MAP_SCALING != 0.f
       && RENODX_SAFE_LIMIT_WHITE_CLIP_ENABLED) {
     shoulder_peak_ratio = min(peak_ratio, ComputeFilmicSafeInversePeakRatio(cb_config));
   }

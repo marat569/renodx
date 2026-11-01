@@ -177,10 +177,103 @@ renodx::utils::settings::Settings settings = {
         .default_value = 1.f,
         .can_reset = true,
         .label = "Tone Mapper",
-        .section = "Tone Mapping",
+        .section = "Output",
         .tooltip = "Sets the tone mapper type",
-        // .labels = {"UE ACES (HDR)", "None", "ACES", "UE Filmic Extended (HDR)", "UE Filmic (SDR)"},
-        .labels = {"UE Vanilla", "UE Filmic Extended (HDR)"},
+        .labels = {"Vanilla", "UE Filmic Extended (HDR)"},
+        .is_visible = []() { return current_settings_mode >= 1.f; },
+    },
+    new renodx::utils::settings::Setting{
+        .key = "ToneMapPeakNits",
+        .binding = &shader_injection.peak_white_nits,
+        .default_value = 1000.f,
+        .can_reset = false,
+        .label = "Peak Brightness",
+        .section = "Output",
+        .tooltip = "Sets the value of peak white in nits",
+        .min = 48.f,
+        .max = 10000.f,
+        .is_enabled = []() { return shader_injection.tone_map_type != 0.f; },
+        .is_logarithmic = true,
+    },
+    new renodx::utils::settings::Setting{
+        .key = "SafeLimitWhiteClip",
+        .binding = &shader_injection.safe_limit_white_clip,
+        .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
+        .default_value = 0.f,
+        .label = "Safe Peak Limiter",
+        .section = "Output",
+        .tooltip = "Calculates the slope of the vanilla tone curve to determine a safe brightness extension to offer HDR enhancements while preserving more of the SDR look.",
+        .labels = {"Off", "On"},
+        .is_enabled = []() { return shader_injection.tone_map_type == 1.f; },
+        .is_visible = []() { return current_settings_mode >= 1.f; },
+    },
+    new renodx::utils::settings::Setting{
+        .key = "ToneMapGameNits",
+        .binding = &shader_injection.diffuse_white_nits,
+        .default_value = 203.f,
+        .label = "Game Brightness",
+        .section = "Output",
+        .tooltip = "Sets the value of 100% white in nits",
+        .min = 48.f,
+        .max = 500.f,
+    },
+    new renodx::utils::settings::Setting{
+        .key = "ToneMapUINits",
+        .binding = &shader_injection.graphics_white_nits,
+        .default_value = 203.f,
+        .label = "UI Brightness",
+        .section = "Output",
+        .tooltip = "Sets the brightness of UI and HUD elements in nits",
+        .min = 48.f,
+        .max = 500.f,
+    },
+    new renodx::utils::settings::Setting{
+        .key = "UIVisibility",
+        .binding = &shader_injection.custom_hide_ui,
+        .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
+        .default_value = 1.f,
+        .label = "UI Visibility",
+        .section = "Output",
+        .tooltip = "Sets the visibility of UI and HUD elements.\n"
+                   "Only works with native HDR games.",
+        .labels = {"Hide", "Show"},
+        .is_enabled = []() { return shader_injection.processing_path == 0.f && vanilla_tone_map_mode == 0.f; },
+        .is_visible = []() { return current_settings_mode >= 1.f && shader_injection.processing_path == 0.f; },
+    },
+    new renodx::utils::settings::Setting{
+        .key = "ToneMapGammaCorrection",
+        .binding = &shader_injection.gamma_correction,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 1.f,
+        .label = "SDR EOTF Emulation",
+        .section = "Output",
+        .tooltip = "Emulates a 2.2 EOTF",
+        .labels = {"Off", "2.2"},
+        .is_enabled = []() { return vanilla_tone_map_mode == 0.f; },
+    },
+    new renodx::utils::settings::Setting{
+        .key = "UIGammaCorrection",
+        .binding = &shader_injection.gamma_correction_ui,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .label = "UI SDR EOTF Emulation",
+        .section = "Output",
+        .tooltip = "Match SDR EOTF Emulation or force 2.2 for the UI. For native/ini HDR only.",
+        .labels = {"Match EOTF Emulation", "Force 2.2"},
+        .is_enabled = []() { return shader_injection.processing_path == 0.f && vanilla_tone_map_mode == 0.f; },
+        .is_visible = []() { return current_settings_mode >= 1.f && shader_injection.processing_path == 0.f; },
+    },
+    new renodx::utils::settings::Setting{
+        .key = "ToneMapGammaCorrectionWorkingSpace",
+        .binding = &shader_injection.gamma_correction_working_space,
+        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
+        .default_value = 0.f,
+        .label = "SDR EOTF Scaling",
+        .section = "Output",
+        .tooltip = "Display Emulation: Matches the behavior of the display in SDR\n"
+                   "Match Tone Map Scaling: Performs the correction in the working space of the selected tone map scaling. May have a preferrable look.",
+        .labels = {"Display Emulation", "Match Tone Map Scaling"},
+        .is_enabled = []() { return shader_injection.gamma_correction != 0.f && vanilla_tone_map_mode == 0.f; },
         .is_visible = []() { return current_settings_mode >= 1.f; },
     },
     new renodx::utils::settings::Setting{
@@ -189,24 +282,11 @@ renodx::utils::settings::Settings settings = {
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
         .default_value = 0.f,
         .label = "Vanilla Tone Map Mode",
-        .section = "Tone Mapping",
+        .section = "Advanced Tone Map Settings",
         .tooltip = "Force SDR runs the original SDR code, clamped and presented up to game brightness nits. Vanilla uses the game's unmodified shaders. Note that you may still need to force the lutbuilder to rebuild.",
         .labels = {"Force SDR", "Vanilla"},
         .is_enabled = []() { return shader_injection.processing_path == 0.f && shader_injection.tone_map_type == 0.f; },
         .is_visible = []() { return current_settings_mode >= 1.f && shader_injection.processing_path == 0.f && shader_injection.tone_map_type == 0.f; },
-    },
-    new renodx::utils::settings::Setting{
-        .key = "ToneMapPeakNits",
-        .binding = &shader_injection.peak_white_nits,
-        .default_value = 1000.f,
-        .can_reset = false,
-        .label = "Peak Brightness",
-        .section = "Tone Mapping",
-        .tooltip = "Sets the value of peak white in nits",
-        .min = 48.f,
-        .max = 10000.f,
-        .is_enabled = []() { return shader_injection.tone_map_type != 0.f; },
-        .is_logarithmic = true,
     },
     new renodx::utils::settings::Setting{
         .key = "UEExtendedDeveloperMode",
@@ -220,99 +300,16 @@ renodx::utils::settings::Settings settings = {
     },
 
     new renodx::utils::settings::Setting{
-        .key = "ToneMapGameNits",
-        .binding = &shader_injection.diffuse_white_nits,
-        .default_value = 203.f,
-        .label = "Game Brightness",
-        .section = "Tone Mapping",
-        .tooltip = "Sets the value of 100% white in nits",
-        .min = 48.f,
-        .max = 500.f,
-    },
-
-    new renodx::utils::settings::Setting{
-        .key = "ToneMapUINits",
-        .binding = &shader_injection.graphics_white_nits,
-        .default_value = 203.f,
-        .label = "UI Brightness",
-        .section = "Tone Mapping",
-        .tooltip = "Sets the brightness of UI and HUD elements in nits",
-        .min = 48.f,
-        .max = 500.f,
-    },
-    new renodx::utils::settings::Setting{
-        .key = "UIVisibility",
-        .binding = &shader_injection.custom_hide_ui,
-        .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
-        .default_value = 1.f,
-        .label = "UI Visibility",
-        .section = "Tone Mapping",
-        .tooltip = "Sets the visibility of UI and HUD elements.\n"
-                   "Only works with native HDR games.",
-        .labels = {"Hide", "Show"},
-        .is_enabled = []() { return shader_injection.processing_path == 0.f; },
-        .is_visible = []() { return current_settings_mode >= 1.f && shader_injection.processing_path == 0.f; },
-    },
-    new renodx::utils::settings::Setting{
-        .key = "ToneMapGammaCorrection",
-        .binding = &shader_injection.gamma_correction,
-        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 1.f,
-        .label = "SDR EOTF Emulation",
-        .section = "Tone Mapping",
-        .tooltip = "Emulates a 2.2 EOTF",
-        .labels = {"Off", "2.2"},
-    },
-    new renodx::utils::settings::Setting{
-        .key = "UIGammaCorrection",
-        .binding = &shader_injection.gamma_correction_ui,
-        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 0.f,
-        .label = "UI SDR EOTF Emulation",
-        .section = "Tone Mapping",
-        .tooltip = "Match SDR EOTF Emulation or force 2.2 for the UI. For native/ini HDR only.",
-        .labels = {"Match EOTF Emulation", "Force 2.2"},
-        .is_enabled = []() { return shader_injection.processing_path == 0.f; },
-        .is_visible = []() { return current_settings_mode >= 1.f && shader_injection.processing_path == 0.f; },
-    },
-    new renodx::utils::settings::Setting{
-        .key = "ToneMapGammaCorrectionWorkingSpace",
-        .binding = &shader_injection.gamma_correction_working_space,
-        .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 0.f,
-        .label = "SDR EOTF Scaling",
-        .section = "Tone Mapping",
-        .tooltip = "Display Emulation: Matches the behavior of the display in SDR\n"
-                   "Match Tone Map Scaling: Performs the correction in the working space of the selected tone map scaling. May have a preferrable look.",
-        .labels = {"Display Emulation", "Match Tone Map Scaling"},
-        .is_enabled = []() { return shader_injection.gamma_correction != 0.f; },
-        .is_visible = []() { return current_settings_mode >= 1.f; },
-    },
-
-    new renodx::utils::settings::Setting{
         .key = "BlendFactor",
         .binding = &shader_injection.blend_factor,
         .default_value = 50.f,
         .label = "Blend Factor",
-        .section = "Tone Mapping",
+        .section = "Advanced Tone Map Settings",
         .tooltip = "Controls average scene brightness for UE Filmic Extended.",
         .min = 0.f,
         .max = 100.f,
         .is_enabled = []() { return shader_injection.tone_map_type >= 1.f; },
         .parse = [](float value) { return value * 0.01f; },
-        .is_visible = []() { return current_settings_mode >= 1.f; },
-    },
-
-    new renodx::utils::settings::Setting{
-        .key = "SafeLimitWhiteClip",
-        .binding = &shader_injection.safe_limit_white_clip,
-        .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
-        .default_value = 0.f,
-        .label = "Safe Peak Limiter",
-        .section = "Tone Mapping",
-        .tooltip = "Calculates the slope of the vanilla tone curve to determine a safe brightness extension to offer HDR enhancements while preserving more of the SDR look.",
-        .labels = {"Off", "On"},
-        .is_enabled = []() { return shader_injection.tone_map_type == 1.f; },
         .is_visible = []() { return current_settings_mode >= 1.f; },
     },
 
@@ -334,7 +331,7 @@ renodx::utils::settings::Settings settings = {
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
         .default_value = 0.f,
         .label = "Tonemap Scaling",
-        .section = "Tone Mapping",
+        .section = "Advanced Tone Map Settings",
         .tooltip = "AP1: Applies grading and display mapping per channel in AP1.\n"
                    "LMS: Applies grading, filmic extension, and display mapping per channel in normalized LMS.",
         .labels = {"AP1", "LMS"},
@@ -347,7 +344,7 @@ renodx::utils::settings::Settings settings = {
         .binding = &shader_injection.tone_map_hue_correction,
         .default_value = 50.f,
         .label = "Hue Correction",
-        .section = "Tone Mapping",
+        .section = "Advanced Tone Map Settings",
         .tooltip = "Emulates BT.709 gamut clipping present in SDR.",
         .min = 0.f,
         .max = 100.f,
@@ -361,7 +358,7 @@ renodx::utils::settings::Settings settings = {
         .binding = &shader_injection.tone_map_hue_correction_peak,
         .default_value = 1.f,
         .label = "Hue Correction Peak",
-        .section = "Tone Mapping",
+        .section = "Advanced Tone Map Settings",
         .tooltip = "Reference peak relative to game white. 0 uses the calculated display-mapping peak.",
         .min = 0.f,
         .max = 10.f,
@@ -370,27 +367,13 @@ renodx::utils::settings::Settings settings = {
         .is_visible = []() { return developer_mode_enabled != 0.f && current_settings_mode >= 3.f; },
     },
 
-    new renodx::utils::settings::Setting{
-        .key = "ToneMapHueRestore",
-        .binding = &shader_injection.tone_map_hue_restore,
-        .default_value = 50.f,
-        .label = "Hue Restore",
-        .section = "Tone Mapping",
-        .tooltip = "Controls LMS hue restoration for the extended and blended vanilla tonemaps.",
-        .min = 0.f,
-        .max = 100.f,
-        .is_enabled = []() { return shader_injection.tone_map_type == 1.f && RENODX_TONE_MAP_SCALING == RENODX_TONE_MAP_SCALING_LMS; },
-        .parse = [](float value) { return value * 0.01f; },
-        .is_visible = []() { return current_settings_mode >= 1.f && RENODX_TONE_MAP_SCALING == RENODX_TONE_MAP_SCALING_LMS; },
-    },
-
     // new renodx::utils::settings::Setting{
     //     .key = "ForceBlueCorrect",
     //     .binding = &shader_injection.force_blue_correct,
     //     .value_type = renodx::utils::settings::SettingValueType::INTEGER,
     //     .default_value = 1.f,
     //     .label = "Force Blue Correct",
-    //     .section = "Tone Mapping",
+    //     .section = "Advanced Tone Map Settings",
     //     .tooltip = "Force Blue Correct when using AP1 Tonemap Scaling.",
     //     .labels = {"Off", "On"},
     //     .is_enabled = []() { return shader_injection.tone_map_type == 1.f && shader_injection.tone_map_scaling == 1.f; },
@@ -403,7 +386,7 @@ renodx::utils::settings::Settings settings = {
         .value_type = renodx::utils::settings::SettingValueType::BOOLEAN,
         .default_value = 1.f,
         .label = "Override Black Clip",
-        .section = "Tone Mapping",
+        .section = "Advanced Tone Map Settings",
         .tooltip = "Sets the filmic tonemapper's black clip to zero in Force SDR and extended modes.",
         .labels = {"Off", "On"},
         .is_visible = []() { return developer_mode_enabled != 0.f && current_settings_mode >= 3.f; },
@@ -973,13 +956,15 @@ void OnOverlay(reshade::api::effect_runtime* /*runtime*/) {
 void OnInitSwapchain(reshade::api::swapchain* swapchain, bool resize) {
   if (fired_on_init_swapchain) return;
   auto peak = renodx::utils::swapchain::GetPeakNits(swapchain);
-  if (peak.has_value()) {
-    if (auto* peak_setting = renodx::utils::settings::FindSetting("ToneMapPeakNits"); peak_setting != nullptr) {
-      peak_setting->default_value = peak.value();
-      peak_setting->can_reset = true;
-      fired_on_init_swapchain = true;
-    }
+  if (!peak.has_value()) return;
+  auto* peak_setting = renodx::utils::settings::FindSetting("ToneMapPeakNits");
+  if (peak_setting == nullptr) return;
+  if (peak_setting->GetValue() == peak_setting->default_value) {
+    peak_setting->Set(*peak)->Write();
   }
+  peak_setting->default_value = peak.value();
+  peak_setting->can_reset = true;
+  fired_on_init_swapchain = true;
 }
 
 // Per game resource upgrades, where we need custom paramaters -- the sliders (output size/ratio/all) don't work
@@ -1620,6 +1605,7 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
         GameSettings{
             {
                 {"Upgrade_R10G10B10A2_UNORM", UPGRADE_TYPE_OUTPUT_SIZE},
+                {"ToneMapScaling", 1.f},
             },
             {},
             {
@@ -1685,9 +1671,14 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
         },
     },
     {
-        "Phantom Blade Zero",  // The Talos Principle: Reawakened
+        "Phantom Blade Zero",
         GameSettings{
             {"Set_Path", 0.f},
+            {"ToneMapGammaCorrection", 0.f},
+            {"UIGammaCorrection", 1.f},
+            {"ColorGradeContrast", 54.f},
+            {"ColorGradeHighlightContrast", 50.f},
+            {"ColorGradeFlare", 15.f},
         },
     },
 
@@ -1716,9 +1707,9 @@ void AddGameSettings() {
 
   if (game_settings == GAME_SETTINGS.end() || game_settings->second.additional_settings.empty()) return;
 
-  // We want to add game settings just beneath Tone Mapping section
+  // We want to add game settings just beneath the advanced tone map section
   const auto tone_mapping_end = std::find_if(settings.rbegin(), settings.rend(), [](const auto* setting) {
-    return setting->section == "Tone Mapping";
+    return setting->section == "Advanced Tone Map Settings";
   });
   settings.insert(
       tone_mapping_end.base(),
@@ -2277,7 +2268,7 @@ void AddAdvancedSettings() {
     reshade::log::message(reshade::log::level::info, s.str().c_str());
   }
 
-  auto add_setting = [&](auto* setting) {
+  auto apply_game_default = [&](auto* setting) {
     if (game_settings != GAME_SETTINGS.end()) {
       const auto& values = game_settings->second.default_settings;
       if (auto values_pair = values.find(setting->key);
@@ -2291,7 +2282,15 @@ void AddAdvancedSettings() {
         reshade::log::message(reshade::log::level::info, s.str().c_str());
       }
     }
-    renodx::utils::settings::LoadSetting(renodx::utils::settings::global_name, setting);
+  };
+
+  for (auto* setting : settings) {
+    apply_game_default(setting);
+  }
+
+  auto add_advanced_setting = [&](auto* setting) {
+    apply_game_default(setting);
+    setting->ReadFromConfig(renodx::utils::settings::global_name);
     settings.push_back(setting);
   };
 
@@ -2315,7 +2314,7 @@ void AddAdvancedSettings() {
         .is_global = true,
         .is_visible = []() { return current_settings_mode >= 2.f; },
     };
-    add_setting(path);
+    add_advanced_setting(path);
 
     g_path = path->GetValue();
   }
@@ -2337,7 +2336,7 @@ void AddAdvancedSettings() {
         //.is_visible = []() { return current_settings_mode >= 2.f && shader_injection.processing_path == 1.f; },
         .is_visible = []() { return current_settings_mode >= 2.f; },
     };
-    add_setting(setting);
+    add_advanced_setting(setting);
 
     g_upgrade_copy_destinations = setting->GetValue();
   }
@@ -2359,7 +2358,7 @@ void AddAdvancedSettings() {
         //.is_visible = []() { return current_settings_mode >= 2.f && shader_injection.processing_path == 1.f; },
         .is_visible = []() { return current_settings_mode >= 2.f; },
     };
-    add_setting(revert_state);
+    add_advanced_setting(revert_state);
 
     g_proxy_revert_state = revert_state->GetValue();
 
@@ -2385,7 +2384,7 @@ void AddAdvancedSettings() {
         //.is_visible = []() { return current_settings_mode >= 2.f && shader_injection.processing_path == 1.f; },
         .is_visible = []() { return current_settings_mode >= 2.f; },
     };
-    add_setting(new_setting);
+    add_advanced_setting(new_setting);
 
     auto value = new_setting->GetValue();
     if (value > 0) {
@@ -2425,7 +2424,7 @@ void AddAdvancedSettings() {
         //.is_visible = []() { return current_settings_mode >= 2.f && shader_injection.processing_path == 1.f; },
         .is_visible = []() { return current_settings_mode >= 2.f; },
     };
-    add_setting(swapchain_setting);
+    add_advanced_setting(swapchain_setting);
     renodx::mods::swapchain::swapchain_proxy_compatibility_mode = swapchain_setting->GetValue() != 0;
   }
 
@@ -2446,7 +2445,7 @@ void AddAdvancedSettings() {
         //.is_visible = []() { return current_settings_mode >= 2.f && shader_injection.processing_path == 1.f; },
         .is_visible = []() { return current_settings_mode >= 2.f; },
     };
-    add_setting(scrgb_setting);
+    add_advanced_setting(scrgb_setting);
 
     shader_injection.processing_use_scrgb = scrgb_setting->GetValue();
     renodx::mods::swapchain::SetUseHDR10(scrgb_setting->GetValue() == 0);
@@ -2467,7 +2466,7 @@ void AddAdvancedSettings() {
         .is_global = true,
         .is_visible = []() { return current_settings_mode >= 2.f; },
     };
-    add_setting(force_borderless_setting);
+    add_advanced_setting(force_borderless_setting);
 
     if (force_borderless_setting->GetValue() == 0) {
       renodx::mods::swapchain::force_borderless = false;
@@ -2490,7 +2489,7 @@ void AddAdvancedSettings() {
         .is_global = true,
         .is_visible = []() { return current_settings_mode >= 2.f; },
     };
-    add_setting(setting);
+    add_advanced_setting(setting);
 
     renodx::mods::swapchain::prevent_full_screen = (setting->GetValue() == 1.f);
   }
@@ -2513,7 +2512,7 @@ void AddAdvancedSettings() {
         .is_visible = []() { return current_settings_mode >= 2.f; },
 
     };
-    add_setting(lut_dump_setting);
+    add_advanced_setting(lut_dump_setting);
 
     g_dump_shaders = lut_dump_setting->GetValue();
   }
@@ -2619,7 +2618,11 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
     for (auto* setting : settings) {
       if (setting->key == "UEExtendedDeveloperMode") continue;
       if (setting->key != "ToneMapType" && setting->key != "VanillaToneMapMode"
-          && (setting->section == "Tone Mapping"
+          && (setting->key == "ToneMapPeakNits"
+              || setting->key == "SafeLimitWhiteClip"
+              || setting->key == "ToneMapGameNits"
+              || setting->key == "ToneMapUINits"
+              || setting->section == "Advanced Tone Map Settings"
               || setting->section == "Custom Color Grading"
               || setting->section == "Color Grading LUTs"
               || setting->section == "Effects")) {
@@ -2632,9 +2635,14 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
         };
       }
       auto is_visible = setting->is_visible;
-      setting->is_visible = [is_visible]() {
-        return (developer_mode_enabled != 0.f && current_settings_mode >= 3.f)
-               || is_visible == nullptr || is_visible();
+      const bool extended_tone_map_only = setting->key == "BlendFactor"
+                                          || setting->key == "ToneMapScaling"
+                                          || setting->key == "ToneMapHueCorrection"
+                                          || setting->key == "ToneMapHueCorrectionPeak";
+      setting->is_visible = [is_visible, extended_tone_map_only]() {
+        return (!extended_tone_map_only || shader_injection.tone_map_type == 1.f)
+               && ((developer_mode_enabled != 0.f && current_settings_mode >= 3.f)
+                   || is_visible == nullptr || is_visible());
       };
     }
   }

@@ -132,7 +132,7 @@ void ApplyFilmicToneMap(
   if (RENODX_TONE_MAP_TYPE != 0.f) {
     untonemapped_ap1 *= RENODX_TONE_MAP_EXPOSURE;
   }
-  if (RENODX_TONE_MAP_TYPE != 0.f && OVERRIDE_BLACK_CLIP) {
+  if (RENODX_TONE_MAP_TYPE != 0.f && (OVERRIDE_BLACK_CLIP == 1.f || (OVERRIDE_BLACK_CLIP == 2.f && cb_config.ue_filmblackclip > 0.f))) {
     cb_config.ue_filmblackclip = 0.f;
   }
 

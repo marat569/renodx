@@ -237,7 +237,7 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Sets the visibility of UI and HUD elements.\n"
                    "Only works with native HDR games.",
         .labels = {"Hide", "Show"},
-        .is_enabled = []() { return shader_injection.processing_path == 0.f && vanilla_tone_map_mode == 0.f; },
+        .is_enabled = []() { return shader_injection.processing_path == 0.f && (shader_injection.tone_map_type != 0.f || vanilla_tone_map_mode == 0.f); },
         .is_visible = []() { return current_settings_mode >= 1.f && shader_injection.processing_path == 0.f; },
     },
     new renodx::utils::settings::Setting{
@@ -249,7 +249,7 @@ renodx::utils::settings::Settings settings = {
         .section = "Output",
         .tooltip = "Emulates a 2.2 EOTF",
         .labels = {"Off", "2.2"},
-        .is_enabled = []() { return vanilla_tone_map_mode == 0.f; },
+        .is_enabled = []() { return shader_injection.tone_map_type != 0.f || vanilla_tone_map_mode == 0.f; },
     },
     new renodx::utils::settings::Setting{
         .key = "UIGammaCorrection",
@@ -260,7 +260,7 @@ renodx::utils::settings::Settings settings = {
         .section = "Output",
         .tooltip = "Match SDR EOTF Emulation or force 2.2 for the UI. For native/ini HDR only.",
         .labels = {"Match EOTF Emulation", "Force 2.2"},
-        .is_enabled = []() { return shader_injection.processing_path == 0.f && vanilla_tone_map_mode == 0.f; },
+        .is_enabled = []() { return shader_injection.processing_path == 0.f && (shader_injection.tone_map_type != 0.f || vanilla_tone_map_mode == 0.f); },
         .is_visible = []() { return current_settings_mode >= 1.f && shader_injection.processing_path == 0.f; },
     },
     new renodx::utils::settings::Setting{
@@ -273,7 +273,7 @@ renodx::utils::settings::Settings settings = {
         .tooltip = "Display Emulation: Matches the behavior of the display in SDR\n"
                    "Match Tone Map Scaling: Performs the correction in the working space of the selected tone map scaling. May have a preferrable look.",
         .labels = {"Display Emulation", "Match Tone Map Scaling"},
-        .is_enabled = []() { return shader_injection.gamma_correction != 0.f && vanilla_tone_map_mode == 0.f; },
+        .is_enabled = []() { return shader_injection.gamma_correction != 0.f && (shader_injection.tone_map_type != 0.f || vanilla_tone_map_mode == 0.f); },
         .is_visible = []() { return current_settings_mode >= 1.f; },
     },
     new renodx::utils::settings::Setting{

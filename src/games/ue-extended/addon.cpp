@@ -384,7 +384,7 @@ renodx::utils::settings::Settings settings = {
         .key = "OverrideBlackClip",
         .binding = &shader_injection.override_black_clip,
         .value_type = renodx::utils::settings::SettingValueType::INTEGER,
-        .default_value = 2.f,
+        .default_value = 1.f,
         .label = "Override Black Clip",
         .section = "Advanced Tone Map Settings",
         .tooltip = "Off uses the game's black clip. On forces zero. Allow Negative forces positive values to zero and preserves negative values, which some games may use in an unsupported way for contrast adjustments.",
@@ -1674,6 +1674,7 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
         "Phantom Blade Zero",
         GameSettings{
             {"Set_Path", 0.f},
+            {"OverrideBlackClip", 2.f},
         },
     },
 

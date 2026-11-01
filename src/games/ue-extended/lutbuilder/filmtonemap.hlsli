@@ -206,7 +206,7 @@ float3 ApplyToneCurveExtended(
     float FilmBlackClip,
     float FilmWhiteClip) {
   float filmic_black_clip = FilmBlackClip;
-  if (OVERRIDE_BLACK_CLIP) filmic_black_clip = 0.f;
+  if (OVERRIDE_BLACK_CLIP == 1.f || (OVERRIDE_BLACK_CLIP == 2.f && filmic_black_clip > 0.f)) filmic_black_clip = 0.f;
   unrealengine::filmtonemap::Config filmic_params =
       unrealengine::filmtonemap::config::Create(FilmSlope, FilmToe, FilmShoulder, filmic_black_clip, FilmWhiteClip);
 

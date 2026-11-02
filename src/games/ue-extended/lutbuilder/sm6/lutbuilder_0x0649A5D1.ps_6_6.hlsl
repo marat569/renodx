@@ -271,6 +271,8 @@ float4 main(
   cb_config.ue_colorscale = ColorScale;
   cb_config.ue_lutweights = LUTWeights;
 
+  cb_config.ue_srgb_only = true;
+  cb_config.ue_output_exponent = InverseGamma.y;
   SV_Target = ProcessLutbuilder(float3(_740, _742, _744), Samplers_1, Textures_1, cb_config, SV_Target, 3u);
   return SV_Target;
 

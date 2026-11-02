@@ -260,6 +260,8 @@ float4 main(
       cb_config.ue_overlaycolor = float4(cb0_015x, cb0_015y, cb0_015z, cb0_015w);
       cb_config.ue_bluecorrection = cb0_038z;
       cb_config.ue_colorscale = float3(cb0_016x, cb0_016y, cb0_016z);
+      cb_config.ue_srgb_only = true;
+      cb_config.ue_output_exponent = cb0_042y;
 
       SV_Target = ProcessLutbuilder(float3(_749, _751, _753), cb_config, SV_Target, 3u);
       return SV_Target;
@@ -542,6 +544,8 @@ float4 main(
   cb_config.ue_overlaycolor = float4(cb0_015x, cb0_015y, cb0_015z, cb0_015w);
   cb_config.ue_bluecorrection = cb0_038z;
   cb_config.ue_colorscale = float3(cb0_016x, cb0_016y, cb0_016z);
+  cb_config.ue_srgb_only = true;
+  cb_config.ue_output_exponent = cb0_042y;
 
   SV_Target = ProcessLutbuilder(float3(_749, _751, _753), cb_config, SV_Target, 3u);
   return SV_Target;

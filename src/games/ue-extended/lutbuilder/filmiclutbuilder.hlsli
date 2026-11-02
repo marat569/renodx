@@ -27,6 +27,8 @@ struct UECbufferConfig {
   float3 ue_colorscale;
   float ue_bluecorrection;
   bool ue_haslut;
+  bool ue_srgb_only;
+  float ue_output_exponent;
 };
 
 // // Config builder
@@ -45,7 +47,9 @@ UECbufferConfig CreateCbufferConfig(
     float4 ue_overlaycolor = 1.f,
     float3 ue_colorscale = 1.f,
     float ue_bluecorrection = 1.f,
-    bool ue_haslut = false) {
+    bool ue_haslut = false,
+    bool ue_srgb_only = false,
+    float ue_output_exponent = 1.f / 2.2f) {
   UECbufferConfig cb_config;
   cb_config.ue_filmblackclip = ue_filmblackclip;
   cb_config.ue_filmtoe = ue_filmtoe;
@@ -60,6 +64,8 @@ UECbufferConfig CreateCbufferConfig(
   cb_config.ue_colorscale = ue_colorscale;
   cb_config.ue_bluecorrection = ue_bluecorrection;
   cb_config.ue_haslut = ue_haslut;
+  cb_config.ue_srgb_only = ue_srgb_only;
+  cb_config.ue_output_exponent = ue_output_exponent;
 
   return cb_config;
 }

@@ -398,10 +398,14 @@ float4 GenerateOutput(
   float3 encoded_color;
 
   [branch]
-  if (PROCESSING_PATH == 0.f && !srgb_only) {
-    final_color = ApplyGammaCorrection(final_color, false, blue_correction);
-    float3 bt2020_color = renodx::color::bt2020::from::BT709(final_color);
-    encoded_color = renodx::color::pq::EncodeSafe(bt2020_color, RENODX_DIFFUSE_WHITE_NITS);
+  if (PROCESSING_PATH == 0.f) {
+    if (srgb_only) {
+      encoded_color = renodx::color::srgb::EncodeSafe(final_color);
+    } else {
+      final_color = ApplyGammaCorrection(final_color, false, blue_correction);
+      float3 bt2020_color = renodx::color::bt2020::from::BT709(final_color);
+      encoded_color = renodx::color::pq::EncodeSafe(bt2020_color, RENODX_DIFFUSE_WHITE_NITS);
+    }
   } else {
     float3 srgb_color = renodx::color::srgb::EncodeSafe(final_color);
     encoded_color = ScaleScene(srgb_color);

@@ -47,7 +47,11 @@ float3 ApplyMappingAndOverlay(float3 color_bt709, UECbufferConfig cb_config) {
     }
   }
   float3 scaled = cb_config.ue_colorscale.xyz * color_bt709;
-  return ((cb_config.ue_overlaycolor.xyz - scaled) * cb_config.ue_overlaycolor.w) + scaled;
+  float3 output = ((cb_config.ue_overlaycolor.xyz - scaled) * cb_config.ue_overlaycolor.w) + scaled;
+  if (cb_config.ue_srgb_only) {
+    output = renodx::math::SafePow(output, cb_config.ue_output_exponent);
+  }
+  return output;
 }
 
 // input: untonemapped AP1 linear and processed BT.709 linear
@@ -97,7 +101,8 @@ float4 FinalizeLutbuilderOutput(
       SV_Target,
       outputdevice,
       cb_config.ue_bluecorrection,
-      shoulder_peak_ratio);
+      shoulder_peak_ratio,
+      cb_config.ue_srgb_only);
 }
 
 // No SDR Lut

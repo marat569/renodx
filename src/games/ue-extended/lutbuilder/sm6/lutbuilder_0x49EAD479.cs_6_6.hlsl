@@ -1,6 +1,6 @@
 // Deep Rock Galactic: Rogue Core
 
-#include "../../lutbuilder/lutbuilderoutput.hlsli"
+#include "../lutbuilderoutput.hlsli"
 
 RWTexture3D<float4> u0 : register(u0);
 

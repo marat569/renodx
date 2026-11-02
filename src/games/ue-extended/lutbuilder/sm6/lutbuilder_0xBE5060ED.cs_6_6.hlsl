@@ -1,6 +1,6 @@
 // Deep Rock Galactic: Rogue Core
 
-#include "../../lutbuilder/lutbuilderoutput.hlsli"
+#include "../lutbuilderoutput.hlsli"
 
 RWTexture3D<float4> u0 : register(u0);
 
@@ -521,6 +521,8 @@ void main(
   cb_config.ue_overlaycolor = float4(cb0_015x, cb0_015y, cb0_015z, cb0_015w);
   cb_config.ue_bluecorrection = cb0_038z;
   cb_config.ue_colorscale = float3(cb0_016x, cb0_016y, cb0_016z);
+  cb_config.ue_srgb_only = true;
+  cb_config.ue_output_exponent = cb0_042y;
   float4 output = ProcessLutbuilder(float3(_759, _761, _763), cb_config, u0[int3((uint)(SV_DispatchThreadID.x), (uint)(SV_DispatchThreadID.y), (uint)(SV_DispatchThreadID.z))], 0u);
   u0[int3((uint)(SV_DispatchThreadID.x), (uint)(SV_DispatchThreadID.y), (uint)(SV_DispatchThreadID.z))] = output;
   return;

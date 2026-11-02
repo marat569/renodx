@@ -514,6 +514,8 @@ void main(
   cb_config.ue_bluecorrection = cb0_036z;
   cb_config.ue_colorscale = float3(cb0_014x, cb0_014y, cb0_014z);
 
+  cb_config.ue_srgb_only = true;
+  cb_config.ue_output_exponent = cb0_040y;
   float4 output = ProcessLutbuilder(float3(_748, _750, _752), cb_config, u0[int3((uint)(SV_DispatchThreadID.x), (uint)(SV_DispatchThreadID.y), (uint)(SV_DispatchThreadID.z))], 3u);
   u0[int3((uint)(SV_DispatchThreadID.x), (uint)(SV_DispatchThreadID.y), (uint)(SV_DispatchThreadID.z))] = output;
   return;

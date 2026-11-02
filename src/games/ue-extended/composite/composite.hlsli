@@ -10,12 +10,12 @@ float3 LinearSceneToPq(float3 linear_scene) {
              linear_scene.xyz, 80.f);
 }
 
-float4 OutputscRGB(float4 color, float scale) {
-  return float4(color.rgb *= scale / 80.f, color.a);
+float4 OutputscRGB(float4 color) {
+  return float4(color.rgb / 80.f, color.a);
 }
 
-float4 OutputHDR10(float4 color, float scale) {
-  float3 pq_color = renodx::color::pq::EncodeSafe(renodx::color::bt2020::from::BT709(color.rgb), scale);
+float4 OutputHDR10(float4 color) {
+  float3 pq_color = renodx::color::pq::EncodeSafe(renodx::color::bt2020::from::BT709(color.rgb), 1.f);
   return float4(pq_color, color.a);
 }
 
@@ -82,18 +82,16 @@ bool HandleUICompositing(float4 ui_color_gamma, float4 scene_color_pq, inout flo
   float3 composited_color_gamma = ui_color_gamma.rgb + scene_color_gamma * (1.0 - ui_alpha);
   float3 composited_color_linear = renodx::color::gamma::DecodeSafe(composited_color_gamma);
 
-  // #if 1
-  //   // clamp swapchain to peak nits or ui nits by max channel for meme-ui overshoot
-  //   float swapchain_clamp_nits = renodx::math::Select(RENODX_TONE_MAP_TYPE, RENODX_PEAK_WHITE_NITS, RENODX_DIFFUSE_WHITE_NITS);
-  //   float max_channel = max(max(max(composited_color_linear.r, composited_color_linear.g), composited_color_linear.b), swapchain_clamp_nits);
-  //   composited_color_linear.rgb *= swapchain_clamp_nits / max_channel;  // Clamp UI or Videos
-  // #endif
+  // Scale to nits, then clamp in the output gamut.
+  float3 composited_bt2020 = renodx::color::bt2020::from::BT709(composited_color_linear * RENODX_GRAPHICS_WHITE_NITS);
+  composited_bt2020 = min(composited_bt2020, RENODX_PEAK_WHITE_NITS);
+  composited_color_linear = renodx::color::bt709::from::BT2020(composited_bt2020);
 
   // return ui alpha for better FG support
   if (output_mode == 0u) {  // HDR10
-    output_color = OutputHDR10(float4(composited_color_linear, ui_alpha), RENODX_GRAPHICS_WHITE_NITS);
+    output_color = OutputHDR10(float4(composited_color_linear, ui_alpha));
   } else {  // scRGB
-    output_color = OutputscRGB(float4(composited_color_linear, ui_alpha), RENODX_GRAPHICS_WHITE_NITS);
+    output_color = OutputscRGB(float4(composited_color_linear, ui_alpha));
   }
 
   return true;

@@ -8,9 +8,9 @@
 
 // A QoL macro to quickly swap displaymappers used in one place
 // Can be used for branching for debugging and etc.
-#define SELECT_DISPLAYMAP(T)                                                                            \
-  T SelectDisplaymap(T color, T peak, T shoulder, float compression_strength = 1.5f) {                  \
-    return CInfinityRollOff(color, peak, shoulder, compression_strength);                  \
+#define SELECT_DISPLAYMAP(T)                                                           \
+  T SelectDisplaymap(T color, T peak, T shoulder, float compression_strength = 1.5f) { \
+    return CInfinityRollOff(color, peak, shoulder, compression_strength);              \
   }
 SELECT_DISPLAYMAP(float)
 SELECT_DISPLAYMAP(float3)
@@ -249,7 +249,7 @@ float3 ApplyPostLUTColorGrading(
       cg_config);
   float3 peak_lms_normalized = renodx::color::lms::from::BT709(peak_ratio.xxx) / lms_white;
   return renodx::color::bt709::from::LMS(
-    ApplyPerChannelSaturation(color_lms_normalized, peak_lms_normalized, cg_config) * lms_white);
+      ApplyPerChannelSaturation(color_lms_normalized, peak_lms_normalized, cg_config) * lms_white);
 }
 
 float3 GammaCorrectHuePreserving(float3 incorrect_color) {
@@ -279,7 +279,7 @@ float3 ApplyHueClipEmulationBT709(float3 color, float strength, float clip_point
     float reference_peak = max(clip_point, 0.01f);
     float reference_anchor = clamp(shoulder_anchor, 0.f, reference_peak - 1e-6f);
     float3 custom_reference = CInfinityRollOff(
-      custom_magnitude, reference_peak.xxx, reference_anchor.xxx, 1.5f);
+        custom_magnitude, reference_peak.xxx, reference_anchor.xxx, 1.5f);
     const float custom_reference_min = renodx::math::Min(custom_reference);
     const float custom_reference_range = renodx::math::Max(custom_reference) - custom_reference_min;
     float3 custom_transferred = color;
@@ -366,7 +366,8 @@ float4 GenerateOutput(
     inout float4 SV_Target,
     uint device,
     float blue_correction,
-    float peak_ratio) {
+    float peak_ratio,
+    bool srgb_only = false) {
   if (RENODX_TONE_MAP_TYPE != 0.f && RENODX_GAMMA_CORRECTION != 0.f) {
     peak_ratio = ApplyGammaCorrection(peak_ratio.xxx, true, blue_correction).x;
   }
@@ -378,28 +379,33 @@ float4 GenerateOutput(
     // Empirical default strengths at peak/game ratios 1, 2, 4, 7, and 10.
     float hue_peak_ratio = peak_ratio;
     float default_hue_strength = 0.1f
-        + 0.075f * saturate(hue_peak_ratio - 1.f)
-        + 0.075f * saturate((hue_peak_ratio - 2.f) / 2.f)
-        + 0.13f * saturate((hue_peak_ratio - 4.f) / 3.f)
-        + 0.32f * saturate((hue_peak_ratio - 7.f) / 3.f);
+                                 + 0.075f * saturate(hue_peak_ratio - 1.f)
+                                 + 0.075f * saturate((hue_peak_ratio - 2.f) / 2.f)
+                                 + 0.13f * saturate((hue_peak_ratio - 4.f) / 3.f)
+                                 + 0.32f * saturate((hue_peak_ratio - 7.f) / 3.f);
     float hue_slider = saturate(RENODX_TONE_MAP_HUE_CORRECTION);
     float hue_strength = lerp(
         default_hue_strength * saturate(hue_slider * 2.f),
         0.7f,
         saturate(hue_slider * 2.f - 1.f));
     final_color = ApplyHueClipEmulationBT709(
-      final_color, hue_strength,
-      RENODX_TONE_MAP_HUE_CORRECTION_PEAK == 0.f ? peak_ratio : RENODX_TONE_MAP_HUE_CORRECTION_PEAK,
-      renodx::math::Max(abs(shoulder_anchor_bt709)));
+        final_color, hue_strength,
+        RENODX_TONE_MAP_HUE_CORRECTION_PEAK == 0.f ? peak_ratio : RENODX_TONE_MAP_HUE_CORRECTION_PEAK,
+        renodx::math::Max(abs(shoulder_anchor_bt709)));
     final_color = DisplayMapByScaling(final_color, shoulder_anchor_bt709, peak_ratio, blue_correction);
   }
 
   float3 encoded_color;
+
   [branch]
   if (PROCESSING_PATH == 0.f) {
-    final_color = ApplyGammaCorrection(final_color, false, blue_correction);
-    float3 bt2020_color = renodx::color::bt2020::from::BT709(final_color);
-    encoded_color = renodx::color::pq::EncodeSafe(bt2020_color, RENODX_DIFFUSE_WHITE_NITS);
+    if (srgb_only) {
+      encoded_color = renodx::color::srgb::EncodeSafe(final_color);
+    } else {
+      final_color = ApplyGammaCorrection(final_color, false, blue_correction);
+      float3 bt2020_color = renodx::color::bt2020::from::BT709(final_color);
+      encoded_color = renodx::color::pq::EncodeSafe(bt2020_color, RENODX_DIFFUSE_WHITE_NITS);
+    }
   } else {
     float3 srgb_color = renodx::color::srgb::EncodeSafe(final_color);
     encoded_color = ScaleScene(srgb_color);
@@ -409,68 +415,4 @@ float4 GenerateOutput(
 }
 
 #endif  // INCLUDE_LUTBUILDER_COMMON
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

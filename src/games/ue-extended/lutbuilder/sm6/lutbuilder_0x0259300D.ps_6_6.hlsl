@@ -459,6 +459,9 @@ float4 main(
   cb_config.ue_overlaycolor = OverlayColor;
   cb_config.ue_bluecorrection = BlueCorrection;
   cb_config.ue_colorscale = ColorScale;
+
+  cb_config.ue_srgb_only = true;
+  cb_config.ue_output_exponent = InverseGamma.y;
   SV_Target = ProcessLutbuilder(float3(_738, _740, _742), cb_config, SV_Target, 0u);
   return SV_Target;
 

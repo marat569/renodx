@@ -321,6 +321,9 @@ float4 main(
   cb_config.ue_bluecorrection = cb0_036z;
   cb_config.ue_colorscale = float3(cb0_014x, cb0_014y, cb0_014z);
 
+
+  cb_config.ue_srgb_only = true;
+  cb_config.ue_output_exponent = cb0_040y;
   SV_Target = ProcessLutbuilder(float3(_738, _740, _742), cb_config, SV_Target, 0u);
   return SV_Target;
 

@@ -333,6 +333,9 @@ float4 main(
   float4 lutweights[2] = { float4(cb0_005x, cb0_005y, cb0_005z, 0.f), float4(0.f, 0.f, 0.f, 0.f) };
   cb_config.ue_lutweights = lutweights;  // Only Lutweights[0].xyz is used
 
+
+  cb_config.ue_srgb_only = true;
+  cb_config.ue_output_exponent = cb0_040y;
   SV_Target = ProcessLutbuilder(float3(_742, _744, _746), s0, s1, t0, t1, cb_config, SV_Target, 0u);
   return SV_Target;
 

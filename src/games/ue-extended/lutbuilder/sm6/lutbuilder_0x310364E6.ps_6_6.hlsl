@@ -605,6 +605,9 @@ float4 main(
   cb_config.ue_overlaycolor = float4(cb0_013x, cb0_013y, cb0_013z, cb0_013w);
   cb_config.ue_bluecorrection = cb0_036z;
   cb_config.ue_colorscale = float3(cb0_014x, cb0_014y, cb0_014z);
+
+  cb_config.ue_srgb_only = true;
+  cb_config.ue_output_exponent = cb0_040y;
   float4 output = ProcessLutbuilder(float3(_895, _896, _897), cb_config, SV_Target, 0u);
   SV_Target = output;
   return SV_Target;

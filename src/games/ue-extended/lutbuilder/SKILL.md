@@ -3,7 +3,8 @@ name: ue-extended-lutbuilder
 description: >-
   Inject or port Unreal Engine LUT builder shaders (`lutbuilder_0x*.hlsl`) for the
   ue-extended mod using ProcessLutbuilder, lutbuilderoutput.hlsli, unnamed cbuffers,
-  ExpandGamut defaults, SDR LUT weights, and mobile tonemapper skips. The user
+  ExpandGamut defaults, SDR LUT weights, sRGB-only variants with no output device,
+  and mobile tonemapper skips. The user
   specifies where to look (folder, paths, or hashes); batch edits within that
   lutbuilder scope are fine. Ask only when the lookup location is missing.
 argument-hint: "[folder or lutbuilder hash(es)/paths the user pointed at — ask if missing]"
@@ -39,6 +40,8 @@ These are **canonical examples in the repo library** (`src/games/ue-extended/lut
 | SM5 (3Dmigoto / named cbuffer, 4 SDR LUTs) | [sm5/lutbuilder_0xCD2A823A.ps_5_x.hlsl](sm5/lutbuilder_0xCD2A823A.ps_5_x.hlsl) |
 | SM6 (DXC / named cbuffer, 3 SDR LUTs) | [sm6/lutbuilder_0x670070BD.ps_6_6.hlsl](sm6/lutbuilder_0x670070BD.ps_6_6.hlsl) |
 | SM6 minimal HDR / no grading | [sm6/lutbuilder_0xCBCF8905.ps_6_6.hlsl](sm6/lutbuilder_0xCBCF8905.ps_6_6.hlsl) |
+| sRGB-only, no output device (named cbuffer) | [sm6/lutbuilder_0x50F22BD6.ps_6_6.hlsl](sm6/lutbuilder_0x50F22BD6.ps_6_6.hlsl) |
+| sRGB-only, no output device (`cb0_*`, 1 SDR LUT) | [sm6/lutbuilder_0x4A657EFC.cs_6_6.hlsl](sm6/lutbuilder_0x4A657EFC.cs_6_6.hlsl) |
 
 Shared helpers live in [lutbuilderoutput.hlsli](lutbuilderoutput.hlsli) and [lutbuildercommon.hlsli](lutbuildercommon.hlsli).
 
@@ -52,7 +55,7 @@ Preflight automation: single script [scripts/lutbuilder.py](scripts/lutbuilder.p
 3. Identify cbuffers from **shader usage**, not packoffset order alone (see below).
 4. Apply forced defaults: ExpandGamut `0`, missing BlueCorrection `0`, missing ToneCurveAmount `1`.
 5. Force ExpandGamut off in shader math (see below).
-6. Inject at **untonemapped AP1** (after color grade, before blue correction / film tonemap), call the correct `ProcessLutbuilder` overload, then `return`.
+6. Inject at **untonemapped AP1** (after color grade, before blue correction / film tonemap), call the correct `ProcessLutbuilder` overload, then `return`. If the shader has no output device, wire it as [sRGB-only](#srgb-only-lutbuilders-no-output-device).
 7. Leave all code after the early `return` untouched (dead vanilla path).
 8. Apply regex extras (below) where relevant.
 9. Patch every duplicated block in the file, not just the first copy.
@@ -99,8 +102,9 @@ The `lutbuilder.py convert-temp` helper (optional batch step) strips ue-generic 
    - **MappingPolynomial** — quadratic `(y + (x * t) * t) + z` (channel order varies).
    - **ColorScale** — per-channel multiply before/inside the polynomial.
    - **OverlayColor** — `((cb0_rgb - _graded) * cb0_weight) + _graded` or `lerp(..., cb0_rgb, cb0_weight)`.
-   - **Output device** — `if (cb0_* == 0)` switch / compare, not a color-scale channel.
-3. Every `cb0_*` / `cb0[N].*` in your `cb_config` block and `ProcessLutbuilder` output argument must exist in step 1 **and** appear as `cb0[N].x|y|z|w` in live or dead shader body (not only in the injection block). `lutbuilder.py check` verifies declared `cb0_*` fields match injection usage.
+   - **Output device** — `if (cb0_* == 0)` switch / compare, not a color-scale channel. No such switch means the shader is [sRGB-only](#srgb-only-lutbuilders-no-output-device).
+   - **Output exponent (sRGB-only)** — `exp2(log2(max(0.0f, lerp(_graded, overlay_rgb, overlay_weight))) * cb0_*)` right after OverlayColor.
+3. Every `cb0_*` / `cb0[N].*` in your `cb_config` block and `ProcessLutbuilder` output argument must exist in step 1 **and** appear as `cb0[N].x|y|z|w` in live or dead shader body (not only in the injection block). `lutbuilder.py check` verifies declared `cb0_*` fields match injection usage. sRGB-only shaders pass a literal output argument instead.
 4. If the shader uses a LUT `ProcessLutbuilder` overload (`Samplers_1`, `Textures_1`, …), trace LUT weight slots in dead code and set `cb_config.ue_lutweights` (see SDR LUTs section).
 5. Run `python scripts/lutbuilder.py check` — preflight for declared `cb0_*` / `cb0[N].*` fields and missing LUT weights **only**. Blue/tone fingerprints require manual dead-code review per the workflow above.
 
@@ -114,7 +118,7 @@ These are **examples verified in this repo**, not defaults to apply blindly:
 | White at `038x` (`F6219091`) | `037w` / `037y` / `037z` / `037x` / `038x` | `036w` lerp | `036y` matrix | `039x,y,z` | `014x,y,z` | `013*` | `040w` |
 | Shifted c036 (`4CEC5329`) | `036w` / `036y` / `036z` / `036x` / `037x` | `066z` lerp | `066x` matrix | `026x,y,z` | `042y,z,w` | `043*` | `065z` |
 | SPIRV Hogwarts (`47B97270`) | `036w` / `036y` / `036z` / `036x` / `037x` | `067y` after `0.93` | `066w` matrix (pre-film) | `026x,y,z` | `042y,z,w` | `043*` | `065z` |
-| Film c040/c041 (`D07B008F`) | `041x` / `040z` / `040w` / `040y` / `041y` | `037x` lerp | `036z` matrix | `042x,y,z` | `014x,y,z` | `013*` | `040w` |
+| Film c040/c041 (`D07B008F`) | `041x` / `040z` / `040w` / `040y` / `041y` | `037x` lerp | `036z` matrix | `042x,y,z` | `014x,y,z` | `013*` | *(none — sRGB-only, exponent `043y`)* |
 | Film c039/c040 (`3028EBE7`) | `040x` / `039z` / `039w` / `039y` / `040y` | `039x` lerp | `038z` matrix | `041x,y,z` | `014x,y,z` | `013*` | `040w` |
 | Extended `074.x` (`425022C1`) | `036w` / `036y` / `036z` / `036x` / `037x` | `075x` after `0.93` | `074z` matrix (pre-film) | `026x,y,z` | `044y,z,w` | `045*` | `074x` |
 | Extended `074.z` (`03F2231B`) | `036w` / `036y` / `036z` / `036x` / `037x` | `075z` after `0.93` | `075x` matrix | `026x,y,z` | `051y,z,w` | `052*` | `074z` |
@@ -250,6 +254,38 @@ Some hashes (e.g. `CBCF8905`, `18639D8F`) have no BlueCorrection/ToneCurveAmount
 - Force `cb_config.ue_bluecorrection = 0.f` and `cb_config.ue_tonecurveammount = 1.f` when dead code has **no** blue matrix (`0.938639…` dots) and **no** `cb0[*]` multiply after `0.930000007`.
 - Leave other `cb_config` fields at `CreateCbufferConfig()` defaults unless the dead tail exposes usable film params.
 
+## sRGB-only lutbuilders (no output device)
+
+Some lutbuilders have no output device field at all and only encode sRGB. Identify them from the dead tail, all of which must hold:
+
+- No output device field in the cbuffer, and no `if (OutputDevice == N)` / `if (cb0_* == N)` switch. `OutputGamut` is a different field and does not count as an output device.
+- One gamma step after OverlayColor, which is the exponent to wire:
+
+  ```hlsl
+  float _901 = exp2(log2(max(0.0f, (lerp(_878, OverlayColor.x, OverlayColor.w)))) * InverseGamma.y);
+  ```
+
+- A single sRGB encode (threshold near `0.00313`, `* 12.92` below it, `pow(x, 0.41666) * 1.055 - 0.055` above it) followed by the `0.952381` scale, with no PQ path. The threshold constant and comparison form vary by hash.
+
+An `InverseGamma` field alone does not make a shader sRGB-only. Shaders with an output device declare it too, and they must not set these fields.
+
+Set both fields directly before the `ProcessLutbuilder` call:
+
+```hlsl
+// Named cbuffer
+cb_config.ue_srgb_only = true;
+cb_config.ue_output_exponent = InverseGamma.y;
+
+// Unnamed cbuffer: trace the slot, it varies by hash (seen: cb0_040y, cb0_042y, cb0_043y)
+cb_config.ue_srgb_only = true;
+cb_config.ue_output_exponent = cb0_042y;
+SV_Target = ProcessLutbuilder(float3(_485, _487, _489), cb_config, SV_Target, 3u);
+```
+
+- **Exponent:** always the slot from the dead-tail fingerprint above, never copied from another hash. `ue_output_exponent` defaults to `1.f / 2.2f`, so a missing assignment still compiles and silently uses the wrong gamma.
+- **Output argument:** pass a literal, since there is no field to pass. The repo uses `3u` and `0u`, which behave the same because only `8u`/`9u` select a different path. Never pass `8u` or `9u` here.
+- **Other fields:** film, blue, tone, LUT weights, and ExpandGamut follow the normal rules.
+
 ## Scripts
 
 All automation lives in one file: [scripts/lutbuilder.py](scripts/lutbuilder.py). Run from repo root.
@@ -268,6 +304,8 @@ python src/games/ue-extended/lutbuilder/scripts/lutbuilder.py convert-temp
 ```
 
 **Scripts check structural wiring only.** They cannot verify blue/tone fingerprints (false positives on vanilla film tonemapper code). Always verify the live injection block against dead code before marking a shader done.
+
+`convert-temp` does not handle sRGB-only shaders. It never sets `ue_srgb_only` or `ue_output_exponent`, and it passes `OutputDevice` even when that field is not declared, so fix these by hand after converting.
 
 ## Staging new shaders
 
@@ -324,11 +362,12 @@ $1if (asuint($2$3) $4
 4. If the only texture is `Texture3D<float4> t0` with `float3` sample coords → **no** `ue_lutweights` (internal 3D LUT volume, not SDR LUT blend).
 5. Confirm every wired `cb0_*` / `cb0[N].*` appears in the shader's `cbuffer cb0` declaration **and** in live/dead body code (`check` wiring audit).
 6. When dead code has no blue matrix and no post-`0.93` tone multiply, confirm `ue_bluecorrection = 0.f` and `ue_tonecurveammount = 1.f`.
+7. When dead code has no output device switch, confirm `ue_srgb_only = true`, `ue_output_exponent` matches the slot in the dead-tail gamma step, and the output argument is a literal other than `8u`/`9u`. `check` does not verify any of this.
 
 From repo root (after manual review of **the files you edited**):
 
 ```powershell
-rg -n "ProcessLutbuilder|ExpandGamut set to 0| \* 0\.f\)|ue_bluecorrection|ue_tonecurveammount|ue_lutweights" <user-confirmed-paths>
+rg -n "ProcessLutbuilder|ExpandGamut set to 0| \* 0\.f\)|ue_bluecorrection|ue_tonecurveammount|ue_lutweights|ue_srgb_only|ue_output_exponent" <user-confirmed-paths>
 python src/games/ue-extended/lutbuilder/scripts/lutbuilder.py check
 ```
 

@@ -629,6 +629,9 @@ float4 main(
   cb_config.ue_colorscale = float3(cb0_014x, cb0_014y, cb0_014z);
   float4 lutweights[2] = { float4(cb0_005x, cb0_005y, 0.f, 0.f), float4(0.f, 0.f, 0.f, 0.f) };
   cb_config.ue_lutweights = lutweights;  // Only Lutweights[0].xy is used
+
+  cb_config.ue_srgb_only = true;
+  cb_config.ue_output_exponent = cb0_040y;
   float4 output = ProcessLutbuilder(float3(_897, _898, _899), s0, t0, cb_config, SV_Target, 0u);
   SV_Target = output;
   return SV_Target;

@@ -1337,6 +1337,18 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
             },
         },
     },
+    {
+        "Queens Domain",
+        GameSettings{
+            {
+                {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_RATIO},
+            },
+            {},
+            {
+                0xB696D110,  // Post-tonemap material with grading LUT
+            },
+        },
+    },
     // Native HDR on games (Path off)
     {
         "Grounded2",

@@ -2411,6 +2411,12 @@ void AddAdvancedSettings() {
           .aspect_ratio = static_cast<float>((value == UPGRADE_TYPE_OUTPUT_RATIO)
                                                  ? renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER
                                                  : renodx::mods::swapchain::SwapChainUpgradeTarget::ANY),
+          // Internal render dimensions are rounded, slightly changing the output aspect ratio.
+          .aspect_ratio_tolerance = (filename == "QueensDomain-Win64-Shipping.exe"
+                                            && format == reshade::api::format::b8g8r8a8_typeless
+                                            && value == UPGRADE_TYPE_OUTPUT_RATIO
+                                        ? 0.01f
+                                        : renodx::mods::swapchain::SwapChainUpgradeTarget{}.aspect_ratio_tolerance),
           .usage_include = reshade::api::resource_usage::render_target
                            | (g_upgrade_copy_destinations == 0.f
                                   ? reshade::api::resource_usage::undefined

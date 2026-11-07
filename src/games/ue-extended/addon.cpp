@@ -1343,7 +1343,22 @@ const std::unordered_map<std::string, GameSettings> GAME_SETTINGS = {
             {
                 {"Upgrade_B8G8R8A8_TYPELESS", UPGRADE_TYPE_OUTPUT_RATIO},
             },
-            {},
+            {
+                new renodx::utils::settings::Setting{
+                    .key = "QueensHDRHighlightExtension",
+                    .binding = &shader_injection.custom_slider_1,
+                    .default_value = 100.f,
+                    .label = "Highlight Extension (Artistic)",
+                    .section = "Queen's Domain",
+                    .tooltip = "Optionally expands highlights above Game Brightness toward Peak Brightness.\n"
+                               "0 preserves the existing HDR conversion. Values at or below Game Brightness are unchanged.\n"
+                               "Very bright colors may desaturate to fit the selected peak. Does not recover clipped scene detail.",
+                    .min = 0.f,
+                    .max = 100.f,
+                    .is_enabled = []() { return shader_injection.tone_map_type != 0.f; },
+                    .parse = [](float value) { return value * 0.01f; },
+                },
+            },
             {
                 0xB696D110,  // Post-tonemap material with grading LUT
             },
@@ -2411,6 +2426,12 @@ void AddAdvancedSettings() {
           .aspect_ratio = static_cast<float>((value == UPGRADE_TYPE_OUTPUT_RATIO)
                                                  ? renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER
                                                  : renodx::mods::swapchain::SwapChainUpgradeTarget::ANY),
+          // Internal render dimensions are rounded, slightly changing the output aspect ratio.
+          .aspect_ratio_tolerance = (filename == "QueensDomain-Win64-Shipping.exe"
+                                            && format == reshade::api::format::b8g8r8a8_typeless
+                                            && value == UPGRADE_TYPE_OUTPUT_RATIO
+                                        ? 0.01f
+                                        : renodx::mods::swapchain::SwapChainUpgradeTarget{}.aspect_ratio_tolerance),
           .usage_include = reshade::api::resource_usage::render_target
                            | (g_upgrade_copy_destinations == 0.f
                                   ? reshade::api::resource_usage::undefined

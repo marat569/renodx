@@ -203,6 +203,47 @@ void main(
   r0.xyz = cb3[11].yyy * r1.xyz + r0.xyz;
 
   o0.xyz = SdrSrgbToLutOutput(max(float3(0, 0, 0), r0.xyz), bridge_state);
+  // Optional artistic highlight expansion after the vanilla presentation effects.
+  float highlight_extension = saturate(CUSTOM_SLIDER_1);
+  if (highlight_extension > 0.f && RENODX_TONE_MAP_TYPE != 0.f) {
+    float3 nits;
+    if (PROCESSING_PATH == 0.f) {
+      nits = renodx::color::bt709::from::BT2020(
+          renodx::color::pq::DecodeSafe(o0.xyz, RENODX_DIFFUSE_WHITE_NITS)) * RENODX_DIFFUSE_WHITE_NITS;
+    } else {
+      nits = ApplyGammaCorrection(renodx::color::srgb::DecodeSafe(o0.xyz)) * RENODX_GRAPHICS_WHITE_NITS;
+    }
+    float luminance = dot(nits, float3(.2126f, .7152f, .0722f));
+    float white = max(RENODX_DIFFUSE_WHITE_NITS, 1.f);
+    float peak = max(RENODX_PEAK_WHITE_NITS, white);
+    // Bypass in the encoded domain to preserve lower luminances exactly.
+    if (luminance > white && peak > white) {
+      float excess = luminance / white - 1.f;
+      // Zero added value and slope at game white; 0.18 is the relative transition width.
+      float extra = (peak - white) * excess * excess / (excess + .18f);
+      float target_luminance = luminance + highlight_extension * extra;
+      float rolloff_start = max(white, .8f * peak);
+      if (target_luminance > rolloff_start) {
+        float shoulder = peak - rolloff_start;
+        target_luminance = rolloff_start + shoulder * (1.f - exp(-(target_luminance - rolloff_start) / shoulder));
+      }
+      float3 scaled = nits * (target_luminance / luminance);
+      float maximum = max(scaled.r, max(scaled.g, scaled.b));
+      float minimum = min(scaled.r, min(scaled.g, scaled.b));
+      float chroma_scale = 1.f;
+      if (maximum > peak) chroma_scale = min(chroma_scale, (peak - target_luminance) / max(maximum - target_luminance, 1e-6f));
+      if (minimum < 0.f) chroma_scale = min(chroma_scale, target_luminance / max(target_luminance - minimum, 1e-6f));
+      // Compress out-of-range chroma toward a neutral axis at the same luminance.
+      nits = target_luminance.xxx + saturate(chroma_scale) * (scaled - target_luminance.xxx);
+      if (PROCESSING_PATH == 0.f) {
+        o0.xyz = renodx::color::pq::EncodeSafe(
+            renodx::color::bt2020::from::BT709(nits / RENODX_DIFFUSE_WHITE_NITS), RENODX_DIFFUSE_WHITE_NITS);
+      } else {
+        o0.xyz = renodx::color::srgb::EncodeSafe(
+            ApplyGammaCorrection(nits / max(RENODX_GRAPHICS_WHITE_NITS, 1.f), true));
+      }
+    }
+  }
   o0.w = 1.0;
   return;
 }

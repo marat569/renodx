@@ -7,6 +7,8 @@
 // Similar to the Unreal Engine ACES Lut Builder
 // The game's tonemapper is uncharted2, so this is probably just for color correction
 
+//
+
 #include "./shared.h"
 
 cbuffer fblock : register(b0) {

@@ -1028,14 +1028,13 @@ void AddMixtapeUpgrades() {
 }
 
 void AddQueensDomainUpgrades() {
-  for (auto& target : renodx::mods::swapchain::swap_chain_upgrade_targets) {
-    if (target.old_format == reshade::api::format::b8g8r8a8_typeless
-        && target.aspect_ratio == renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER
-        && !target.ignore_size) {
-      // Internal render dimensions are rounded, slightly changing the output aspect ratio.
-      target.aspect_ratio_tolerance = 0.01f;
-    }
-  }
+  renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      .old_format = reshade::api::format::b8g8r8a8_typeless,
+      .new_format = reshade::api::format::r16g16b16a16_float,
+      .use_resource_view_cloning = true,
+      .aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
+      .aspect_ratio_tolerance = 0.01f,
+  });
 }
 
 void AddGamePatches() {

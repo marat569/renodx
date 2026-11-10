@@ -1027,6 +1027,17 @@ void AddMixtapeUpgrades() {
   });
 }
 
+void AddQueensDomainUpgrades() {
+  for (auto& target : renodx::mods::swapchain::swap_chain_upgrade_targets) {
+    if (target.old_format == reshade::api::format::b8g8r8a8_typeless
+        && target.aspect_ratio == renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER
+        && !target.ignore_size) {
+      // Internal render dimensions are rounded, slightly changing the output aspect ratio.
+      target.aspect_ratio_tolerance = 0.01f;
+    }
+  }
+}
+
 void AddGamePatches() {
   auto process_path = renodx::utils::platform::GetCurrentProcessPath();
   auto filename = process_path.filename().string();
@@ -1040,6 +1051,8 @@ void AddGamePatches() {
     AddSonicRacingCrossWorldsUpgrades();
   } else if (product_name == "Mixtape") {
     AddMixtapeUpgrades();
+  } else if (product_name == "Queens Domain") {
+    AddQueensDomainUpgrades();
   } else {
     return;
   }
@@ -2411,12 +2424,6 @@ void AddAdvancedSettings() {
           .aspect_ratio = static_cast<float>((value == UPGRADE_TYPE_OUTPUT_RATIO)
                                                  ? renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER
                                                  : renodx::mods::swapchain::SwapChainUpgradeTarget::ANY),
-          // Internal render dimensions are rounded, slightly changing the output aspect ratio.
-          .aspect_ratio_tolerance = (filename == "QueensDomain-Win64-Shipping.exe"
-                                            && format == reshade::api::format::b8g8r8a8_typeless
-                                            && value == UPGRADE_TYPE_OUTPUT_RATIO
-                                        ? 0.01f
-                                        : renodx::mods::swapchain::SwapChainUpgradeTarget{}.aspect_ratio_tolerance),
           .usage_include = reshade::api::resource_usage::render_target
                            | (g_upgrade_copy_destinations == 0.f
                                   ? reshade::api::resource_usage::undefined

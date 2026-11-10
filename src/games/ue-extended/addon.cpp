@@ -1027,6 +1027,16 @@ void AddMixtapeUpgrades() {
   });
 }
 
+void AddQueensDomainUpgrades() {
+  renodx::mods::swapchain::swap_chain_upgrade_targets.push_back({
+      .old_format = reshade::api::format::b8g8r8a8_typeless,
+      .new_format = reshade::api::format::r16g16b16a16_float,
+      .use_resource_view_cloning = true,
+      .aspect_ratio = renodx::mods::swapchain::SwapChainUpgradeTarget::BACK_BUFFER,
+      .aspect_ratio_tolerance = 0.01f,
+  });
+}
+
 void AddGamePatches() {
   auto process_path = renodx::utils::platform::GetCurrentProcessPath();
   auto filename = process_path.filename().string();
@@ -1040,6 +1050,8 @@ void AddGamePatches() {
     AddSonicRacingCrossWorldsUpgrades();
   } else if (product_name == "Mixtape") {
     AddMixtapeUpgrades();
+  } else if (product_name == "Queens Domain") {
+    AddQueensDomainUpgrades();
   } else {
     return;
   }

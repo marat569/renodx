@@ -7,6 +7,7 @@
 #define DEBUG_LEVEL_0
 
 #include <algorithm>
+#include <optional>
 
 #include <deps/imgui/imgui.h>
 #include <embed/shaders.h>
@@ -36,6 +37,7 @@ ShaderInjectData shader_injection;
 float current_settings_mode = 0;
 float developer_mode_enabled = 0.f;
 float vanilla_tone_map_mode = 0.f;
+std::optional<float> detected_peak_nits;
 
 // start keybind code
 
@@ -185,14 +187,32 @@ renodx::utils::settings::Settings settings = {
     new renodx::utils::settings::Setting{
         .key = "ToneMapPeakNits",
         .binding = &shader_injection.peak_white_nits,
-        .default_value = 1000.f,
-        .can_reset = false,
+        .default_value = 47.f,
         .label = "Peak Brightness",
         .section = "Output",
-        .tooltip = "Sets the value of peak white in nits",
-        .min = 48.f,
+        .tooltip = "Sets the peak white in nits. Auto uses the detected display peak.",
+        .min = 47.f,
         .max = 10000.f,
         .is_enabled = []() { return shader_injection.tone_map_type != 0.f; },
+        .parse = [](float value) {
+          if (auto* peak_setting = renodx::utils::settings::FindSetting("ToneMapPeakNits")) {
+            if (value == 47.f && detected_peak_nits.has_value()) {
+              peak_setting->format = "Auto (" + std::to_string(static_cast<int>(*detected_peak_nits + 0.5f)) + " nits)";
+            } else {
+              peak_setting->format = (value == 47.f ? "Auto" : "%.0f");
+            }
+          }
+          if (value == 47.f) {
+            return detected_peak_nits.value_or(1000.f);
+          }
+          return value;
+        },
+        .on_change = []() {
+          auto* peak_setting = renodx::utils::settings::FindSetting("ToneMapPeakNits");
+          if (peak_setting->value > 47.f && peak_setting->value < 48.f) {
+            peak_setting->value = (peak_setting->value < 47.5f ? 47.f : 48.f);
+          }
+        },
         .is_logarithmic = true,
     },
     new renodx::utils::settings::Setting{
@@ -957,13 +977,10 @@ void OnInitSwapchain(reshade::api::swapchain* swapchain, bool resize) {
   if (fired_on_init_swapchain) return;
   auto peak = renodx::utils::swapchain::GetPeakNits(swapchain);
   if (!peak.has_value()) return;
+  detected_peak_nits = *peak;
   auto* peak_setting = renodx::utils::settings::FindSetting("ToneMapPeakNits");
   if (peak_setting == nullptr) return;
-  if (peak_setting->GetValue() == peak_setting->default_value) {
-    peak_setting->Set(*peak)->Write();
-  }
-  peak_setting->default_value = peak.value();
-  peak_setting->can_reset = true;
+  peak_setting->Write();
   fired_on_init_swapchain = true;
 }
 
@@ -2645,7 +2662,7 @@ BOOL APIENTRY DllMain(HMODULE h_module, DWORD fdw_reason, LPVOID lpv_reserved) {
     for (auto* setting : settings) {
       if (setting->key == "UEExtendedDeveloperMode") continue;
       if (setting->key != "ToneMapType" && setting->key != "VanillaToneMapMode"
-          && (setting->key == "ToneMapPeakNits"
+              && (setting->key == "ToneMapPeakNits"
               || setting->key == "SafeLimitWhiteClip"
               || setting->key == "ToneMapGameNits"
               || setting->key == "ToneMapUINits"
